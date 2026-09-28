@@ -11,12 +11,6 @@ dependencies = [
     "pyyaml>=6.0.2",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.3.3",
-    "ruff>=0.8.0",
-]
-
 [project.scripts]
 brainswarm = "agent_brainswarm.cli:main"
 
@@ -31,3 +25,18 @@ pythonpath = ["src"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.ty.environment]
+python-version = "3.12"   # matches requires-python; ty otherwise assumes "3.14"
+
+[tool.ty.terminal]
+error-on-warning = true   # any diagnostic, warning or error, fails the run
+
+[dependency-groups]
+dev = [
+    "detect-secrets>=1.5.0",
+    "pre-commit>=4.6.2",
+    "pytest>=9.1.1",
+    "ruff>=0.16.9",
+    "ty>=0.0.84",
+]

@@ -2,8 +2,9 @@
 
 > **Status: design phase (2026-09-28).** This document is the source of truth
 > for what brainswarm is and how it will work. Nothing in the protocol is
-> implemented yet; the repo contains a scaffold only. Build order is in
-> [§18](#18-build-order). Where a decision is still open it says so explicitly
+> implemented yet; the repo contains a scaffold only. Work is tracked in
+> [`PROJECT_PLAN.md`](../PROJECT_PLAN.md); the repository overview is in the
+> [README](../README.md). Where a decision is still open it says so explicitly
 > in [§20](#20-open-questions).
 
 ## Contents
@@ -28,6 +29,7 @@
 18. [Build order](#18-build-order)
 19. [Design history: what we took from prior art](#19-design-history-what-we-took-from-prior-art)
 20. [Open questions](#20-open-questions)
+21. [References](#references)
 
 ---
 
@@ -69,7 +71,7 @@ testing"* prior, never a claim that the idea works.
 
 ## 2. Relationship to agent-evolve
 
-**Independent tool, shared philosophy, compatible output.** brainswarm does
+**Independent tool, shared philosophy, compatible output** [[14]](#ref-agent-evolve). brainswarm does
 the *coming up with ideas* part that agent-evolve is not designed for;
 agent-evolve is good at testing and improving an idea once it is code.
 Pairing: **brainswarm the ideas, evolve the code.**
@@ -360,7 +362,59 @@ No band is ever zero: common angles may be common because they are good;
 rare ones are where surprises come from. Free slots already lean common, and
 the assignment accounts for that. The mix is a hypothesis; per-band results
 are logged so defaults can be moved on evidence. v1 is deterministic (no
-auto-tuning) so runs stay comparable.
+auto-tuning) so runs stay comparable. Near/far analogy research reports
+mixed effects of analogical distance on design output
+[[9]](#ref-fu-2013), which is why every distance band is sampled and
+measured rather than one being chosen a priori.
+
+### Banding and allocation
+
+Let the angle pool be partitioned into clusters $k = 1, \dots, K$, and let
+$s_k$ be the number of distinct generators that proposed an angle in
+cluster $k$ (its popularity). Clusters are assigned to the bands common,
+middle and rare by the tertiles of $\{s_k\}$; ties at a tertile boundary go
+to the more common band, so that a band is never populated by an arbitrary
+split of equal-popularity clusters. Domains are banded the same way on a
+distance rating (near, mid, far) given by the proposing generator.
+
+Given $n$ assigned-angle slots and the knob's band shares $q_b$
+($\sum_b q_b = 1$), band $b$ receives
+
+$$
+n_b = \lfloor n q_b \rfloor + \delta_b,
+$$
+
+where the $\delta_b \in \{0, 1\}$ distribute the remaining
+$n - \sum_b \lfloor n q_b \rfloor$ slots to the bands with the largest
+fractional parts $n q_b - \lfloor n q_b \rfloor$ (largest-remainder
+rounding). This keeps $\sum_b n_b = n$ exactly and each $n_b$ within one
+slot of its target $n q_b$. Within a band, clusters are drawn uniformly
+without replacement (so one popular cluster cannot absorb a band's slots),
+an angle is drawn within each cluster, and angles proposed by the receiving
+generator are excluded where an alternative exists. All draws use a
+recorded seed.
+
+### Parameter provenance
+
+Every fixed default below is provisional: chosen by judgment during design,
+not fitted, and scheduled for recalibration from logged runs (§14).
+
+| Parameter | Default | Basis |
+|---|---|---|
+| Generators (quick / standard / deep) | 8 / 20 / 30 | Standard is the owner's proposed swarm size (~20 agents); quick and deep scale it down and up. Diminishing returns are expected past a few dozen; the logged yield curve (§14) will locate the real knee. |
+| Ideas per generator | 3 | Breadth over depth at generation; depth comes from the workshop. Three gives ~60 ideas at standard size, enough for a stable ranking without swamping critique. |
+| Angles and domains proposed per generator | 3 + 3 | Yields ~60 of each at standard size: roughly three candidates per generator slot, so assignment can prefer angles from other generators. |
+| Critics per idea | ~6 | Enough independent judgments per idea for the Plackett–Luce fit and for "raised by m of 6" counts to be meaningful, at ~20 critic agents in total. |
+| Targeted lookups per critic | ~5 | Enough to check a card's load-bearing citations, not enough to research the topic (research belongs to generators). |
+| Web-call ceiling per generator | ~40 | A runaway stop, set well above the 10–24 tool calls observed for research subagents in the design session. |
+| Workshop slots (quick / standard / deep) | 0 / 12 / 16 | Standard develops ~20 % of ~60 ideas; the split is set by the exploration knob. |
+| Re-critique critics | 2–3 | Checks fixes without repeating the full critique cost. |
+| Finals judges (standard / deep) | 3 / 5 | Odd counts avoid split panels; two model families at minimum. |
+| Top families shown | 5 | The owner's stated use: several ideas to take forward, not one. |
+| Returning champions | 3 | Enough to benchmark against the previous best without crowding the finals. |
+| Agent wave size | ~10 | Keeps concurrent subagents within observed practical limits; to be confirmed (§16.6). |
+| Bootstrap resamples $B$ | 1000 | Standard choice for 95 % percentile intervals [[5]](#ref-efron-tibshirani-1993). |
+| Band shares $q_b$ | §6 table | Hypotheses about the exploration–exploitation balance; every band non-zero by construction. |
 
 ### Overrides
 
@@ -371,7 +425,8 @@ Anything finer (e.g. `generators: 12`) is an advanced override in
 
 Fixation (anchoring on examples) is treated as a primary risk. Human design
 research found people fixate on example features even when told to avoid
-them, so "avoid these" instructions are not relied on.
+them [[8]](#ref-jansson-smith-1991), so "avoid these" instructions are not
+relied on.
 
 - **Blind generation, informed selection.** History (the library, earlier
   runs) enters only *after* generation: in clustering, novelty scoring,
@@ -449,14 +504,85 @@ draft `agent-evolve.yaml` with placeholders.
 
 ## 10. Scoring
 
-- **Model**: Bradley–Terry over all pairwise outcomes (Plackett–Luce for
-  critics' batch rankings), fitted **once** after all judgments are in (not
-  online Elo, which is order-dependent on static data).
+- **Model**: Bradley–Terry over all pairwise outcomes
+  [[1]](#ref-bradley-terry-1952) (Plackett–Luce
+  [[2]](#ref-luce-1959)[[3]](#ref-plackett-1975) for critics' batch
+  rankings), fitted **once** after all judgments are in (not online Elo,
+  which is order-dependent on static data; Chatbot Arena moved to
+  Bradley–Terry for the same reason [[6]](#ref-chiang-2024)).
 - **Scale shown to humans**: "chance of beating an average idea in this
   run" (0–100 %), converted from the log-odds strength.
-- **Uncertainty**: bootstrap (~1000 resamples) **clustered by judge**
-  (one judge's calls are correlated); report **rank ranges**
-  ("#3, 95 % CI #2–#6") and **tiers** of statistically tied ideas.
+- **Uncertainty**: bootstrap [[4]](#ref-efron-1979) (1000 resamples)
+  **clustered by judge** [[7]](#ref-field-welsh-2007) (one judge's calls
+  are correlated); report **rank ranges** ("#3, 95 % CI #2–#6") and
+  **tiers** of statistically tied ideas.
+
+### Formulation
+
+Each idea $i \in \{1, \dots, N\}$ has a positive worth $\pi_i$, with
+$\beta_i = \log \pi_i$. The Bradley–Terry model states
+
+$$
+P(i \succ j) = \frac{\pi_i}{\pi_i + \pi_j}
+            = \frac{1}{1 + e^{-(\beta_i - \beta_j)}}
+            = \sigma(\beta_i - \beta_j).
+$$
+
+Only differences $\beta_i - \beta_j$ enter, so $\beta$ is identified up to
+an additive constant; the constraint $\sum_i \beta_i = 0$ fixes it. With
+$w_{ij}$ the number of matches $i$ won against $j$, the log-likelihood is
+
+$$
+\ell(\beta) = \sum_{i \neq j} w_{ij} \log \sigma(\beta_i - \beta_j).
+$$
+
+A tie (the two presentation orders disagree, §5 Phase 6) contributes half a
+win to each side, $w_{ij} \mathrel{+}= \tfrac12$ and
+$w_{ji} \mathrel{+}= \tfrac12$. An idea that wins every match has no finite
+maximum-likelihood estimate ($\beta_i \to \infty$), so the fit maximises the
+penalised likelihood
+
+$$
+\ell_\lambda(\beta) = \ell(\beta) - \frac{\lambda}{2} \sum_i \beta_i^2,
+$$
+
+equivalent to a Gaussian prior $\beta_i \sim \mathcal N(0, 1/\lambda)$;
+$\lambda$ is set small enough that it only matters for undefeated or
+winless ideas (value to be fixed during implementation and documented).
+
+A critic's ranking $\rho = (\rho_1, \dots, \rho_K)$ of a batch of $K$ ideas
+enters through the Plackett–Luce likelihood, which treats the ranking as
+successive choices of the best remaining idea:
+
+$$
+P(\rho) = \prod_{k=1}^{K} \frac{\pi_{\rho_k}}{\sum_{m=k}^{K} \pi_{\rho_m}}.
+$$
+
+For $K = 2$ this reduces to the Bradley–Terry probability, so both kinds of
+evidence share one set of worths.
+
+The reported score is $p_i = \sigma(\beta_i - \bar\beta) = \sigma(\beta_i)$
+(since $\bar\beta = 0$): the probability of beating a hypothetical idea of
+exactly average strength. It is not the mean of $i$'s pairwise win
+probabilities; it is chosen because it is monotone in $\beta_i$ and
+readable.
+
+**Bootstrap.** Let $J$ be the set of judges (critics in the preliminary
+fit; judge × panel seat in the finals). For $b = 1, \dots, B$: draw $|J|$
+judges from $J$ with replacement, take all judgments of each drawn judge,
+refit $\beta^{(b)}$, and record each idea's rank $r_i^{(b)}$. The 95 %
+rank interval of idea $i$ is the 2.5th to 97.5th percentile of
+$\{r_i^{(b)}\}$. Resampling whole judges rather than individual judgments
+keeps each judge's internal correlation, which a naive resample would
+destroy and thereby understate uncertainty.
+
+**Tiers.** Sort ideas by point estimate. Tier 1 contains the top idea and
+every idea whose rank interval overlaps the top idea's interval; tier 2
+starts from the best remaining idea, and so on.
+
+**Few-judge caveat.** The finals have only 3–5 judges, and a cluster
+bootstrap with so few clusters gives unreliable intervals. The finals
+bootstrap design is an open item (§16.11).
 - **Axes**: the main ranking is **value**. Per-criterion fits (novelty,
   feasibility, upside, …) give additional axes and a secondary
   quality × novelty Pareto view.
@@ -586,7 +712,7 @@ reliability note until verified.
 | Rubric misinferred (autonomous) | rubric-audit disagreements; assumptions log | shown in preflight so the user can interrupt |
 | Critics harsher on novel ideas | novelty–rank correlation | tighten the "unproven" rule |
 | Generic filter miscalibrated | flag rate; random spot-checks | recalibrate substitution test |
-| Judge position bias | order-swap disagreement rate | more judges / other models |
+| Judge position bias [[10]](#ref-zheng-2023) | order-swap disagreement rate | more judges / other models |
 | Judge verbosity bias | length–rank correlation | length caps are enforced |
 | Judge self-preference | win rate when judge and author share a model | mixed panels |
 | Anonymity leaks via writing style | judge verdicts tracking author family beyond chance | stricter card structure |
@@ -623,6 +749,10 @@ reliability note until verified.
    reliability.
 10. **Does brainswarm beat one strong agent?** Benchmark (§18) is the first
     milestone after the MVP.
+11. **Finals bootstrap with few judges.** A judge-clustered bootstrap with
+    3–5 clusters is unreliable [[7]](#ref-field-welsh-2007). Candidates:
+    resample judgments within judge (stratified), or treat judge × match
+    order as the cluster; to be decided with simulated data.
 
 ## 17. Demo
 
@@ -647,42 +777,33 @@ Not demoed (too expensive): web research, the multi-run library.
 
 ## 18. Build order
 
-1. Scaffold (this commit): design doc, skill and role stubs, package
-   skeleton.
-2. Resolve §16 items 1, 4, 9 (tool restriction, triggers, token
-   accounting) — they shape the skill and agent files.
-3. Python hands with fixture mode: models, config, rubric, assign,
-   critique checks, scoring, select, state, report, export; tests.
-4. Skill and role prompts (the most important deliverable, as in
-   agent-evolve).
-5. Tier 2 demo run → record → tier 1 offline demo.
-6. `install.py`, README usage docs.
-7. **Benchmark**: brainswarm vs a single strong agent asked for 20 ideas on
-   3–5 briefs; ablations (no critique, no workshop, no angle round). Dated
-   test reports.
-8. Library and repeat runs, returning champions.
-9. Later: external CLIs as contestants, auto-tuning of band mixes from
-   logged data, optional `seed_hypotheses` in agent-evolve.
+Phases, tasks and their status are tracked in
+[`PROJECT_PLAN.md`](../PROJECT_PLAN.md). The ordering principle: verify the
+platform assumptions that shape the prompts (§16.1, 16.4, 16.9) before
+writing them; build the Python layer with fixture mode before any live run;
+benchmark against a single strong agent before building repeat-run
+features.
 
 ## 19. Design history: what we took from prior art
 
-- **zhjai/agent-arena** (evidence-first multi-agent debate): kept
+- **zhjai/agent-arena** [[11]](#ref-zhjai-agent-arena) (evidence-first multi-agent debate): kept
   independence before discussion, evidence over consensus, preserved dissent,
   "what would change your mind", honest limitations, on-disk packets and
   digest read-back. Changed: 13 modes → two knobs; prose-only → prose + code;
   orchestrator no longer participates or judges; rubric with scales and
   swaps. Different purpose: it adjudicates one question; brainswarm
   generates and ranks many ideas.
-- **skillsarena.ai** (skill discoverability benchmark): kept "observe, don't
+- **skillsarena.ai** [[12]](#ref-skills-arena) (skill discoverability benchmark): kept "observe, don't
   ask" and frozen scenario sets (for our benchmark). Dropped online Elo,
   winner-beats-all counting, arbitrary grade weights, and its optimiser.
-- **oyi77 agent-arena-skill** (on-chain agent registry wrapper): dropped;
+- **oyi77 agent-arena-skill** [[13]](#ref-oyi77) (on-chain agent registry wrapper): dropped;
   kept only the note that reputation should come from verified outcomes
   (→ human-feedback logging).
 - **Also relevant**: Chatbot Arena (Bradley–Terry + bootstrap over online
-  Elo), LLM-as-judge bias literature (position, verbosity, self-preference),
-  design-fixation research, near/far analogy research (mixed results → we
-  sample across distances and measure).
+  Elo) [[6]](#ref-chiang-2024), LLM-as-judge bias literature (position,
+  verbosity, self-preference) [[10]](#ref-zheng-2023), design-fixation
+  research [[8]](#ref-jansson-smith-1991), near/far analogy research (mixed
+  results, so every distance is sampled and measured) [[9]](#ref-fu-2013).
 
 The name: "brainswarm" — a play on *brainstorm* (many minds, thought,
 eureka) that is distinctive enough not to trigger by accident, and a verb
@@ -694,3 +815,35 @@ like *evolve*.
 - Tool-restriction mechanism for roles (§16.1).
 - Default workshop/judge model assignments once measured.
 - Whether to add an optional `seed_hypotheses` field to agent-evolve later.
+- Finals bootstrap design with few judges (§16.11).
+- Penalty strength $\lambda$ for the Bradley–Terry fit (§10).
+
+## References
+
+<span id="ref-bradley-terry-1952">[1]</span> Bradley, R. A., & Terry, M. E. (1952). *Rank analysis of incomplete block designs: I. The method of paired comparisons.* Biometrika, 39(3/4), 324–345. [Link](https://doi.org/10.2307/2334029)
+
+<span id="ref-luce-1959">[2]</span> Luce, R. D. (1959). *Individual Choice Behavior: A Theoretical Analysis.* New York: Wiley.
+
+<span id="ref-plackett-1975">[3]</span> Plackett, R. L. (1975). *The analysis of permutations.* Journal of the Royal Statistical Society, Series C (Applied Statistics), 24(2), 193–202. [Link](https://doi.org/10.2307/2346567)
+
+<span id="ref-efron-1979">[4]</span> Efron, B. (1979). *Bootstrap methods: Another look at the jackknife.* The Annals of Statistics, 7(1), 1–26. [Link](https://doi.org/10.1214/aos/1176344552)
+
+<span id="ref-efron-tibshirani-1993">[5]</span> Efron, B., & Tibshirani, R. J. (1993). *An Introduction to the Bootstrap.* New York: Chapman & Hall.
+
+<span id="ref-chiang-2024">[6]</span> Chiang, W.-L., et al. (2024). *Chatbot Arena: An open platform for evaluating LLMs by human preference.* Proceedings of the 41st International Conference on Machine Learning. [Link](https://arxiv.org/abs/2403.04132)
+
+<span id="ref-field-welsh-2007">[7]</span> Field, C. A., & Welsh, A. H. (2007). *Bootstrapping clustered data.* Journal of the Royal Statistical Society, Series B, 69(3), 369–390. [Link](https://doi.org/10.1111/j.1467-9868.2007.00593.x)
+
+<span id="ref-jansson-smith-1991">[8]</span> Jansson, D. G., & Smith, S. M. (1991). *Design fixation.* Design Studies, 12(1), 3–11. [Link](https://doi.org/10.1016/0142-694X(91)90003-F)
+
+<span id="ref-fu-2013">[9]</span> Fu, K., Chan, J., Cagan, J., Kotovsky, K., Schunn, C., & Wood, K. (2013). *The meaning of "near" and "far": The impact of structuring design databases and the effect of distance of analogy on design output.* Journal of Mechanical Design, 135(2), 021007. [Link](https://doi.org/10.1115/1.4023158)
+
+<span id="ref-zheng-2023">[10]</span> Zheng, L., et al. (2023). *Judging LLM-as-a-judge with MT-Bench and Chatbot Arena.* Advances in Neural Information Processing Systems 36, Datasets and Benchmarks Track. [Link](https://arxiv.org/abs/2306.05685)
+
+<span id="ref-zhjai-agent-arena">[11]</span> zhjai. *agent-arena: Evidence-first multi-agent debate for Claude Code × Codex* (v0.2.6). GitHub repository. [Link](https://github.com/zhjai/agent-arena)
+
+<span id="ref-skills-arena">[12]</span> Ben Barouch, E. *skills-arena* (skillsarena.ai). GitHub repository. [Link](https://github.com/Eyalbenba/skills-arena)
+
+<span id="ref-oyi77">[13]</span> oyi77. *agent-arena-skill*, in *1ai-skills*. GitHub repository. [Link](https://github.com/oyi77/1ai-skills)
+
+<span id="ref-agent-evolve">[14]</span> Kyle. *agent-evolve: Evolutionary code search with cooperating language-model agents.* GitHub repository. [Link](https://github.com/kyleyhw/agent-evolve)

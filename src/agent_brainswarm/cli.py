@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import sys
 
-SUBCOMMANDS = ("validate", "report", "export", "resume", "feedback")
+SUBCOMMANDS: tuple[str, ...] = ("validate", "report", "export", "resume", "feedback")
 
 
 def main(argv: list[str] | None = None) -> int:
