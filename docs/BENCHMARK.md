@@ -65,6 +65,7 @@ worth it.
 | Brief | Brainswarm run | Baseline | Pack | Ratings |
 |---|---|---|---|---|
 | ETF strategy | recorded (`examples/demo-run/`) | done | [`benchmark/etf-strategy/pack.md`](../benchmark/etf-strategy/pack.md) | 6 LLM reviewers (below); no human rating |
+| Improving brainswarm itself | recorded (`examples/runs/2026-09-29-beat-baseline/`) | done | all 8 finalists + 3 baseline cards | 6 LLM reviewers (below) |
 | Exoplanet transit | shelved until usage allows | pending | pending | pending |
 | Home heating | shelved until usage allows | pending | pending | pending |
 
@@ -98,6 +99,52 @@ only weakly.*
   finalists were not rated better than a single strong agent's own top three, at about 24
   times the new-token cost. One brief is not a verdict on the method; the physically
   checkable briefs are the stronger test.
+
+### Improving brainswarm itself (2026-09-30)
+
+The brief of the self-run: ways to make a multi-agent idea system beat a single strong agent's
+top 3. The same six-reviewer panel rated **all 8** brainswarm finalists and the single agent's
+top 3 (11 cards; 6 rows of an 11x11 cyclic Latin square, so no card appeared twice in the same
+position). The single agent had the same context the generators had (the brief and the
+rubric's descriptions of the system and the benchmark), 20 ideas, and web off; its first card
+was 409 words, 9 over the cap.
+
+![Ranks from six independent reviewers on the self-run brief](figures/benchmark_beat_baseline_review.png)
+
+*The single agent won clearly. Each row is one card; small dots are the rank each reviewer gave
+it (1 = best, right) and the large dot the mean. Blue: brainswarm's eight finalists; orange:
+the single agent's top three. All three single-agent cards sit above every brainswarm card
+except I004, and the dots in each row cluster tightly: the reviewers agreed.*
+
+| Measure (brainswarm's own top 3 vs the single agent's) | Difference | Reviewers favouring brainswarm | Sign test p |
+|---|---|---|---|
+| "Would pursue" (1–5) | −1.17 | 0 of 6 | 0.06 |
+| Rank of 11 (lower is better) | +3.89 | 0 of 6 | 0.03 |
+
+- **Agreement** was strong: Kendall's $W = 0.92$ (against 0.33 on the ETF brief), and the
+  position–rank correlation was 0.05, so order did not matter.
+- **Brainswarm's internal ranking disagreed with the panel:** its #1 (I001) was 7th of 11 and
+  its #3 (I005) 9th; its best card by the panel, I004, was its own #2.
+
+### Selection rules tested offline (Stage 1)
+
+`benchmark/experiments/selection_rules.py` re-picks brainswarm's top 3 from the run's own
+finals verdicts under two proposed rules and scores the picks by the panel's "would pursue".
+
+| Rule | Picks | Best of 3 | Mean of 3 |
+|---|---|---|---|
+| current (top 3 posterior modes) | I001, I004, I005 | 3.83 | 3.00 |
+| portfolio: maximise $E[\max_{i\in S}\beta_i]$ (idea I003) | I001, I004, I005 | 3.83 | 3.00 |
+| judge-reliability weighting, weights from the ETF brief (idea I008) | I001, I004, I008 | 3.83 | 3.28 |
+| best possible of the 8 | I001, I003, I004 | 3.83 | 3.28 |
+| a random set (mean of all 56) | | 3.27 | 2.65 |
+| *single agent's own top 3* | | *4.33* | *4.17* |
+
+The portfolio rule changed nothing on this run. Reliability weighting (Sonnet judges agreed
+with the ETF panel on 44 % of verdicts, so weight 0; Opus 78 %, weight 0.56; Fable unseen, the
+mean 0.28) reached the best possible mean, one brief of evidence. The main finding is the last
+two rows: **even the best 3 of brainswarm's 8 ideas rate below every single-agent card**, so
+on this brief the gap is in what was generated, not in which ideas were selected.
 
 ## Cost
 

@@ -1,0 +1,7 @@
+[
+  {"name": "constraints", "text": "how convincingly it meets the brief's hard rules: buildable within the described system without replacing it, and testable with the described benchmark"},
+  {"name": "gain", "text": "how much it would improve the system's top ideas relative to a single strong agent's own top 3"},
+  {"name": "measurable", "text": "how cleanly its effect could be isolated and detected, preferably by measured outcomes rather than opinion"},
+  {"name": "feasibility", "text": "effort to build and extra token cost to run and evaluate, relative to the benefit"},
+  {"name": "pursue", "text": "would an engineer maintaining this system spend a week building and testing it?"}
+]

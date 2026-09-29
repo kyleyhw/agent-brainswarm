@@ -1,12 +1,14 @@
 """Independent LLM reviewers for a benchmark pack, with order counterbalancing.
 
-    uv run python benchmark/llm_review.py make <run> <baseline.json> <out-dir> [--models sonnet opus fable]
+    uv run python benchmark/llm_review.py make <run> <baseline.json> <out-dir>
+        [--models sonnet opus fable] [--k 3] [--reviewers 6] [--criteria criteria.json]
     uv run python benchmark/llm_review.py analyze <out-dir> [--figure path.png]
 
-``make`` writes one task per reviewer. Reviewer r sees the six cards in the order of row r of
-a cyclic Latin square over a random base permutation, so across six reviewers every card
-appears exactly once in every position; letters follow the presented order, so "A" names a
-different card for each reviewer. The key (reviewer -> letter -> origin) and the seed, drawn
+``make`` writes one task per reviewer, with brainswarm's top ``k`` cards (by its own final rank)
+and the single agent's top 3. Reviewer r sees the cards in the order of row r of a cyclic Latin
+square over a random base permutation, so no card appears twice in the same position, and with
+as many reviewers as cards every card appears exactly once in every position; letters follow
+the presented order, so "A" names a different card for each reviewer. The key (reviewer -> letter -> origin) and the seed, drawn
 from OS entropy by numpy, go to ``key.json``.
 
 ``analyze`` reads the reviewers' JSON and reports, per reviewer r, the difference
@@ -37,15 +39,31 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from make_pack import brainswarm_top, leaks, render
 
-CRITERIA = ("constraints", "drawdown", "growth", "diversification", "pursue")
+# Default criteria: the ETF brief's. Other briefs pass --criteria (a JSON list of
+# {"name", "text"}); every list must include "pursue", the benchmark's headline measure.
+ETF_CRITERIA = [
+    {
+        "name": "constraints",
+        "text": "how convincingly it meets the brief's hard rules: trading days, turnover, daily closes, long only",
+    },
+    {
+        "name": "drawdown",
+        "text": "how credible its case for staying under a 20 % maximum drawdown is",
+    },
+    {"name": "growth", "text": "long-run growth potential"},
+    {"name": "diversification", "text": "spread of risk across asset classes"},
+    {"name": "pursue", "text": "would a quantitative researcher spend a week testing it?"},
+]
 
 
-def task_text(brief: str, cards: list[str], out: Path) -> str:
+def task_text(brief: str, cards: list[str], out: Path, criteria: list[dict[str, str]]) -> str:
     letters = string.ascii_uppercase[: len(cards)]
+    names = [c["name"] for c in criteria]
     example = {
-        x: {**dict.fromkeys(CRITERIA, 3), "rank": i + 1, "reason": "one sentence"}
+        x: {**dict.fromkeys(names, 3), "rank": i + 1, "reason": "one sentence"}
         for i, x in enumerate(letters[:2])
     }
+    listed = ", ".join(f"`{c['name']}` ({c['text']})" for c in criteria)
     return "\n".join(
         [
             "# Idea review task",
@@ -62,15 +80,11 @@ def task_text(brief: str, cards: list[str], out: Path) -> str:
             "## How to rate",
             "",
             (
-                "Score each idea from 1 (poor) to 5 (excellent) on: `constraints` (how convincingly "
-                "it meets the brief's hard rules: trading days, turnover, daily closes, long only), "
-                "`drawdown` (how credible its case for staying under a 20 % maximum drawdown is), "
-                "`growth` (long-run growth potential), `diversification` (spread of risk across "
-                "asset classes), and `pursue` (would a quantitative researcher spend a week testing "
-                "it?). Then give every idea a distinct `rank` from 1 (best) to "
-                f"{len(cards)}. Judge substance: mechanism, evidence, and whether the rules are "
-                "really met. Do not reward length, jargon, or confident tone. The order of the ideas "
-                "is random and carries no information. Do not guess who wrote them."
+                f"Score each idea from 1 (poor) to 5 (excellent) on: {listed}. Then give every idea "
+                f"a distinct `rank` from 1 (best) to {len(cards)}. Judge substance: mechanism, "
+                "evidence, and whether the rules are really met. Do not reward length, jargon, or "
+                "confident tone. The order of the ideas is random and carries no information. Do "
+                "not guess who wrote them."
             ),
             "",
             "## Ideas",
@@ -91,9 +105,19 @@ def task_text(brief: str, cards: list[str], out: Path) -> str:
     )
 
 
-def make(run: Path, baseline: Path, out: Path, models: list[str]) -> int:
+def make(
+    run: Path,
+    baseline: Path,
+    out: Path,
+    models: list[str],
+    k: int = 3,
+    reviewers: int | None = None,
+    criteria_path: Path | None = None,
+) -> int:
+    criteria = json.loads(criteria_path.read_text()) if criteria_path else ETF_CRITERIA
+    assert any(c["name"] == "pursue" for c in criteria), "criteria must include 'pursue'"
     top = json.loads(baseline.read_text())["top3"]
-    entries = brainswarm_top(run, 3) + [
+    entries = brainswarm_top(run, k) + [
         {**c, "origin": f"single agent #{i + 1}"} for i, c in enumerate(top)
     ]
     if any(leaks(e) for e in entries):
@@ -104,16 +128,22 @@ def make(run: Path, baseline: Path, out: Path, models: list[str]) -> int:
     assert isinstance(entropy, int)
     base = np.random.default_rng(entropy).permutation(n)
     brief = (run / "brief.md").read_text().strip()
-    key: dict[str, Any] = {"seed": entropy, "reviewers": {}}
+    key: dict[str, Any] = {
+        "seed": entropy,
+        "criteria": [c["name"] for c in criteria],
+        # brainswarm's own final order, so analysis can compare its top 3 with the baseline's
+        "brainswarm_order": [e["origin"] for e in entries if e["origin"].startswith("brainswarm")],
+        "reviewers": {},
+    }
     (out / "tasks").mkdir(parents=True, exist_ok=True)
     (out / "out").mkdir(parents=True, exist_ok=True)
-    for r in range(n):
+    for r in range(reviewers or n):
         order = [int(base[(r + j) % n]) for j in range(n)]  # cyclic Latin square row
         letters = string.ascii_uppercase[:n]
         cards = [render(letters[j], entries[i]) for j, i in enumerate(order)]
         rid = f"r{r + 1}"
         target = (out / "out" / f"{rid}.json").resolve()
-        (out / "tasks" / f"{rid}.md").write_text(task_text(brief, cards, target))
+        (out / "tasks" / f"{rid}.md").write_text(task_text(brief, cards, target, criteria))
         key["reviewers"][rid] = {
             "model": models[r % len(models)],
             "labels": {letters[j]: entries[i]["origin"] for j, i in enumerate(order)},
@@ -140,13 +170,14 @@ def spearman(x: list[float], y: list[float]) -> float:
 
 def analyze(out: Path, figure: Path | None) -> int:
     key = json.loads((out / "key.json").read_text())
+    crit = tuple(key.get("criteria", [c["name"] for c in ETF_CRITERIA]))
     rows: list[dict[str, Any]] = []
     for rid, info in key["reviewers"].items():
         data = json.loads((out / "out" / f"{rid}.json").read_text())["ratings"]
         for position, (letter, origin) in enumerate(info["labels"].items(), start=1):
             rows.append(
                 {"reviewer": rid, "model": info["model"], "origin": origin, "position": position}
-                | {c: data[letter][c] for c in (*CRITERIA, "rank")}
+                | {c: data[letter][c] for c in (*crit, "rank")}
             )
     origins = sorted({r["origin"] for r in rows})
     side = {o: ("brainswarm" if o.startswith("brainswarm") else "single agent") for o in origins}
@@ -156,14 +187,17 @@ def analyze(out: Path, figure: Path | None) -> int:
         mine = [r for r in rows if r["origin"] == o]
         result["per_idea"][o] = {
             "side": side[o],
-            **{c: float(np.mean([r[c] for r in mine])) for c in (*CRITERIA, "rank")},
+            **{c: float(np.mean([r[c] for r in mine])) for c in (*crit, "rank")},
             "ranks": [r["rank"] for r in mine],
         }
+    # Compare brainswarm's own top 3 with the baseline's 3 (the benchmark question), whatever
+    # number of brainswarm cards the reviewers saw.
+    own_top = set(key.get("brainswarm_order", [o for o in origins if side[o] == "brainswarm"])[:3])
     for measure in ("pursue", "rank"):
         diffs = []
         for rid in reviewers:
             mine = [r for r in rows if r["reviewer"] == rid]
-            s = np.mean([r[measure] for r in mine if side[r["origin"]] == "brainswarm"])
+            s = np.mean([r[measure] for r in mine if r["origin"] in own_top])
             b = np.mean([r[measure] for r in mine if side[r["origin"]] == "single agent"])
             diffs.append(float(s - b))
             result["per_reviewer"].setdefault(rid, {})[f"{measure}_diff"] = float(s - b)
@@ -213,10 +247,11 @@ def plot(result: dict[str, Any], path: Path) -> None:
             v["rank"], y, "o", color=c, markersize=10, markeredgecolor=surface, markeredgewidth=2
         )
     ax.set_yticks(range(len(ideas)), ideas, color=ink, fontsize=9)
-    ax.set_xticks(range(1, 7))
-    ax.set_xlim(0.6, 6.4)
+    n = len(ideas)
+    ax.set_xticks(range(1, n + 1))
+    ax.set_xlim(0.6, n + 0.4)
     ax.invert_xaxis()
-    ax.set_xlabel("rank given by each reviewer (6 = worst, 1 = best)", color=ink, fontsize=9)
+    ax.set_xlabel(f"rank given by each reviewer ({n} = worst, 1 = best)", color=ink, fontsize=9)
     ax.grid(axis="x", color=grid, linewidth=0.8)
     ax.set_axisbelow(True)
     for s in ("top", "right"):
@@ -236,7 +271,12 @@ def plot(result: dict[str, Any], path: Path) -> None:
         bbox_to_anchor=(0.5, -0.18),
         ncol=2,
     )
-    ax.set_title("Ranks from six independent reviewers", color=ink, fontsize=10, loc="left")
+    ax.set_title(
+        f"Ranks from {len(next(iter(result['per_idea'].values()))['ranks'])} independent reviewers",
+        color=ink,
+        fontsize=10,
+        loc="left",
+    )
     fig.tight_layout()
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=160, facecolor=surface)
@@ -250,12 +290,17 @@ def main() -> int:
     s.add_argument("baseline", type=Path)
     s.add_argument("out", type=Path)
     s.add_argument("--models", nargs="+", default=["sonnet", "opus", "fable"])
+    s.add_argument("--k", type=int, default=3, help="brainswarm cards shown (its top k)")
+    s.add_argument("--reviewers", type=int, help="default: one per card (full Latin square)")
+    s.add_argument("--criteria", type=Path, help="JSON list of {name, text}; default: ETF")
     s = sub.add_parser("analyze")
     s.add_argument("out", type=Path)
     s.add_argument("--figure", type=Path)
     args = parser.parse_args()
     if args.command == "make":
-        return make(args.run, args.baseline, args.out, args.models)
+        return make(
+            args.run, args.baseline, args.out, args.models, args.k, args.reviewers, args.criteria
+        )
     return analyze(args.out, args.figure)
 
 

@@ -1,0 +1,143 @@
+{
+ "ideas": [
+  {
+   "title": "Baseline-in-the-pool champion gate",
+   "pitch": "Run one strong single agent on the brief as an extra generator and put its self-selected top 3 into the finals pool as 'champions'. The system may only emit an idea that beats every champion in pairwise judging, so its top 3 is chosen from a superset of what the baseline could produce."
+  },
+  {
+   "title": "Benchmark-mirrored final panel",
+   "pitch": "Replace the finals judge with a panel that reproduces the benchmark's rating conditions: identical card rendering, blinding, counterbalanced order, the same rubric and a mix of reviewer models. Selection then optimises the exact quantity the benchmark measures instead of a proxy."
+  },
+  {
+   "title": "Card editor and specificity checker",
+   "pitch": "Add a final editor role that rewrites each finalist card for concreteness, self-containment and the 400-word limit, and a checker that rejects cards missing numbers, a runnable cheapest test or an operational spec. Raters judge cards, so presentation quality directly moves outcomes."
+  },
+  {
+   "title": "Diversity-aware top-3 selection",
+   "pitch": "Choose the top 3 to maximise expected rater preference for the set, penalising pairs from the same idea family, rather than taking the three highest Plackett-Luce scores. This avoids spending two of three slots on near-duplicates that raters score as one idea."
+  },
+  {
+   "title": "Uncertainty-driven pairwise scheduling",
+   "pitch": "Schedule finals comparisons actively, spending the judging budget on pairs whose Bradley-Terry score intervals overlap near the top-3 cutoff. The same budget then yields a more reliable top 3 than round-robin or random pairing."
+  },
+  {
+   "title": "Anti-obvious generator seeding",
+   "pitch": "Have a cheap agent list the 20 most obvious ideas for the brief, then instruct half the generators to avoid them while the other half improves on them. This forces exploration beyond the single agent's modal ideas while keeping strong obvious ones in play."
+  },
+  {
+   "title": "Heterogeneous generator models",
+   "pitch": "Assign different model families, temperatures and personas to generators so their idea distributions differ. Independent generators drawn from one model at one temperature largely resample the same modes, wasting the multi-agent budget."
+  },
+  {
+   "title": "Rubric-aware generation and critique",
+   "pitch": "Give generators and critics the exact criteria the benchmark raters use (novelty, feasibility, expected impact, concreteness) so effort targets what is scored. Critique justifications are required to cite a rubric criterion."
+  },
+  {
+   "title": "Judge accuracy weighting from the library",
+   "pitch": "Store each run's internal critic scores alongside the final benchmark outcome in the idea library and fit per-critic, per-model weights by how well they predicted rater preference. Future runs weight critiques accordingly."
+  },
+  {
+   "title": "Length and position bias control",
+   "pitch": "Normalise card length and counterbalance presentation order in every internal pairwise comparison, and reject judgments that flip under swap. Internal winners then reflect content quality rather than verbosity or slot position."
+  },
+  {
+   "title": "Cross-family hybrid workshop",
+   "pitch": "In the development phase, pair ideas from different families whose critiques show complementary strengths and ask a developer to synthesise a hybrid. Hybrids enter finals alongside their parents and survive only if they beat both."
+  },
+  {
+   "title": "Sandbox pre-validation",
+   "pitch": "For briefs with measurable outcomes, have a role write and run a minimal experiment in the sandbox for each shortlisted idea, attaching the result to the card. Ideas with evidence beat ideas with assertions when outcomes are measured."
+  },
+  {
+   "title": "Library-informed priors",
+   "pitch": "Retrieve past ideas similar to each new idea from the cross-run library, including whether they won or lost against baselines, and show that record to critics. Known losers are penalised early and known winners are extended rather than rediscovered."
+  },
+  {
+   "title": "Adversarial pre-mortem round",
+   "pitch": "Before finals, a red-team role writes the single strongest objection to each finalist and the developer must revise the idea to answer it. Raters see a card whose failure modes are already addressed."
+  },
+  {
+   "title": "Multi-model judge ensemble",
+   "pitch": "Use judges from several model families for finals and aggregate with Plackett-Luce, so no single model's self-preference or taste decides the top 3. This matches a panel of independent raters better than one judge."
+  },
+  {
+   "title": "Independent blind critique",
+   "pitch": "Critics see neither the generator's identity nor other critiques, and each writes its verdict before any aggregation. This prevents early critiques anchoring later ones and homogenising the shortlist."
+  },
+  {
+   "title": "Budget reallocation to development",
+   "pitch": "Cut the number of raw ideas per generator and spend the saved tokens on more development and revision rounds for the shortlist. The benchmark scores only three developed cards, so depth may matter more than breadth."
+  },
+  {
+   "title": "Brief decomposition into axes",
+   "pitch": "A planner splits the brief into distinct solution axes (mechanism, levers, constraints) and assigns generators to different axes. Coverage of the idea space becomes deliberate instead of relying on independent sampling."
+  },
+  {
+   "title": "Self-consistency check on the winner",
+   "pitch": "Rerun the finals with a fresh judge seed and different card orderings, and only accept a top 3 that is stable across reruns. Unstable winners are replaced by the next most stable candidates."
+  },
+  {
+   "title": "Rater-simulation calibration run",
+   "pitch": "Periodically run the full benchmark on a fixed set of briefs and fit which internal signals (critic score, finals score, card length, family) predict rater wins. Use the fitted model to set phase weights and thresholds."
+  }
+ ],
+ "top3": [
+  {
+   "title": "Baseline-in-the-pool champion gate",
+   "pitch": "Run a strong single agent inside the system as an extra generator, seed its self-selected top 3 into finals as champions, and emit only ideas that beat all champions head to head.",
+   "mechanism": "A new 'champion' phase runs in parallel with the independent generators: one strong-model agent receives the brief alone, writes 20 ideas and picks and develops its top 3, exactly as the benchmark baseline does. Its 20 ideas join the generator pool and its developed top 3 are frozen as champion cards. In finals, every candidate is compared pairwise against every champion in addition to the usual comparisons. The final top 3 is drawn from all candidates, champions included, by Plackett-Luce score, and a system idea displaces a champion only if its Bradley-Terry win probability against that champion exceeds 0.5 with its 80% interval above 0.5.",
+   "rationale": "The system's output is then selected from a strict superset of the baseline's candidates. If the internal judge's preference correlates positively with the raters', the expected rated quality of the system top 3 cannot fall below the baseline's, and any gain from multi-agent exploration shows up as displaced champions.",
+   "assumptions": [
+    "Internal pairwise judgments correlate positively with the benchmark raters.",
+    "The in-system champion run is statistically similar to the external baseline run.",
+    "The extra phase costs about one single-agent run, which the budget can absorb."
+   ],
+   "failure_modes": [
+    "If the internal judge disagrees with raters, champions may be wrongly displaced.",
+    "If the output is often the champions themselves, the benchmark ties at best; the log of displacement rate reveals this.",
+    "Judges may recognise champion style; mitigated by rendering all cards in the benchmark's card format."
+   ],
+   "cheapest_test": "On 5 benchmark briefs, compare rater win rate of the system top 3 against the external baseline with and without the gate, logging how often champions survive.",
+   "effort": "About 2 to 3 days: one new state-machine phase, a champion role prompt reusing the baseline task text, and a displacement rule in the scoring module.",
+   "spec": "Phase 'champion' starts after planning, runs concurrently with generators, output = 20 idea stubs + 3 cards tagged champion=true. Finals scheduler: for each non-champion finalist, at least 3 comparisons per champion with order counterbalanced. Selection: fit Plackett-Luce on all comparisons; rank; a non-champion enters the top 3 over a champion only if P(beat champion) > 0.5 with lower 80% bound > 0.5. Log displacement count per run to the idea library."
+  },
+  {
+   "title": "Benchmark-mirrored final panel",
+   "pitch": "Make the system's finals judge reproduce the benchmark's rating conditions exactly, so the ideas it selects are the ones independent raters are most likely to prefer.",
+   "mechanism": "Finalists are rendered into the same card template the benchmark uses (title, pitch, mechanism, rationale, assumptions, failure modes, cheapest test, effort, spec; 400-word cap), stripped of provenance, family tags and critique history. A panel of at least three reviewer models from different families, prompted with the benchmark's rater rubric, judges pairs with both presentation orders. Comparisons whose verdict flips on order swap count as ties. Plackett-Luce scores fitted on panel verdicts pick the top 3.",
+   "rationale": "Current finals judge ideas in an internal format with context the raters never see, so the system optimises a proxy. Mismatch in format, rubric, model or order effects means an idea can win internally and lose externally. Matching the conditions is the most direct way to increase correlation between internal selection and the measured outcome, and it costs no new ideas, only a changed judging step.",
+   "assumptions": [
+    "The benchmark's card template and rubric can be reused by the system's code.",
+    "Rater preferences are partly driven by model-family taste and format, which a mixed panel captures.",
+    "Budget allows roughly doubling finals comparisons for order swaps."
+   ],
+   "failure_modes": [
+    "Overfitting to LLM-rater taste may not transfer to human raters.",
+    "Stripping critique history removes information that could correct judge errors.",
+    "Tie-heavy panels give unstable top-3 choices; mitigated by adding comparisons where intervals overlap."
+   ],
+   "cheapest_test": "Take the finals logs of 5 past runs, re-judge the existing finalists with the mirrored panel, and check whether the newly chosen top 3 wins more often against the baseline in the benchmark than the original top 3.",
+   "effort": "About 2 days: a rendering function shared with the benchmark, a panel role configuration, order-swap logic in the finals phase, and tie handling in the scoring module.",
+   "spec": "Finals input: up to 10 finalists. Render with the benchmark template; remove ids and family labels. Panel: 3 models from distinct families, rubric text copied from the benchmark rater prompt. Each pair judged by each model in both orders (6 verdicts). Order-inconsistent verdicts = tie (0.5). Fit Plackett-Luce; output top 3 by score; store per-model agreement in the idea library."
+  },
+  {
+   "title": "Card editor and specificity checker",
+   "pitch": "Add a final editing role and an automatic checker so every card the system submits is concrete, self-contained and within the word limit, since raters judge the card, not the idea behind it.",
+   "mechanism": "After finals choose the top 3 and before output, an editor agent rewrites each card: it replaces vague verbs with named components, adds numbers (thresholds, budgets, sample sizes), states one runnable cheapest test, removes references to other ideas, and trims to 400 words. A deterministic checker in the state machine then validates the card: every field present, word count at most 400, at least three numeric quantities, no phrases like 'as above' or 'Idea N', and a cheapest test that names an input, a measurement and a decision rule. Failing cards go back to the editor with the checker's error list, up to two retries. An LLM verifier confirms that the edited card's claims do not exceed the developed idea's content.",
+   "rationale": "The benchmark shows raters only the rendered cards. A strong single agent writes coherent cards in one pass, while multi-agent development often produces cards with residue from critique rounds, cross-references and uneven detail. Removing that presentation deficit may win comparisons the underlying ideas already deserve.",
+   "assumptions": [
+    "Some current losses to the baseline come from card quality rather than idea quality.",
+    "Editing can add concreteness without inventing unsupported claims.",
+    "The checker's rules correlate with rater judgments of concreteness."
+   ],
+   "failure_modes": [
+    "The editor invents numbers that raters find implausible; the verifier limits this.",
+    "Uniform editing makes cards formulaic, reducing perceived novelty.",
+    "If idea quality is the real gap, the change yields no gain."
+   ],
+   "cheapest_test": "Take the top 3 cards from 5 past runs, apply the editor and checker offline, and rerun only the benchmark rating step with edited versus original cards against the same baseline cards.",
+   "effort": "About 1 to 2 days: one editor role prompt, a checker function of about 100 lines, a verifier prompt, and a new final phase with retry logic.",
+   "spec": "Phase 'polish' after finals. Editor input: developed idea, its critiques, current card. Checker rules: 9 fields non-empty; words <= 400; >= 3 numbers; regex ban on cross-references; cheapest_test contains input, metric, decision threshold. Max 2 editor retries; on final failure submit the best-scoring version. Verifier: flag any claim not supported by the source; flagged claims are removed."
+  }
+ ]
+}

@@ -1,0 +1,92 @@
+{
+  "I004": {
+    "author": "sonnet",
+    "developer": "opus",
+    "words": 349,
+    "losses": 2
+  },
+  "I003": {
+    "author": "sonnet",
+    "developer": "opus",
+    "words": 326,
+    "losses": 5
+  },
+  "I001": {
+    "author": "opus",
+    "developer": "sonnet",
+    "words": 345,
+    "losses": 1
+  },
+  "I005": {
+    "author": "fable",
+    "developer": "opus",
+    "words": 357,
+    "losses": 2
+  },
+  "I007": {
+    "author": "opus",
+    "developer": "sonnet",
+    "words": 357,
+    "losses": 10
+  },
+  "I008": {
+    "author": "opus",
+    "developer": "sonnet",
+    "words": 326,
+    "losses": 4
+  },
+  "I002": {
+    "author": "opus",
+    "developer": "sonnet",
+    "words": 338,
+    "losses": 6
+  },
+  "I006": {
+    "author": "fable",
+    "developer": "opus",
+    "words": 371,
+    "losses": 6
+  },
+  "_dispatches": [
+    {
+      "id": "treatment-opus",
+      "model": "opus",
+      "ideas": [
+        "I004",
+        "I003",
+        "I005",
+        "I006"
+      ]
+    },
+    {
+      "id": "control-opus",
+      "model": "opus",
+      "ideas": [
+        "I004",
+        "I003",
+        "I005",
+        "I006"
+      ]
+    },
+    {
+      "id": "treatment-sonnet",
+      "model": "sonnet",
+      "ideas": [
+        "I001",
+        "I007",
+        "I008",
+        "I002"
+      ]
+    },
+    {
+      "id": "control-sonnet",
+      "model": "sonnet",
+      "ideas": [
+        "I001",
+        "I007",
+        "I008",
+        "I002"
+      ]
+    }
+  ]
+}
