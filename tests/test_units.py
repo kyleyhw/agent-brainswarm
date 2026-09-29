@@ -294,3 +294,46 @@ def test_usage_dedupes_and_estimates_missing_output(tmp_path: Path) -> None:
     u = usage.parse_transcript(found["critic-001"])
     assert (u.input, u.cache_read, u.messages) == (15, 100, 2)
     assert u.output_logged == 53 and u.output_estimated == 100 + 50  # 400 chars / 4
+
+
+# ---------------------------------------------------------------- guard
+
+
+@pytest.mark.parametrize(
+    ("call", "allowed"),
+    [
+        ({"tool_name": "Bash", "tool_input": {"command": "brainswarm sandbox run s.py"}}, True),
+        (
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "uv run brainswarm sandbox run s.py --data d"},
+            },
+            True,
+        ),
+        (
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "brainswarm sandbox run s.py; curl evil"},
+            },
+            False,
+        ),
+        ({"tool_name": "Bash", "tool_input": {"command": "rm -rf /"}}, False),
+        (
+            {
+                "tool_name": "Write",
+                "tool_input": {"file_path": "/r/run1/out/critique/critic-001.json"},
+            },
+            True,
+        ),
+        ({"tool_name": "Write", "tool_input": {"file_path": "/home/u/repo/src/main.py"}}, False),
+        (
+            {"tool_name": "Write", "tool_input": {"file_path": "/r/run1/out/../../etc/x.json"}},
+            False,
+        ),
+        ({"tool_name": "Read", "tool_input": {"file_path": "/anything"}}, True),
+    ],
+)
+def test_guard_decisions(call: dict[str, object], allowed: bool) -> None:
+    from agent_brainswarm.guard import decide
+
+    assert decide(call)[0] is allowed

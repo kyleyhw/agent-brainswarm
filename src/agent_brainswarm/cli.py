@@ -13,6 +13,7 @@ brainswarm feedback <run> <idea> <starred|pursued|exported|worked|failed> [--not
 brainswarm validate <brainswarm.yaml>
 brainswarm replay <recorded-run> [--into DIR]
 brainswarm sandbox run <script.py> [--data DIR] [--scratch DIR]
+brainswarm guard             PreToolUse hook for role agents (reads JSON on stdin)
 """
 
 from __future__ import annotations
@@ -24,7 +25,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from agent_brainswarm import export, library, pipeline, report, sandbox
+from agent_brainswarm import export, guard, library, pipeline, report, sandbox
 from agent_brainswarm.config import build_config, config_to_dict, load_manifest
 from agent_brainswarm.models import SchemaError
 from agent_brainswarm.state import (
@@ -49,6 +50,7 @@ SUBCOMMANDS: tuple[str, ...] = (
     "validate",
     "replay",
     "sandbox",
+    "guard",
 )
 
 
@@ -227,6 +229,10 @@ def cmd_sandbox(args: argparse.Namespace) -> int:
     return 124 if result.timed_out else result.returncode
 
 
+def cmd_guard(args: argparse.Namespace) -> int:
+    return guard.main()
+
+
 def parser() -> argparse.ArgumentParser:
     """Argument parser for all subcommands."""
     p = argparse.ArgumentParser(
@@ -289,6 +295,9 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--data")
     s.add_argument("--scratch", default="./sandbox-scratch")
     s.set_defaults(func=cmd_sandbox)
+
+    s = sub.add_parser("guard")
+    s.set_defaults(func=cmd_guard)
     return p
 
 
