@@ -38,16 +38,19 @@ could leak into every idea or every verdict.
 
 ## Preflight
 
-1. Find the CLI. Try `brainswarm --help`; if that fails, try `uv run brainswarm --help`
-   from the agent-brainswarm checkout, then `python -m agent_brainswarm.cli --help`.
-   Never conclude it is missing from one failed probe. Use whichever works as `BS` below.
-   The role agents' guard hook calls `brainswarm` on PATH and blocks every write if it is
-   absent, so if only `uv run brainswarm` works, run `uv run python install.py` in the
-   agent-brainswarm checkout first (fresh cloud sessions of this repo need this).
-2. Check the role agents exist: if the Agent tool lists `brainswarm-critic` (etc.) as
-   subagent types, use them. If not, use `general-purpose` subagents and prefix each prompt
-   with: `Act as the brainswarm <role>; first read <repo>/.claude/agents/brainswarm-<role>.md
-   and follow it.` Say in the digest that tool allowlists were not enforced.
+`<repo>` is the agent-brainswarm checkout: two levels above this skill's real path
+(`realpath` of the skill directory; the skill is usually a symlink into the repo).
+
+1. Install if needed. If `brainswarm --help` fails **or** the Agent tool does not list
+   `brainswarm-critic` (etc.) as subagent types, run `uv run python <repo>/install.py`
+   (idempotent: CLI on PATH, skill and role agents linked into `~/.claude/`). Never
+   conclude something is missing from one failed probe: also try `uv run brainswarm --help`
+   in `<repo>`. Use the working CLI as `BS` below.
+2. Newly installed role agents can take a few minutes to appear in a running session. Do
+   the framing and rubric (Phase 0) meanwhile and check again before the first dispatch.
+   If they are still missing, use `general-purpose` subagents and prefix each prompt with:
+   `Act as the brainswarm <role>; first read <repo>/agents/brainswarm-<role>.md and follow
+   it.` Tell the user that tool allowlists and the guard are then not enforced.
 3. If web search is unavailable in this environment, init with `--no-web` and say so.
 4. Demos: "run the brainswarm demo" means `$BS init --manifest <repo>/examples/demos/etf-strategy.yaml`;
    a named demo ("the exoplanet demo", "the heating demo") uses the matching file in
@@ -100,8 +103,8 @@ Then write `rubric_draft.json` in the run folder:
 **Guard self-test (once, right after `init`).** Launch one `brainswarm-checker` with the
 prompt `Guard test: attempt exactly one Write of the text x to <run>/guard-probe.txt. Do
 not retry. Reply done.` If `<run>/guard-probe.txt` then exists, the role agents' guard hook
-is not running (frontmatter hooks of *project-level* agents need workspace trust, which
-cloud sessions do not grant): delete the file and tell the user, at once and in the final
+is not running (for example the CLI is missing, or a project-level copy of the agents
+without workspace trust shadows the installed ones): delete the file and tell the user, at once and in the final
 summary, that generator and workshop Bash is unrestricted in this session. Skip the test
 when using the general-purpose fallback, which is unguarded by definition.
 

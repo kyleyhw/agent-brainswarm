@@ -648,8 +648,9 @@ blind spot the interval is narrow and wrong. Every report says so.
   for user-level agents, and did not run at all for the project-level
   agent in a fresh cloud session opened on this repository (the probe's
   write succeeded, no hook record). The referee therefore runs a guard
-  self-test after `init` and says so when the guard is inactive; moving
-  the role files out of `.claude/agents/` is an open decision (§20). When role
+  self-test after `init` and says so when the guard is inactive, and the
+  role files live in `agents/`, which Claude Code does not load, so the
+  only loaded copies are the user-level links `install.py` makes. When role
   agents are not installed, the referee falls back to general-purpose
   subagents that read their role file; the allowlists and hook are then
   **not** enforced, and the digest says so.
@@ -664,7 +665,7 @@ code enforces what prose cannot.**
 ```
 agent-brainswarm/
   .claude/skills/brainswarm/SKILL.md     # the referee: a thin loop over next / ingest
-  .claude/agents/brainswarm-*.md         # 9 roles: allowlists + guard hook
+  agents/brainswarm-*.md                 # 9 roles: allowlists + guard hook (linked user-level)
   src/agent_brainswarm/                  # the "hands"
   docs/DESIGN.md  docs/studies/  docs/figures/
   examples/                              # demo manifest, recorded demo run, replay script
@@ -890,11 +891,6 @@ like *evolve*.
 - Band-share defaults and generator count, once per-band yield and the
   yield curve are logged.
 - Whether to add an optional `seed_hypotheses` field to agent-evolve.
-- Where the role files live. In `.claude/agents/` they load automatically in
-  sessions on this repository but, without workspace trust, run unguarded
-  and shadow the guarded user-level copies. Moving them (e.g. to `agents/`,
-  linked user-level by `install.py`) keeps the guard wherever they load, at
-  the cost of an install step before the first run in a fresh session.
 
 ## 21. Design review
 

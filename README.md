@@ -40,9 +40,12 @@ git clone --depth 1 https://github.com/kyleyhw/agent-brainswarm ~/agent-brainswa
   && (cd ~/agent-brainswarm && uv run python install.py)
 ```
 
-Sessions opened on this repository itself already load the skill and role
-agents from `.claude/`; the skill installs the CLI on first use, because the
-role agents' guard hook needs `brainswarm` on PATH and blocks writes without it.
+Without the setup script, the skill runs the installer itself on first use;
+role agents installed mid-session can take a few minutes to appear. The role
+files live in `agents/` rather than `.claude/agents/` on purpose: Claude Code
+runs a project-level agent's guard hook only after workspace trust, which
+cloud sessions never grant, so only the installed user-level links are
+guaranteed to be guarded.
 
 ## Documentation
 
@@ -60,11 +63,11 @@ role agents' guard hook needs `brainswarm` on PATH and blocks writes without it.
 
 ```
 agent-brainswarm/
-├── .claude/
-│   ├── skills/brainswarm/SKILL.md   # /brainswarm: the referee, a thin loop over next/ingest
-│   └── agents/brainswarm-*.md       # 9 roles with tool allowlists and the guard hook:
-│                                    #   ideator, generator, clusterer, critic, checker,
-│                                    #   advocate, workshop, judge, rubric-auditor
+├── .claude/skills/brainswarm/SKILL.md  # /brainswarm: the referee, a thin loop over next/ingest
+├── agents/brainswarm-*.md           # 9 roles with tool allowlists and the guard hook, linked
+│                                    #   into ~/.claude/agents by install.py: ideator, generator,
+│                                    #   clusterer, critic, checker, advocate, workshop, judge,
+│                                    #   rubric-auditor
 ├── src/agent_brainswarm/
 │   ├── pipeline.py                  # the state machine (plan / check / finish per phase)
 │   ├── scoring.py                   # Bradley–Terry / Plackett–Luce, Laplace, bootstrap

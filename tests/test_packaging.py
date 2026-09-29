@@ -39,7 +39,7 @@ def test_every_dispatched_role_has_a_guarded_agent_definition() -> None:
     roles = set(re.findall(r'_dispatch\(\s*run,\s*[^,]+,\s*[^,]+,\s*"([a-z-]+)"', source))
     assert {"ideator", "generator", "clusterer", "critic", "judge", "workshop"} <= roles
     for role in roles:
-        text = (REPO / f".claude/agents/brainswarm-{role}.md").read_text()
+        text = (REPO / f"agents/brainswarm-{role}.md").read_text()
         front = yaml.safe_load(text.split("---")[1])
         assert front["name"] == f"brainswarm-{role}"
         assert front["hooks"]["PreToolUse"][0]["hooks"][0]["command"] == hook_command()
@@ -65,7 +65,7 @@ def test_installer_links_skill_and_agents(tmp_path: Path, monkeypatch: pytest.Mo
 
 def hook_command() -> str:
     """The guard hook command shared by every role agent."""
-    text = (REPO / ".claude/agents/brainswarm-judge.md").read_text()
+    text = (REPO / "agents/brainswarm-judge.md").read_text()
     front = yaml.safe_load(text.split("---")[1])
     return front["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
 

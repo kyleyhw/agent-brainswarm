@@ -10,8 +10,11 @@ What it does:
 1. Installs the package as a uv tool (editable), so the ``brainswarm`` CLI,
    which the skill and the role guard hook call, is on PATH everywhere.
 2. Symlinks ``.claude/skills/brainswarm`` into ``~/.claude/skills/`` and every
-   ``.claude/agents/brainswarm-*.md`` into ``~/.claude/agents/``, so
-   ``/brainswarm`` and its roles exist in every Claude Code session.
+   ``agents/brainswarm-*.md`` into ``~/.claude/agents/``, so ``/brainswarm``
+   and its roles exist in every Claude Code session. The role files live in
+   ``agents/``, not ``.claude/agents/``: project-level agents run their guard
+   hook only after workspace trust (never granted in cloud sessions) and
+   would shadow these user-level links, whose hooks always run.
 
 ``--force`` replaces existing links; ``--skip-python`` / ``--skip-skills``
 skip a step. Where symlinks are not permitted (e.g. Windows without
@@ -63,7 +66,7 @@ def install_skills(force: bool) -> list[str]:
     """Link the skill folder and every role agent file into the user config."""
     home = claude_dir()
     lines = [link(REPO / ".claude/skills/brainswarm", home / "skills/brainswarm", force)]
-    for agent in sorted((REPO / ".claude/agents").glob("brainswarm-*.md")):
+    for agent in sorted((REPO / "agents").glob("brainswarm-*.md")):
         lines.append(link(agent, home / "agents" / agent.name, force))
     return lines
 
