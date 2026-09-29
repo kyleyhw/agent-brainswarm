@@ -63,3 +63,24 @@ These ran against the real platform, not fakes. Where a check needed tokens its 
   Under the crossover schedule no pair flipped, so the estimate is exactly 0 by symmetry; the
   test now requires $\gamma$ not to be negative, and recovery is tested in `test_scoring.py`
   with 400 simulated matches.
+
+## Generic-critique checker (2026-09-30)
+
+**What and why.** The substitution test flagged 3 of the demo's 66 critiques as generic; all 3
+quote a formula from their idea and compute with its parameters, so all 3 were false
+positives. Causes: the checker saw only each critique's mechanism (not its quoted target or
+evidence), the comparison idea came from the critic's own batch (often a close relative, so a
+shared flaw "transferred"), and the definition blurred *generic* with *shared*.
+
+**Fix.** The checker sees target, mechanism and evidence; the comparison idea comes from a
+different cluster when one exists; generic means the argument uses nothing specific to the
+idea; each verdict carries a one-line reason. Old `transfers` verdicts still load, so the
+recorded run replays exactly.
+
+| Check | Inputs and their rationale | Result |
+|---|---|---|
+| `test_checker_compares_against_a_different_cluster` | A fixture run branched at the checker; every critique/comparison pair in the task files must span two clusters, and the task must show target and evidence | pass |
+| Live rerun of the demo's checker phase (3 dispatches, ~87k tokens) | The same 66 critiques with the new prompt, to see whether the 3 false positives clear | 0 of 66 flagged; the 3 former flags cleared, each reason citing the idea-specific formula or numbers |
+| Live planted test (1 dispatch, ~16k tokens) | 3 deliberately generic critiques ("may overfit", "costs could erode returns", "unproven") in the house format with real quotes and disguised ids, interleaved with the 3 specific ones, so a checker that says "not generic" to everything would fail | 6 of 6 correct: 3 planted flagged, 3 specific cleared |
+
+Six items is a small sample: the test shows the checker can discriminate, not its error rates.

@@ -732,14 +732,23 @@ def _critic_model(run: Run, did: str) -> str:
 def plan_checker(run: Run) -> list[Dispatch]:
     checked = [c for c in load_checked(run) if c.counts]
     cards = _cards(run)
+    cluster_of = run.read("data", "clusters.json")["cluster_of"]
+    originals = sorted(k for k, c in cards.items() if c.version == 1)
     rng = _rng(run, "checker")
     rows = []
     for item in checked:
-        batch = [x for x in _batch(run, item.critique.critic_id) if x != item.critique.idea_id]
-        if not batch:
+        own = item.critique.idea_id
+        # A dissimilar comparison idea: a flaw shared with a close relative is not "generic".
+        # Prefer the critic's batch, then any idea, from a different cluster.
+        batch = [x for x in _batch(run, item.critique.critic_id) if x != own]
+        pool = (
+            [x for x in batch if cluster_of.get(x) != cluster_of.get(own)]
+            or [x for x in originals if x != own and cluster_of.get(x) != cluster_of.get(own)]
+            or batch
+        )
+        if not pool:
             continue
-        other = batch[int(rng.integers(len(batch)))]
-        rows.append((item.critique, other))
+        rows.append((item.critique, pool[int(rng.integers(len(pool)))]))
     out = []
     for n, start in enumerate(range(0, len(rows), CHECKS_PER_DISPATCH)):
         chunk = rows[start : start + CHECKS_PER_DISPATCH]
@@ -747,15 +756,27 @@ def plan_checker(run: Run) -> list[Dispatch]:
         for c, other in chunk:
             o = cards[other]
             lines.append(
-                f"### {c.id}\nCritique of {c.idea_id} ({cards[c.idea_id].title}): {c.mechanism}\n"
-                f"Other idea {o.id}: **{o.title}**. {o.pitch} Mechanism: {o.mechanism[:300]}"
+                f"### {c.id}\nCritique of {c.idea_id} ({cards[c.idea_id].title})\n"
+                f'- target (quoted from the idea): "{c.target}"\n- mechanism: {c.mechanism}\n'
+                f"- evidence: {c.evidence}\n\n"
+                f"Comparison idea {o.id}: **{o.title}**. {o.pitch} Mechanism: {o.mechanism[:300]}"
             )
         body = (
-            "## Substitution test\n\nFor each critique, decide whether it would be *equally valid* "
-            "if aimed at the other idea shown. A critique that transfers unchanged is generic "
-            "(it attacks the problem, not the idea).\n\n" + "\n\n".join(lines)
+            "## Generic-critique test\n\nA critique is **generic** when its argument uses nothing "
+            "specific to the idea it attacks: no quoted rule, parameter, number or design choice of "
+            "that idea is needed, so it would be about as true of most ideas for this brief (for "
+            "example 'unproven', 'may overfit', 'execution risk', 'markets change'). The "
+            "comparison idea is a quick check: if the critique could be pasted onto it unchanged, "
+            "target and evidence included, and still make sense, it is generic.\n\n"
+            "A critique is **not** generic when its target or evidence depends on this idea's own "
+            "text, formulas or numbers, even if other ideas share the same flaw. A correct, "
+            "specific critique of a common flaw is valuable; do not flag it.\n\n"
+            "Give a one-sentence reason for every verdict.\n\n" + "\n\n".join(lines)
         )
-        schema = '{"verdicts": [{"critique_id": "critic-001-01", "transfers": false}]}'
+        schema = (
+            '{"verdicts": [{"critique_id": "critic-001-01", "generic": false, '
+            '"reason": "evidence computes weights from the card\'s own formula"}]}'
+        )
         did = f"check-{n + 1:03d}"
         out.append(
             _dispatch(run, "checker", did, "checker", _config(run).critic_models[0], body, schema)
@@ -787,7 +808,8 @@ def finish_checker(run: Run, results: dict[str, Any]) -> list[str]:
         v["critique_id"]
         for data in results.values()
         for v in data["verdicts"]
-        if isinstance(v, dict) and v.get("transfers")
+        # "transfers" is the key used before 2026-09-30; kept so recorded runs replay.
+        if isinstance(v, dict) and v.get("generic", v.get("transfers"))
     }
     checked = load_checked(run)
     merged = merge_flags(checked, repetition_flags(c.critique for c in checked), generic)

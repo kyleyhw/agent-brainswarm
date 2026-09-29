@@ -247,3 +247,20 @@ def test_rebuilt_report_does_not_repeat_limitations(tmp_path: Path) -> None:
     digest = run.path("digest.txt").read_text()
     assert digest.count("Limitations:") == 1
     assert digest.count("3 failed the substitution test") == 1
+
+
+def test_checker_compares_against_a_different_cluster(tmp_path: Path) -> None:
+    # Regression: comparing with a close relative flagged specific critiques of shared flaws.
+    import re
+
+    run = new_run(tmp_path)
+    drive(run)
+    branch = cli.replay(run.root, tmp_path / "b", until="checker")
+    cluster_of = branch.read("data", "clusters.json")["cluster_of"]
+    dispatches = pipeline.plan_checker(branch)
+    assert dispatches
+    for d in dispatches:
+        text = branch.path("tasks", "checker", f"{d.id}.md").read_text()
+        assert "evidence:" in text and "target (quoted from the idea)" in text
+        pairs = re.findall(r"Critique of (I\d+).*?Comparison idea (I\d+)", text, flags=re.DOTALL)
+        assert pairs and all(cluster_of[a] != cluster_of[b] for a, b in pairs)

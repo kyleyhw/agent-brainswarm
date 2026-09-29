@@ -188,7 +188,9 @@ def respond(run: Run, phase: str, dispatch_id: str) -> dict[str, Any]:
         task = run.path("tasks", "checker", f"{dispatch_id}.md").read_text()
         ids = re.findall(r"^### (\S+)$", task, flags=re.MULTILINE)
         return {
-            "verdicts": [{"critique_id": c, "transfers": bool(rng.random() < 0.1)} for c in ids]
+            "verdicts": [
+                {"critique_id": c, "generic": bool(rng.random() < 0.1), "reason": "r"} for c in ids
+            ]
         }
     if phase == "advocate":
         return {"promote": []}

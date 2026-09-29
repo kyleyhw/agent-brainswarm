@@ -751,7 +751,7 @@ new tokens instead of at least 1.41M.
 | Shared model priors | repeat rate across runs; cross-model agreement | external CLIs later |
 | Rubric misinferred (autonomous) | rubric-audit disagreements; assumptions log | shown in preflight so the user can interrupt |
 | Critics harsher on novel ideas | novelty–rank correlation | tighten the "unproven" rule |
-| Generic filter miscalibrated | flag rate; random spot-checks | recalibrate substitution test |
+| Generic filter miscalibrated | flag rate; random spot-checks; planted generic critiques | the demo's 3 flags were all false positives; fixed 2026-09-30 (full critique shown, comparison idea from another cluster, stricter definition); a planted test scored 6 of 6 |
 | Judge position bias [[10]](#ref-zheng-2023) | estimated $\gamma$ (§10); demo crossover: first listed won 20 of 24, each model flipping with the order in 4 of 6 pairs | crossover schedule: each model judges both orders of its pairs in different dispatches, and $\gamma$ is removed from the strengths; a prompt fix alone did not help (§17) |
 | Workshop claims every fix | share of responses marked `fixed` (35 of 35 in the rerun) | re-critique checks claimed fixes against the card (§20) |
 | Workshop variance | finals order across repeated workshop attempts | rank intervals are conditional on the cards (§20) |
