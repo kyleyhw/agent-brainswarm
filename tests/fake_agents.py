@@ -248,7 +248,9 @@ def respond(run: Run, phase: str, dispatch_id: str) -> dict[str, Any]:
             verdicts.append(
                 {
                     "pair_id": f"{dispatch_id}-{i + 1:02d}",
-                    "preferred": "first" if margin > 0 else "second",
+                    "strengths": {a: "s", b: "s"},
+                    "winner": a if margin > 0 else b,
+                    "criterion": "growth",
                     "reason": "r",
                 }
             )

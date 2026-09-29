@@ -64,6 +64,19 @@ from agent_brainswarm.state import Run
 # (verbosity bias, DESIGN.md §15), and so a 6-card critic batch stays
 # around 3k words of input.
 CARD_WORD_CAP = 400
+# Per-field split of CARD_WORD_CAP shown to workshop agents (3 of 4 overshot in the demo).
+# Sums to 390, leaving 10 words of slack; the mechanism gets the most because it carries the idea.
+WORKSHOP_BUDGET = {
+    "title": 10,
+    "pitch": 40,
+    "mechanism": 120,
+    "rationale": 50,
+    "assumptions": 40,
+    "failure_modes": 40,
+    "cheapest_test": 40,
+    "effort": 15,
+    "spec": 35,
+}
 # Critics rank only their top 3: truncated Plackett-Luce avoids trusting
 # the unreliable tail of a long listwise ranking.
 RANKING_DEPTH = 3
@@ -149,7 +162,7 @@ def _card_md(card: IdeaCard) -> str:
     return "\n\n".join(parts)
 
 
-def _words(card: CardDraft) -> int:
+def _words(card: CardDraft | IdeaCard) -> int:
     fields = [card.title, card.pitch, card.mechanism, card.rationale, card.cheapest_test]
     fields += [card.effort, card.spec or "", *card.assumptions, *card.failure_modes]
     return sum(len(f.split()) for f in fields)
@@ -953,7 +966,11 @@ def plan_workshop(run: Run) -> list[Dispatch]:
             "evidence), or `conceded` (a known limitation). Deepen the mechanism, give a concrete "
             "plan, the cheapest first experiment, and a kill criterion. You may graft strengths from "
             "siblings (list their ids). It must remain *the same idea*; a different idea belongs "
-            f"elsewhere. Stay under {CARD_WORD_CAP} words."
+            f"elsewhere.\n\n## Word budget\n\nThe card is capped at {CARD_WORD_CAP} words "
+            f"(this version: {_words(card)}). Answers to critiques go in `responses`, which does "
+            "not count; the card states the improved idea, not the debate. Suggested budget: "
+            + ", ".join(f"{k} {v}" for k, v in WORKSHOP_BUDGET.items())
+            + " words."
         )
         schema = (
             '{"card": ' + CARD_OBJECT + ", "
@@ -1205,17 +1222,24 @@ def _judge_plan(run: Run, pairs: Sequence[tuple[str, str]], phase: str) -> list[
                 _card_md(cards[x]) + (f"\n\n*Critique record.* {extra}" if extra else "")
             )
         pairs_md = "\n".join(
-            f"- `{b.dispatch_id}-{i + 1:02d}`: first **{a}**, second **{c}**"
+            f"- `{b.dispatch_id}-{i + 1:02d}`: **{a}** vs **{c}**"
             for i, (a, c) in enumerate(b.pairs)
         )
+        judged = ", ".join(f"`{c.name}`" for c in r.criteria if c.kind != "gate")
         body = (
             f"{_brief_block(run)}\n\n## Rubric\n\n{_rubric_text(r)}\n\n## Ideas\n\n"
             + "\n\n".join(cards_md)
             + f"\n\n## Matches\n\n{pairs_md}\n\n## Your job\n\nFor each match, given this brief and rubric, "
-            "which idea would you rather pursue? Judge substance, not length or polish. Give a "
-            "one-sentence reason."
+            "which idea would you rather pursue? Before deciding, write the strongest point of "
+            "*each* idea in the match. Then name the winner by its id, the rubric criterion that "
+            f"decided it (one of {judged}), and a one-sentence reason naming the deciding "
+            "difference. Judge substance, not length or polish. The order in which a match lists "
+            "its two ideas carries no information."
         )
-        schema = '{"verdicts": [{"pair_id": "judge-001-01", "preferred": "first|second", "reason": "..."}]}'
+        schema = (
+            '{"verdicts": [{"pair_id": "finals-001-01", "strengths": {"I001-v2": "...", '
+            '"I005-v2": "..."}, "winner": "I005-v2", "criterion": "robustness", "reason": "..."}]}'
+        )
         out.append(_dispatch(run, phase, b.dispatch_id, "judge", b.model, body, schema))
     return out
 
@@ -1265,10 +1289,25 @@ def check_judges(run: Run, d: Dispatch, data: Any) -> list[str]:
         return problems
     lookup = _pair_lookup(run)
     expected = {k for k, v in lookup.items() if v[2] == d.id}
+    judged = {c.name for c in _rubric(run).criteria if c.kind != "gate"}
     got = set()
     for i, v in enumerate(data.get("verdicts", [])):
-        if not isinstance(v, dict) or v.get("preferred") not in ("first", "second"):
-            problems.append(f"verdicts[{i}]: preferred must be first|second")
+        if not isinstance(v, dict):
+            problems.append(f"verdicts[{i}]: must be an object")
+            continue
+        pair = lookup.get(v.get("pair_id", ""))
+        if "winner" not in v and v.get("preferred") in ("first", "second"):
+            got.add(v.get("pair_id"))  # legacy format, kept so recorded runs replay
+            continue
+        if pair is None:
+            problems.append(f"verdicts[{i}]: unknown pair_id {v.get('pair_id')!r}")
+            continue
+        if v.get("winner") not in pair[:2]:
+            problems.append(f"verdicts[{i}]: winner must be {pair[0]} or {pair[1]}")
+        elif v.get("criterion") not in judged:
+            problems.append(f"verdicts[{i}]: criterion must be one of {sorted(judged)}")
+        elif not isinstance(v.get("strengths"), dict) or set(v["strengths"]) != set(pair[:2]):
+            problems.append(f"verdicts[{i}]: strengths must give one entry for each of {pair[:2]}")
         else:
             got.add(v.get("pair_id"))
     if expected - got:
@@ -1284,12 +1323,13 @@ def finish_judges(run: Run, results: dict[str, Any]) -> list[str]:
         for v in data["verdicts"]:
             if v.get("pair_id") in lookup:
                 a, c, _ = lookup[v["pair_id"]]
+                if "winner" in v:
+                    preferred = "first" if v["winner"] == a else "second"
+                    criterion = v["criterion"]
+                else:
+                    preferred, criterion = v["preferred"], "overall"
                 matches.append(
-                    dump(
-                        Match(
-                            did, models[did], a, c, v["preferred"], "overall", v.get("reason", "")
-                        )
-                    )
+                    dump(Match(did, models[did], a, c, preferred, criterion, v.get("reason", "")))
                 )
     run.write(matches, "data", "matches.json")
     return [f"judged {len(matches)} ordered matches so far"]

@@ -18,7 +18,9 @@ idea you would rather pursue.
 - Do not reward length, polish, or confident tone. Do not favour whichever idea is shown
   first; position bias is measured.
 - Each match is independent; the same idea may appear in several matches.
-- Give a one-sentence reason naming the deciding difference.
+- Before deciding, write the strongest point of *each* idea. Then name the winner by its id
+  (never "first" or "second"), the judged rubric criterion that decided it, and a
+  one-sentence reason naming the deciding difference.
 
 ## Rules for every brainswarm role
 

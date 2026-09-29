@@ -11,7 +11,7 @@ brainswarm report <run>      re-render the report
 brainswarm export <run> [--top N | --idea ID] [--out DIR]
 brainswarm feedback <run> <idea> <starred|pursued|exported|worked|failed> [--note ...]
 brainswarm validate <brainswarm.yaml>
-brainswarm replay <recorded-run> [--into DIR]
+brainswarm replay <recorded-run> [--into DIR] [--until PHASE]
 brainswarm sandbox run <script.py> [--data DIR] [--scratch DIR]
 brainswarm guard             PreToolUse hook for role agents (reads JSON on stdin)
 """
@@ -174,8 +174,12 @@ def cmd_validate(args: argparse.Namespace) -> int:
     return 0
 
 
-def replay(recorded: Path, into: Path) -> Run:
-    """Re-run the code layer over a recorded run's agent outputs (zero tokens)."""
+def replay(recorded: Path, into: Path, until: str | None = None) -> Run:
+    """Re-run the code layer over a recorded run's agent outputs (zero tokens).
+
+    With ``until``, stop when that phase is about to be planned and leave the run live there:
+    a branch of the recorded run whose later phases can be re-run by real agents.
+    """
     source = Run(recorded)
     config = source.read("config.json")
     run = Run(into / source.root.name)
@@ -187,6 +191,8 @@ def replay(recorded: Path, into: Path) -> Run:
     run.write({**pipeline.init_status(), "project": f"replay-{source.root.name}"}, "status.json")
     shutil.copy(source.path("rubric_draft.json"), run.path("rubric_draft.json"))
     while True:
+        if until is not None and run.status["phase"] == until:
+            return run
         step = pipeline.next_step(run)
         if step["action"] == "done":
             return run
@@ -213,7 +219,12 @@ def replay(recorded: Path, into: Path) -> Run:
 
 
 def cmd_replay(args: argparse.Namespace) -> int:
-    run = replay(Path(args.recorded), Path(args.into or Path.cwd() / "brainswarm-replay"))
+    run = replay(
+        Path(args.recorded), Path(args.into or Path.cwd() / "brainswarm-replay"), args.until
+    )
+    if args.until:
+        print(f"branched at {args.until}: {run.root}")
+        return 0
     print(run.path("digest.txt").read_text())
     return 0
 
@@ -290,6 +301,7 @@ def parser() -> argparse.ArgumentParser:
     s = sub.add_parser("replay")
     s.add_argument("recorded")
     s.add_argument("--into")
+    s.add_argument("--until", choices=list(pipeline.PHASES), help="branch: stop before this phase")
     s.set_defaults(func=cmd_replay)
 
     s = sub.add_parser("sandbox")

@@ -186,3 +186,40 @@ def test_fixable_gate_citations_do_not_remove_ideas_from_finals(tmp_path: Path) 
         if v == "fixable" and f"{k}-v2" in run.read("data", "cards.json")
     ]
     assert all(f"{k}-v2" in finalists for k in fixable_developed)
+
+
+def test_replay_until_branches_a_live_run(tmp_path: Path) -> None:
+    run = new_run(tmp_path)
+    drive(run)
+    branch = cli.replay(run.root, tmp_path / "branch", until="finals")
+    assert branch.status["phase"] == "finals" and not branch.exists("data", "matches.json")
+    drive(branch)  # new agents finish the branch
+    assert branch.status["phase"] == "done"
+    assert branch.read("data", "final.json")["ids"] == run.read("data", "final.json")["ids"]
+
+
+def test_judge_verdicts_name_winner_and_criterion(tmp_path: Path) -> None:
+    run = new_run(tmp_path)
+    branch_root = tmp_path / "b"
+    drive(run)
+    branch = cli.replay(run.root, branch_root, until="finals")
+    step = pipeline.next_step(branch)
+    d = pipeline.Dispatch(**branch.status["dispatches"][0])
+    batch = next(b for b in branch.read("data", "judge_batches.json") if b["dispatch_id"] == d.id)
+    a, b = batch["pairs"][0]
+    pid = f"{d.id}-01"
+    good = {"pair_id": pid, "strengths": {a: "x", b: "y"}, "winner": b, "criterion": "growth"}
+    rest = [
+        {"pair_id": f"{d.id}-{i + 1:02d}", "preferred": "first"}  # legacy format still accepted
+        for i in range(1, len(batch["pairs"]))
+    ]
+    assert pipeline.check_judges(branch, d, {"verdicts": [good, *rest]}) == []
+    for bad, why in (
+        ({**good, "winner": "first"}, "winner must be"),
+        ({**good, "criterion": "trades_daily"}, "criterion must be"),  # a gate, not judged
+        ({**good, "strengths": {a: "x"}}, "strengths must"),
+    ):
+        problems = pipeline.check_judges(branch, d, {"verdicts": [bad, *rest]})
+        assert any(why in p for p in problems), (bad, problems)
+    task = branch.path("tasks", "finals", f"{d.id}.md").read_text()
+    assert step["phase"] == "finals" and f"**{a}** vs **{b}**" in task and "first**" not in task
