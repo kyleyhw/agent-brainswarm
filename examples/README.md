@@ -2,7 +2,9 @@
 
 | File | What it is |
 |---|---|
-| `brainswarm-demo.yaml` | Manifest for the live mini demo |
+| `demos/etf-strategy.yaml` | Manifest for the live mini demo: a rule-based ETF trading strategy (recorded below) |
+| `demos/exoplanet-transit.yaml` | Manifest: a low-cost exoplanet-transit setup for a 20 cm amateur telescope (not yet run) |
+| `demos/home-heating.yaml` | Manifest: cutting home heating energy by 30 % for under $3,000 (not yet run) |
 | `demo-run/` | A recorded live run of that manifest: brief, config, rubric, every task file and agent output, the code-owned `data/`, and the rendered `report.md` / `report.html` |
 | `demo_run.py` | Offline replay: re-runs the code layer over the recorded agent outputs (zero tokens) and checks the ranking is reproduced exactly |
 
@@ -13,8 +15,16 @@ uv run python examples/demo_run.py        # offline, zero tokens, ~5 s
 ```
 
 Live (in Claude Code, after `uv run python install.py`): say "run the
-brainswarm demo", or `brainswarm init --manifest examples/brainswarm-demo.yaml`
-and follow `/brainswarm`.
+brainswarm demo", or `brainswarm init --manifest examples/demos/<name>.yaml`
+and follow `/brainswarm`. All three manifests use the same reduced `quick`
+size as the recorded run (4 generators x 2 ideas, 2 critic reviews per
+idea, 4 workshop slots, web off), so each should cost about 0.9M new
+tokens. The two unrun briefs were chosen because their outcomes are
+measurable against physics rather than taste: photometric scatter in
+mmag per bin for the transit setup, and heat-loss arithmetic
+($Q = UA\,\Delta T$ summed over heating degree-days) for the house. They
+therefore test whether critics catch quantitative errors, which the
+trading brief could not.
 
 ## The recorded run (2026-09-29)
 

@@ -61,7 +61,7 @@ agent-brainswarm/
 │   ├── export.py  sandbox.py        # agent-evolve bundles; Docker runner
 │   └── guard.py  models.py  config.py  rubric.py  state.py  cli.py
 ├── docs/  DESIGN.md  studies/  figures/
-├── examples/                        # demo manifest, recorded demo run, offline replay
+├── examples/                        # demos/ (3 manifests), recorded demo run, offline replay
 ├── tests/                           # unit + end-to-end tests with fake agents; reports/
 ├── install.py  PROJECT_PLAN.md  CLAUDE.md
 └── pyproject.toml  uv.lock  .pre-commit-config.yaml  .secrets.baseline
@@ -130,9 +130,14 @@ Derivations are in [`docs/DESIGN.md` §10](docs/DESIGN.md#10-scoring).
 - **Offline, zero tokens:** `uv run python examples/demo_run.py` replays a
   recorded live run through the real code and checks that the ranking is
   reproduced exactly.
-- **Live, ~0.9M new tokens:** in Claude Code, say "run the brainswarm demo"
-  (`brainswarm init --manifest examples/brainswarm-demo.yaml`). The brief
-  is a concrete ETF trading strategy with stated gates.
+- **Live, ~0.9M new tokens each:** in Claude Code, say "run the brainswarm
+  demo" or `brainswarm init --manifest examples/demos/<name>.yaml`. Three
+  concrete briefs with stated constraints:
+  - `etf-strategy.yaml`: a rule-based ETF trading strategy (recorded run);
+  - `exoplanet-transit.yaml`: a low-cost transit-photometry setup for a
+    20 cm amateur telescope;
+  - `home-heating.yaml`: cutting a house's heating energy by 30 % for
+    under $3,000.
 
 See [`examples/README.md`](examples/README.md) for the recorded results.
 
@@ -140,7 +145,7 @@ See [`examples/README.md`](examples/README.md) for the recorded results.
 
 ```bash
 uv sync
-uv run pytest                        # 62 tests incl. end-to-end runs with fake agents
+uv run pytest                        # 63 tests incl. end-to-end runs with fake agents
 uv run ruff check . && uv run ty check
 uv run pre-commit install            # ruff, ruff-format, secret scanning, ty on commit
 ```

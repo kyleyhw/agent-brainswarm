@@ -766,11 +766,14 @@ Status as of 2026-09-29:
   recorded live run through the real code (rubric freeze, assignment,
   critique checks, fits, report, library) and checks that the ranking is
   reproduced exactly.
-- **Live:** `examples/brainswarm-demo.yaml`, a concrete ETF strategy brief
+- **Live:** three manifests in `examples/demos/`. The recorded one,
+  `etf-strategy.yaml`, is a concrete ETF strategy brief
   with five user-stated gates, at reduced `quick` size with web off. The
   recorded run cost about 0.9M new tokens and 3.9M cache reads (the
   earlier estimate of 0.3M was low: general-purpose fallback dispatches and
-  retries cost more than role agents).
+  retries cost more than role agents). `exoplanet-transit.yaml` and
+  `home-heating.yaml` are physically checkable briefs (photometric noise
+  budget; heat-loss arithmetic) at the same size, not yet run.
 
 The recorded run's main finding: judges preferred the first-shown idea in
 11 of 12 verdicts ($\gamma = 1.93$). The both-orders design and the

@@ -1,0 +1,33 @@
+# Live demo: a low-cost exoplanet-transit setup for a 20 cm amateur telescope.
+# Run: brainswarm init --manifest examples/demos/exoplanet-transit.yaml
+# Same reduced size as the ETF demo (~0.9M new tokens); web off to keep it cheap.
+# Set `web: true` for a richer run (hardware prices and current software change).
+brief: >
+  Design a low-cost setup and observing method for detecting known exoplanet transits
+  with an existing 20 cm (8-inch) amateur telescope on an equatorial mount, observing
+  from a suburban backyard. Spend under $1,500 in total on top of the telescope and
+  mount. Use only off-the-shelf commercial hardware and free software, with no access
+  to professional facilities. Target at most 2 mmag photometric scatter per 2-minute
+  bin on host stars of magnitude V = 10-12, enough to detect a 1 % deep transit at
+  5 sigma or better. Optimise for detection reliability and for a setup that is easy
+  to repeat night after night.
+size: quick
+exploration: balanced
+seed: 20260930
+overrides:
+  generators: 4
+  ideas_per_generator: 2
+  angles_per_generator: 2
+  domains_per_generator: 2
+  critics_per_idea: 2
+  cards_per_critic: 4
+  workshop_slots: 4
+  workshop_rounds: 1
+  recritique_critics: 1
+  finals_matches_per_idea: 3
+  pairs_per_judge: 6
+  draws: 500
+  web: false
+  generator_models: [sonnet, opus]
+  critic_models: [sonnet]
+  judge_models: [sonnet, opus]

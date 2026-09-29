@@ -30,6 +30,8 @@ This document outlines the planned phases and tasks for developing agent-brainsw
 
 ## Phase 5: Demo and installation
 17. [completed] Live mini demo run on a concrete trading brief; recorded in `examples/demo-run/`.
+    - [completed] Manifests for two physically checkable briefs in `examples/demos/` (exoplanet-transit setup; home heating)
+    - [pending] Live runs of the two new manifests
 18. [completed] Offline replay demo (`examples/demo_run.py`); reproduces the ranking exactly.
 19. [completed] `install.py` (editable uv tool; symlink skill and agents).
 

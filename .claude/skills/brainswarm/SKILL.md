@@ -46,6 +46,9 @@ could leak into every idea or every verdict.
    with: `Act as the brainswarm <role>; first read <repo>/.claude/agents/brainswarm-<role>.md
    and follow it.` Say in the digest that tool allowlists were not enforced.
 3. If web search is unavailable in this environment, init with `--no-web` and say so.
+4. Demos: "run the brainswarm demo" means `$BS init --manifest <repo>/examples/demos/etf-strategy.yaml`;
+   a named demo ("the exoplanet demo", "the heating demo") uses the matching file in
+   `examples/demos/`. The manifest supplies the brief and knobs; still draft the rubric as below.
 
 ## Phase 0 — frame (the only creative work you do)
 
