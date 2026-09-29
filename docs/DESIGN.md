@@ -640,7 +640,16 @@ blind spot the interval is narrow and wrong. Every report says so.
   other code is a non-blocking error that lets the call proceed, so the
   hook command exits 2 itself when `brainswarm` is not on PATH (exit 127
   would otherwise allow everything) and the guard turns any internal error
-  into exit 2. When role
+  into exit 2. **Hooks need trust for project-level agents.** Frontmatter
+  hooks of agents in a repository's `.claude/agents/` run only after the
+  workspace-trust dialog is accepted; user-level agents (`~/.claude/agents/`,
+  where `install.py` links them) need no trust, and project-level agents
+  win over user-level ones of the same name. Verified live: the hook fired
+  for user-level agents, and did not run at all for the project-level
+  agent in a fresh cloud session opened on this repository (the probe's
+  write succeeded, no hook record). The referee therefore runs a guard
+  self-test after `init` and says so when the guard is inactive; moving
+  the role files out of `.claude/agents/` is an open decision (§20). When role
   agents are not installed, the referee falls back to general-purpose
   subagents that read their role file; the allowlists and hook are then
   **not** enforced, and the digest says so.
@@ -764,7 +773,9 @@ Status as of 2026-09-29:
 
 1. **Per-role tool restriction.** Claude Code enforces agent allowlists,
    and agents may declare hooks in frontmatter (documentation). The guard
-   is implemented and tested through its stdin / exit-code interface.
+   is implemented and tested through its stdin / exit-code interface, and
+   verified live for user-level agents; it does not run for project-level
+   agents without workspace trust (§12).
    *Observed in the demo (cloud session):* user-level agents installed
    mid-session appeared as agent types only after several minutes (the
    skill appeared at once), so the demo's early phases used the
@@ -775,8 +786,9 @@ Status as of 2026-09-29:
 2. **Referee context budget.** Resolved by the state machine (§5).
 3. **Ephemeral storage.** `init` warns in cloud sessions; `--here` keeps
    runs in the project.
-4. **Trigger collisions.** The description excludes "brainstorm" and is
-   tested; live trigger behaviour still needs a fresh session.
+4. **Trigger collisions.** Verified in fresh cloud sessions: "brainstorm"
+   does not trigger; "brainswarm" triggered only once the description led
+   with the trigger and said the word is not a typo.
 5. **Partial failures.** Resolved: one retry, then drop; phases need half
    their dispatches (§5).
 6. **Environment differences.** The preflight probes the CLI, the role
@@ -878,6 +890,11 @@ like *evolve*.
 - Band-share defaults and generator count, once per-band yield and the
   yield curve are logged.
 - Whether to add an optional `seed_hypotheses` field to agent-evolve.
+- Where the role files live. In `.claude/agents/` they load automatically in
+  sessions on this repository but, without workspace trust, run unguarded
+  and shadow the guarded user-level copies. Moving them (e.g. to `agents/`,
+  linked user-level by `install.py`) keeps the guard wherever they load, at
+  the cost of an install step before the first run in a fresh session.
 
 ## 21. Design review
 

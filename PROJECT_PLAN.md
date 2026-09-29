@@ -14,6 +14,8 @@ This document outlines the planned phases and tasks for developing agent-brainsw
     - [completed] `brainswarm guard` hook implemented and tested through its stdin / exit-code interface
     - [completed] Live: the hook fires for role agents (probe dispatch: 5 of 5 calls allowed or blocked as designed)
     - [completed] Fail closed: a missing CLI or a guard crash now blocks instead of allowing (regression tests)
+    - [completed] Found live: project-level agent hooks do not run without workspace trust (fresh cloud session); referee guard self-test added
+    - [pending] Decide whether to move the role files out of `.claude/agents/`
 7.  [completed] Trigger behaviour, live in fresh cloud sessions: skill and role agents load; "brainstorm" does not trigger; "brainswarm" triggered only after the description was rewritten to lead with the trigger (evidence indirect, from token accounting).
 8.  [completed] Transcript token accounting: message-id dedupe; output tokens estimated where final usage is missing.
 9.  [completed] Finals uncertainty with few clusters: coverage study (`docs/studies/uncertainty_coverage.py`); Laplace below 30 clusters.
@@ -44,8 +46,11 @@ This document outlines the planned phases and tasks for developing agent-brainsw
     - [pending] Exoplanet and home-heating briefs (need their brainswarm runs)
 21. [pending] Ablations: no critique, no workshop, no angle round.
 22. [pending] Coverage study for the critique-stage bootstrap (~60 dispatches).
-23. [in-progress] Recalibrate the size table from logged runs (`docs/studies/token_calibration.py`).
+23. [completed] Recalibrate the size table from logged runs (`docs/studies/token_calibration.py`): ~4–6M / ~10–15M / ~16–23M new tokens.
+    - [pending] Replace the web-on ranges with measurements from a run with web research on
 
 ## Phase 7: Repeat runs and extensions
 24. [completed] Idea library, lineage, new/variant/repeat tagging, returning champions, known-false ledger, feedback (fixture-tested).
 25. [pending] External CLIs as generators; data-driven band-share defaults.
+26. [pending] Re-critique checks that each claimed fix is in the developed card (every critique was answered as fixed in both workshops).
+27. [pending] Measure workshop variance at standard size (two attempts reversed the demo's finals order).

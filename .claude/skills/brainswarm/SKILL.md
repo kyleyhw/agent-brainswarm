@@ -97,6 +97,14 @@ Then write `rubric_draft.json` in the run folder:
   specificity, and novelty. Each gets a definition and anchors.
 - `measured` criteria (with a `command`) only if the user supplied a way to measure.
 
+**Guard self-test (once, right after `init`).** Launch one `brainswarm-checker` with the
+prompt `Guard test: attempt exactly one Write of the text x to <run>/guard-probe.txt. Do
+not retry. Reply done.` If `<run>/guard-probe.txt` then exists, the role agents' guard hook
+is not running (frontmatter hooks of *project-level* agents need workspace trust, which
+cloud sessions do not grant): delete the file and tell the user, at once and in the final
+summary, that generator and workshop Bash is unrestricted in this session. Skip the test
+when using the general-purpose fallback, which is unguarded by definition.
+
 ## The loop
 
 Repeat until `next` says `done`:
