@@ -1,0 +1,71 @@
+{
+  "seed": 288411079009107441659664446727600485406,
+  "reviewers": {
+    "r1": {
+      "model": "sonnet",
+      "labels": {
+        "A": "single agent #2",
+        "B": "brainswarm I004-v2",
+        "C": "brainswarm I003-v2",
+        "D": "single agent #3",
+        "E": "brainswarm I008-v2",
+        "F": "single agent #1"
+      }
+    },
+    "r2": {
+      "model": "opus",
+      "labels": {
+        "A": "brainswarm I004-v2",
+        "B": "brainswarm I003-v2",
+        "C": "single agent #3",
+        "D": "brainswarm I008-v2",
+        "E": "single agent #1",
+        "F": "single agent #2"
+      }
+    },
+    "r3": {
+      "model": "fable",
+      "labels": {
+        "A": "brainswarm I003-v2",
+        "B": "single agent #3",
+        "C": "brainswarm I008-v2",
+        "D": "single agent #1",
+        "E": "single agent #2",
+        "F": "brainswarm I004-v2"
+      }
+    },
+    "r4": {
+      "model": "sonnet",
+      "labels": {
+        "A": "single agent #3",
+        "B": "brainswarm I008-v2",
+        "C": "single agent #1",
+        "D": "single agent #2",
+        "E": "brainswarm I004-v2",
+        "F": "brainswarm I003-v2"
+      }
+    },
+    "r5": {
+      "model": "opus",
+      "labels": {
+        "A": "brainswarm I008-v2",
+        "B": "single agent #1",
+        "C": "single agent #2",
+        "D": "brainswarm I004-v2",
+        "E": "brainswarm I003-v2",
+        "F": "single agent #3"
+      }
+    },
+    "r6": {
+      "model": "fable",
+      "labels": {
+        "A": "single agent #1",
+        "B": "single agent #2",
+        "C": "brainswarm I004-v2",
+        "D": "brainswarm I003-v2",
+        "E": "single agent #3",
+        "F": "brainswarm I008-v2"
+      }
+    }
+  }
+}

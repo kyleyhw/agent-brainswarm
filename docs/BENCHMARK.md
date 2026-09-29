@@ -34,10 +34,17 @@ worth it.
    The seed and the label key go to `key.json`, which the judge opens only after rating.
    The builder refuses a pack whose cards mention an idea number or id (`Idea 1`, `I008`,
    `L0004`).
-4. **Judging.** A human rates every card from 1 to 5 on constraint fit, drawdown (or the
-   brief's main risk), growth (or the main objective), diversification (or breadth), and
-   "would pursue", then ranks all six. Human raters are used because the demo showed LLM
-   judges have a strong position bias ([`DESIGN.md` §10](DESIGN.md#10-scoring)).
+4. **Judging.** Every card is rated from 1 to 5 on constraint fit, drawdown (or the brief's
+   main risk), growth (or the main objective), diversification (or breadth), and "would
+   pursue", then all six are ranked. The default rater is a panel of six independent LLM
+   reviewers (`benchmark/llm_review.py`): two each of Sonnet, Opus and Fable, each in a fresh
+   read/write-only context, with card order counterbalanced by a 6x6 cyclic Latin square
+   (every card once in every position) and letters reassigned per reviewer. A human rater
+   (`pack.md`) remains the stronger check where one with domain knowledge is available,
+   because both sides were written by Claude models and brainswarm's finalists were chosen
+   by Claude judges, so LLM reviewers partly measure agreement with the system's own taste;
+   the demo also showed LLM judges have a strong position bias
+   ([`DESIGN.md` §10](DESIGN.md#10-scoring)).
 5. **Analysis.** Per brief, the difference in mean "would pursue" score and the mean rank of
    each side. Across briefs, a sign test on the per-brief differences. With 3–5 briefs this
    detects only a large effect; the benchmark is a sanity check, not a precise estimate.
@@ -57,9 +64,40 @@ worth it.
 
 | Brief | Brainswarm run | Baseline | Pack | Ratings |
 |---|---|---|---|---|
-| ETF strategy | recorded (`examples/demo-run/`) | done | [`benchmark/etf-strategy/pack.md`](../benchmark/etf-strategy/pack.md) | awaiting a human rater |
+| ETF strategy | recorded (`examples/demo-run/`) | done | [`benchmark/etf-strategy/pack.md`](../benchmark/etf-strategy/pack.md) | 6 LLM reviewers (below); no human rating |
 | Exoplanet transit | shelved until usage allows | pending | pending | pending |
 | Home heating | shelved until usage allows | pending | pending | pending |
+
+## Results
+
+### ETF strategy (2026-09-29)
+
+![Ranks from six independent reviewers](figures/benchmark_etf_review.png)
+
+*The six reviewers did not prefer either side. Each row is one card; small dots are the rank
+each reviewer gave it (1 = best, right), and the large dot is the mean. Blue: brainswarm's
+three finalists; orange: the single agent's own top three. The single agent's first choice has
+the best mean rank (2.17) and its third choice the worst (5.17); brainswarm's cards sit in
+between (2.50, 3.67, 4.00). The spread of dots within every row is wide: the reviewers agree
+only weakly.*
+
+| Measure | Brainswarm minus single agent | Reviewers favouring brainswarm | Sign test p |
+|---|---|---|---|
+| "Would pursue" (1–5) | 0.00 | 3 of 6 | 1.0 |
+| Rank (lower is better) | −0.22 | 3 of 6 | 1.0 |
+
+- **Agreement** between reviewers is weak: Kendall's $W = 0.33$ (0 = none, 1 = identical
+  rankings).
+- **Model effect:** both Opus reviewers preferred brainswarm (rank differences −3.00 and
+  −1.00), both Fable reviewers preferred the single agent (+1.67, +3.00), and the Sonnet
+  reviewers split. With two reviewers per model this is suggestive only.
+- **Position:** the Spearman correlation between the order a card was shown in and its rank
+  is 0.22 (cards shown earlier ranked slightly better); the Latin square spreads this evenly
+  over both sides.
+- **Reading.** On this brief, at this reduced size and with web research off, brainswarm's
+  finalists were not rated better than a single strong agent's own top three, at about 24
+  times the new-token cost. One brief is not a verdict on the method; the physically
+  checkable briefs are the stronger test.
 
 ## Cost
 

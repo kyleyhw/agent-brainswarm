@@ -1,0 +1,146 @@
+{
+  "per_idea": {
+    "brainswarm I003-v2": {
+      "side": "brainswarm",
+      "constraints": 4.5,
+      "drawdown": 4.0,
+      "growth": 2.0,
+      "diversification": 3.8333333333333335,
+      "pursue": 3.5,
+      "rank": 3.6666666666666665,
+      "ranks": [
+        4,
+        2,
+        4,
+        4,
+        2,
+        6
+      ]
+    },
+    "brainswarm I004-v2": {
+      "side": "brainswarm",
+      "constraints": 3.6666666666666665,
+      "drawdown": 3.6666666666666665,
+      "growth": 2.1666666666666665,
+      "diversification": 3.6666666666666665,
+      "pursue": 3.1666666666666665,
+      "rank": 4.0,
+      "ranks": [
+        5,
+        3,
+        6,
+        2,
+        3,
+        5
+      ]
+    },
+    "brainswarm I008-v2": {
+      "side": "brainswarm",
+      "constraints": 4.333333333333333,
+      "drawdown": 4.333333333333333,
+      "growth": 2.1666666666666665,
+      "diversification": 4.333333333333333,
+      "pursue": 3.6666666666666665,
+      "rank": 2.5,
+      "ranks": [
+        2,
+        1,
+        3,
+        1,
+        4,
+        4
+      ]
+    },
+    "single agent #1": {
+      "side": "single agent",
+      "constraints": 4.333333333333333,
+      "drawdown": 3.5,
+      "growth": 3.3333333333333335,
+      "diversification": 4.0,
+      "pursue": 4.166666666666667,
+      "rank": 2.1666666666666665,
+      "ranks": [
+        3,
+        4,
+        1,
+        3,
+        1,
+        1
+      ]
+    },
+    "single agent #2": {
+      "side": "single agent",
+      "constraints": 3.6666666666666665,
+      "drawdown": 2.6666666666666665,
+      "growth": 3.6666666666666665,
+      "diversification": 2.8333333333333335,
+      "pursue": 3.6666666666666665,
+      "rank": 3.5,
+      "ranks": [
+        1,
+        6,
+        2,
+        5,
+        5,
+        2
+      ]
+    },
+    "single agent #3": {
+      "side": "single agent",
+      "constraints": 2.8333333333333335,
+      "drawdown": 2.3333333333333335,
+      "growth": 3.0,
+      "diversification": 3.8333333333333335,
+      "pursue": 2.5,
+      "rank": 5.166666666666667,
+      "ranks": [
+        6,
+        5,
+        5,
+        6,
+        6,
+        3
+      ]
+    }
+  },
+  "per_reviewer": {
+    "r1": {
+      "pursue_diff": -0.33333333333333304,
+      "rank_diff": 0.33333333333333304
+    },
+    "r2": {
+      "pursue_diff": 0.6666666666666665,
+      "rank_diff": -3.0
+    },
+    "r3": {
+      "pursue_diff": -1.0,
+      "rank_diff": 1.6666666666666665
+    },
+    "r4": {
+      "pursue_diff": 0.6666666666666665,
+      "rank_diff": -2.3333333333333335
+    },
+    "r5": {
+      "pursue_diff": 0.6666666666666665,
+      "rank_diff": -1.0
+    },
+    "r6": {
+      "pursue_diff": -0.6666666666666665,
+      "rank_diff": 3.0
+    }
+  },
+  "tests": {
+    "pursue": {
+      "mean_diff": 0.0,
+      "reviewers_favouring_brainswarm": 3,
+      "sign_test_p": 1.0
+    },
+    "rank": {
+      "mean_diff": -0.22222222222222232,
+      "reviewers_favouring_brainswarm": 3,
+      "sign_test_p": 1.0
+    },
+    "kendall_w": 0.3333333333333333,
+    "position_rank_spearman": 0.21724581724581726
+  }
+}
