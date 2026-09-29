@@ -337,3 +337,12 @@ def test_guard_decisions(call: dict[str, object], allowed: bool) -> None:
     from agent_brainswarm.guard import decide
 
     assert decide(call)[0] is allowed
+
+
+def test_longer_ranking_is_accepted_and_shorter_rejected() -> None:
+    from agent_brainswarm.pipeline import _ranking_problems
+
+    batch = ["I1", "I2", "I3", "I4"]
+    assert _ranking_problems(["I2", "I1", "I4", "I3"], batch, "ranking") == []
+    assert _ranking_problems(["I2", "I1"], batch, "ranking")
+    assert _ranking_problems(["I2", "I2", "I1"], batch, "ranking")

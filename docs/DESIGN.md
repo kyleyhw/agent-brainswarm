@@ -1,8 +1,8 @@
 # brainswarm — design
 
-> **Status: design phase (2026-09-28).** This document is the source of truth
-> for what brainswarm is and how it will work. Nothing in the protocol is
-> implemented yet; the repo contains a scaffold only. Work is tracked in
+> **Status: implemented (2026-09-29).** This document is the source of truth
+> for what brainswarm is and how it works; it was revised after an
+> independent design review (§21) and a coverage study (§10). Work is tracked in
 > [`PROJECT_PLAN.md`](../PROJECT_PLAN.md); the repository overview is in the
 > [README](../README.md). Where a decision is still open it says so explicitly
 > in [§20](#20-open-questions).
@@ -24,12 +24,13 @@
 13. [Architecture](#13-architecture)
 14. [Logging and telemetry](#14-logging-and-telemetry)
 15. [Watch list: known weak points](#15-watch-list-known-weak-points)
-16. [Gaps to verify before building](#16-gaps-to-verify-before-building)
+16. [Gaps and platform facts](#16-gaps-and-platform-facts)
 17. [Demo](#17-demo)
 18. [Build order](#18-build-order)
 19. [Design history: what we took from prior art](#19-design-history-what-we-took-from-prior-art)
 20. [Open questions](#20-open-questions)
-21. [References](#references)
+21. [Design review](#21-design-review)
+22. [References](#references)
 
 ---
 
@@ -171,158 +172,103 @@ Draft; will be carried into `SKILL.md` verbatim.
 ## 5. Pipeline
 
 ```
-0 Frame ─ 1 Angle & domain round ─ 2 Generate ─ 3 Cluster ─ [checkpoint, opt-in]
-  ─ 4 Critique ─ 5 Workshop + re-critique ─ 6 Finals ─ 7 Aggregate & report ─ stop
+rubric draft -> audit -> freeze -> angle round -> angle clusters -> ideate (no web)
+  -> research -> idea clusters -> [checkpoint] -> critique -> checker -> advocate
+  -> workshop -> re-critique -> [fact-check] -> finals -> boundary -> report -> stop
 ```
 
-Agents run in waves of ~10. Every phase checkpoints to disk; the referee
-reads only code-built digests (never raw cards or critiques) so its context
-survives a long run, and `brainswarm resume <run>` continues after a crash
-or compaction.
+### Control: a code-driven state machine
 
-### Phase 0 — Frame (referee + one audit subagent + code)
+The referee (the session running `/brainswarm`) is a thin loop, so that the
+protocol lives in code rather than in the referee's context (§21, review
+items B3/B4):
 
-- Parse the brief or load `brainswarm.yaml`.
-- **Infer the rubric** from the guidelines (agent-evolve Path B style):
-  - `gate` criteria: **only constraints the user stated**, plus the default
-    gate *illegal or clearly unethical*. Gate failures are classed
-    **fatal** or **fixable**; fixable ones go to the workshop, not the bin.
-  - `judged` criteria: inferred from the guidelines (e.g. "growth",
-    "diversification"), each with a written definition and anchors, plus a
-    fixed core: value/usefulness, feasibility, specificity, fit to brief,
-    novelty, upside-if-it-works, probability-it-works.
-  - `measured` criteria: optional, a command that emits a number (e.g. a
-    sandboxed sanity backtest), labelled *sanity check, not evidence*.
-- **Audit**: a separate subagent checks the draft rubric against the brief
-  for missing criteria, criteria that reward the wrong thing, and criteria
-  biased toward one idea type.
-- **Freeze**: code writes `rubric.yaml`, hashes it, and records the hash.
-- **Preflight card** is shown; the run continues unless interrupted (or
-  pauses here if the checkpoint is opted in).
+1. `brainswarm next <run>` prints either a **referee action** (write the
+   rubric draft, freeze it, or hold at the opt-in checkpoint) or a list of
+   **dispatches**: role agent, model, and the exact prompt.
+2. Each subagent reads its task file `tasks/<phase>/<id>.md`, writes one
+   JSON object to `out/<phase>/<id>.json`, and replies with one line.
+3. `brainswarm ingest <run>` validates every output against the phase's
+   schema. An invalid output gets **one retry**, with the problems appended
+   to its task file; a second failure **drops** that dispatch. A
+   multi-dispatch phase continues if at least half its dispatches
+   succeeded (below that the evidence is too thin to trust); a
+   single-dispatch phase must succeed. Valid outputs become code-owned
+   state under `data/`, and the phase advances.
 
-### Phase 1 — Angle and domain round (blind, cheap)
+All state is on disk and `next` is idempotent: after a compaction or crash
+the referee runs `brainswarm status` and continues. The referee never opens
+`tasks/` or `out/`. Every dispatch is launched with the description
+`bs <run> <id>`, which is how token usage is attributed (§14).
 
-- Every generator privately proposes **3 angles** (how to approach the
-  problem) and **3 domains far from the problem** to borrow mechanisms
-  from ("not the first ones that come to mind"). Angles and domains only,
-  no ideas.
-- Code clusters the pools and measures **popularity** (how many generators
-  proposed each cluster), giving **common / middle / rare** bands. Domains
-  are also banded by distance: **near / mid / far**.
-- The referee writes **no** lenses; the pool is the union of ~20 minds.
+### Phases
 
-### Phase 2 — Generate
+| Phase | Role (dispatches at standard size) | Sees | Writes | Code then |
+|---|---|---|---|---|
+| audit | rubric-auditor (1) | brief, draft rubric | issues | stores; the referee revises the draft and runs `freeze` |
+| angle round | ideator (20), no web | brief, rubric | 3 angles, 3 far domains with distance | assigns ids and proposers |
+| angle clusters | clusterer (1) | all angles and domains, proposers hidden | partition into clusters | checks every id appears once; counts popularity; bands; assigns slots (§6) |
+| ideate | ideator (20), no web | brief, rubric, own slot | 3 raw sketches | timestamps them: the pre-registration |
+| research | generator (20), web <= 40 calls, sandbox | own sketches | 3 idea cards, each <= 400 words | ids; provenance from code, not from the agent |
+| idea clusters | clusterer (1) | cards; library index | clusters; new / variant / repeat | checks the partition |
+| critique | critic (~60, 6 cards each) | rubric; anonymised cards in random order; known-false ledger | justified critiques; top-3 overall and top-3 novelty rankings; 1-5 upside and probability | schema, quote match, "unproven" flag |
+| checker | checker (~1 per 30 critiques) | each critique beside a random other idea from its batch | whether it transfers | generic and repetition flags; preliminary fit; gates; workshop slots |
+| advocate | advocate (1) | ideas without a slot, with critiques | at most 2 promotions | adds slots |
+| workshop | workshop (1 per slot; a model other than the author's) | idea, all its critiques, sibling ideas | version 2; a response to every counting major or fatal critique; grafts | checks all were answered; v2 is a new node |
+| re-critique | critic (~6) | v1, v2, responses | whether each response holds; same-idea votes; new critiques | drift by majority; critic hit-rate data |
+| fact-check | critic (1 per finalist), web runs only | finalist card | claim statuses | shown to judges |
+| finals | judge (~(F x m)/10) | rubric; cards with critique record and fact-check | per ordered pair: preferred, reason | incomplete schedule; the two orders of a pair in different dispatches |
+| boundary | judge | pairs from a pre-registered rule | as finals | ideas with P(top-k) in [0.2, 0.8] get 4 extra matches each |
+| report | code | | | fits both strata, renders, updates the library |
 
-- **Slot types** (mix set by the exploration knob, §6):
-  - **assigned angle** — an angle from the pool, preferably one proposed by
-    a *different* generator, sampled across bands;
-  - **free** — the generator chooses its own direction;
-  - **cross-domain** — a domain from the pool (proposed by another
-    generator, sampled across distance bands; code may skip domains used in
-    previous runs). **No declining:** the generator must produce an idea
-    through that domain and records a transfer rating
-    (`strong` / `partial` / `stretch`). Nonsense ideas simply rank low.
-- **Ideate before searching.** Step 1: write raw ideas without web access;
-  code timestamps and saves them (pre-registration). Step 2: research
-  (web + sandbox) to develop and check them. New ideas found while
-  researching are allowed and tagged `research-derived`.
-- **3 ideas per generator**, each as an **idea card**:
-  title, one-line pitch, mechanism, why it might work (with sources),
-  key assumptions, how it fails, cheapest test, effort, optional operational
-  spec (precise enough to implement/backtest), provenance (slot type,
-  angle/domain, band, transfer rating, pre-search vs research-derived).
-  Word caps enforced by code.
-- **Framing: competitive.** "Your ideas will face hostile critics and be
-  ranked against ~60 others."
-- **Tools:** web search/fetch (runaway ceiling ~40 calls, a safety stop, not
-  a cost saving), sandboxed code (§12). History-blind (§7).
+### Framing (the referee's only creative work)
 
-### Phase 3 — Cluster
+- The referee parses the request into a brief and the two knobs, asks
+  nothing unless the brief is unrunnable, and records every assumption.
+- **Gates**: only constraints the user stated, plus the required gate
+  `legal_and_ethical`. Anything inferred is a judged criterion (code
+  rejects inferred gates). A gate failure is *fatal* or *fixable*; a
+  fixable one is answered in the workshop.
+- **Judged criteria**: one per guideline in the brief, plus value,
+  feasibility / specificity, and novelty, each with a definition and
+  anchors. Criteria are compared pairwise, never scored on scales, so no
+  weights are set.
+- **Measured criteria**: only when the user supplies a way to measure;
+  results are sanity checks.
+- The rubric auditor's issues are advisory; the referee decides and then
+  freezes (code hashes the rubric; judging refuses a changed hash).
 
-- Merge only **near-duplicates**; keep variants as siblings; err toward
-  splitting; list every merge in the report.
-- Compare against the **idea library** (§8): tag each idea `new`,
-  `variant`, or `repeat`.
-- **Rediscovery**: count how many generators (and how many *model
-  families*) independently found each idea.
-- Record the **yield curve**: unique clusters as each generator is added.
+### Justified critique
 
-### Phase 4 — Critique
+Code rejects items missing a field, flags the rest mechanically, and never
+deletes a critique; flagged critiques are shown but carry no weight.
 
-- Each idea is reviewed by **~6 critics** (never its author; preferably a
-  different model). Critics receive anonymised cards.
-- **Framing: harsh and stake-free.** "Steelman it, then try to kill it."
-  Critics are reviewers, not competitors, so they have no reason to sink
-  rivals.
-- **Targeted web lookups only** (~5): to check the specific claims and
-  citations in the card under review, not to research the topic.
-- **Justified-critique schema** (code rejects items missing a field):
+| Field | Rule |
+|---|---|
+| `target` | a quote from the card; fuzzy-matched by code (ratio >= 0.85) |
+| `mechanism` | why it fails; "unproven" alone is flagged |
+| `evidence` | citation, calculation, counter-example, or brief reference |
+| `severity` | `fatal` / `major` / `minor`; optional `gate` |
+| `falsifier` | what would show the critique wrong, or what fix answers it |
 
-  | Field | Rule |
-  |---|---|
-  | `target` | a quote from the card; code fuzzy-matches it |
-  | `mechanism` | why it fails — the causal story |
-  | `evidence` | citation, calculation, counter-example, or brief reference |
-  | `severity` | `fatal` / `major` / `minor` |
-  | `falsifier` | what would show this critique wrong, or what fix answers it |
+The checker's substitution test flags critiques that would be equally true
+of another idea (generic); code flags a critic that makes nearly the same
+point about three or more ideas (templated).
 
-- **"Unproven" is not an admissible criticism on its own**; the critic must
-  name the mechanism that would fail.
-- **Generic-critique filter** (down-weights, never deletes):
-  - *substitution test*: would the critique still be true attached to a
-    random other idea in the batch?
-  - *repetition check*: the same critic making nearly the same point about
-    3+ ideas.
-- Critics score **upside-if-it-works** and **probability-it-works**
-  separately, and rank their batch → input to the preliminary scores (§10).
-- Critics receive the **known-false claims ledger** from earlier runs.
+### Critic and finals designs
 
-### Phase 5 — Workshop (default on) and re-critique
+Both are generated by code from the run seed before any agent sees the
+ideas, so they are pre-registered.
 
-- **Slots** (standard = 12), split value / wildcard / deepen by the
-  exploration knob (§6). On a first run there is no library, so deepen
-  slots go to value.
-  - *value*: top by preliminary value;
-  - *wildcard*: most novel, most divisive (high critic disagreement), and
-    high-upside/low-probability ideas;
-  - *deepen*: ideas from the library worth pushing further (top ideas,
-    earlier wildcards, ideas with open critiques).
-- **Graveyard advocate**: one agent reviews the ideas that did not get a
-  slot and may promote 1–2 it thinks were wrongly passed over.
-- **Workshop agent** (a different model from the idea's author; web +
-  sandbox) produces **idea v2**:
-  1. a response to **every** major/fatal critique: *fixed* (idea changes),
-     *rebutted* (with evidence), or *conceded* (known limitation);
-  2. depth: concrete mechanism, parameters, step-by-step plan, assumptions
-     with evidence, failure modes, **cheapest first experiment**, kill
-     criterion;
-  3. optional sandbox sanity check (labelled as such);
-  4. grafts from sibling ideas, with provenance.
-- **Drift guard**: if v2 is no longer the same idea it becomes a new idea,
-  not a replacement.
-- **Re-critique**: 2–3 fresh critics check whether the fixes hold and what
-  new flaws appeared.
-- `deep` runs a second workshop round.
-
-### Phase 6 — Finals
-
-- Workshopped ideas (+ **returning champions**: the library's top 3 on
-  repeat runs) compete in **pairwise matches judged in both orders** by a
-  mixed-model panel (3 judges standard, 5 deep). A win counts only if both
-  orders agree; otherwise it is a tie.
-- **Boundary focus**: extra comparisons around the top-k cutoff so #5 vs #6
-  is resolved, not just #1.
-- **Disputed critiques** (rebutted in the workshop) are ruled *upheld* or
-  *overturned*, giving each critic a hit rate.
-- **Fact-check**: web verification of the load-bearing claims of each
-  finalist.
-- Judges see anonymised, length-capped, identically structured cards.
-
-### Phase 7 — Aggregate and report
-
-- Fit scores (§10), build tiers, pick the **family-aware top-k**, attach
-  variants, select wildcards, run bias checks, render the digest and
-  report, write telemetry. **Stop.**
+- **Critic batches**: an incomplete block design. Each idea appears in `r`
+  batches of at most 6; batches are random, so they mix clusters; the
+  co-review graph must be connected. The model of each batch is chosen to
+  clash least with the authors' models.
+- **Finals**: an incomplete round robin. Each finalist meets at least `m`
+  opponents (6 / 8 / 12 by size). Both presentation orders of every pair
+  are judged, in *different* dispatches (a context that saw one order
+  would remember its verdict), at most 10 pairs per dispatch, with the
+  reverse half assigned to a different model where possible.
 
 ## 6. The two knobs: size and exploration
 
@@ -369,13 +315,15 @@ measured rather than one being chosen a priori.
 
 ### Banding and allocation
 
-Let the angle pool be partitioned into clusters $k = 1, \dots, K$, and let
-$s_k$ be the number of distinct generators that proposed an angle in
-cluster $k$ (its popularity). Clusters are assigned to the bands common,
-middle and rare by the tertiles of $\{s_k\}$; ties at a tertile boundary go
-to the more common band, so that a band is never populated by an arbitrary
-split of equal-popularity clusters. Domains are banded the same way on a
-distance rating (near, mid, far) given by the proposing generator.
+A cluster's popularity $s_k$ is the number of distinct generators that
+proposed an angle in it; the clusterer groups the angles, and code counts.
+Bands use fixed thresholds: **rare** $s_k = 1$, **middle**
+$2 \le s_k \le 3$, **common** $s_k \ge 4$ (4 of ~20 generators is a clear
+convergence; one proposer is by definition idiosyncratic). Tertiles were
+rejected because most free-text angles form singleton clusters, which puts
+both tertile cut points at 1 and empties the rare band (§21, review item
+B4). Domains are banded by their proposers' majority distance rating
+(near, mid, far).
 
 Given $n$ assigned-angle slots and the knob's band shares $q_b$
 ($\sum_b q_b = 1$), band $b$ receives
@@ -384,37 +332,43 @@ $$
 n_b = \lfloor n q_b \rfloor + \delta_b,
 $$
 
-where the $\delta_b \in \{0, 1\}$ distribute the remaining
+where the $\delta_b \in \{0, 1\}$ give the remaining
 $n - \sum_b \lfloor n q_b \rfloor$ slots to the bands with the largest
-fractional parts $n q_b - \lfloor n q_b \rfloor$ (largest-remainder
-rounding). This keeps $\sum_b n_b = n$ exactly and each $n_b$ within one
-slot of its target $n q_b$. Within a band, clusters are drawn uniformly
-without replacement (so one popular cluster cannot absorb a band's slots),
-an angle is drawn within each cluster, and angles proposed by the receiving
-generator are excluded where an alternative exists. All draws use a
-recorded seed.
+fractional parts (largest-remainder rounding), so $\sum_b n_b = n$ exactly
+and each $n_b$ is within one slot of $n q_b$. A band with no clusters
+passes its slots to the nearest non-empty band. Within a band, clusters
+are drawn uniformly without replacement (so one popular cluster cannot
+absorb a band's slots), and angles proposed by the receiving generator are
+excluded where an alternative exists. Every draw uses the recorded seed.
 
 ### Parameter provenance
 
-Every fixed default below is provisional: chosen by judgment during design,
-not fitted, and scheduled for recalibration from logged runs (§14).
+Every fixed default is provisional: chosen by judgment or by the studies
+cited, and scheduled for recalibration from logged runs (§14).
 
 | Parameter | Default | Basis |
 |---|---|---|
-| Generators (quick / standard / deep) | 8 / 20 / 30 | Standard is the owner's proposed swarm size (~20 agents); quick and deep scale it down and up. Diminishing returns are expected past a few dozen; the logged yield curve (§14) will locate the real knee. |
-| Ideas per generator | 3 | Breadth over depth at generation; depth comes from the workshop. Three gives ~60 ideas at standard size, enough for a stable ranking without swamping critique. |
-| Angles and domains proposed per generator | 3 + 3 | Yields ~60 of each at standard size: roughly three candidates per generator slot, so assignment can prefer angles from other generators. |
-| Critics per idea | ~6 | Enough independent judgments per idea for the Plackett–Luce fit and for "raised by m of 6" counts to be meaningful, at ~20 critic agents in total. |
-| Targeted lookups per critic | ~5 | Enough to check a card's load-bearing citations, not enough to research the topic (research belongs to generators). |
-| Web-call ceiling per generator | ~40 | A runaway stop, set well above the 10–24 tool calls observed for research subagents in the design session. |
-| Workshop slots (quick / standard / deep) | 0 / 12 / 16 | Standard develops ~20 % of ~60 ideas; the split is set by the exploration knob. |
-| Re-critique critics | 2–3 | Checks fixes without repeating the full critique cost. |
-| Finals judges (standard / deep) | 3 / 5 | Odd counts avoid split panels; two model families at minimum. |
-| Top families shown | 5 | The owner's stated use: several ideas to take forward, not one. |
-| Returning champions | 3 | Enough to benchmark against the previous best without crowding the finals. |
-| Agent wave size | ~10 | Keeps concurrent subagents within observed practical limits; to be confirmed (§16.6). |
-| Bootstrap resamples $B$ | 1000 | Standard choice for 95 % percentile intervals [[5]](#ref-efron-tibshirani-1993). |
-| Band shares $q_b$ | §6 table | Hypotheses about the exploration–exploitation balance; every band non-zero by construction. |
+| Generators (quick / standard / deep) | 8 / 20 / 30 | Standard is the owner's proposed swarm size; the logged yield curve (§14) will locate the real knee |
+| Ideas per generator | 3 | Breadth at generation; depth comes from the workshop; ~60 ideas at standard size |
+| Angles and domains per generator | 3 + 3 | ~60 of each: several candidates per slot, so assignment can prefer other generators' angles |
+| Card word cap | 400 | Judges compare substance, not length; a 6-card batch stays near 3k words |
+| Critic reviews per idea / cards per dispatch | 6 / 6 | Enough independent rankings per idea for the Plackett–Luce fit; short batches keep rankings reliable |
+| Critic ranking depth | top 3 | Truncated rankings avoid the unreliable tail of listwise judgments |
+| Critic lookups per dispatch | 10 | Enough to check a batch's load-bearing citations, not to research the topic |
+| Generator web-call ceiling | 40 | A runaway stop, above the 10-24 calls observed for research subagents |
+| Workshop slots (quick / standard / deep) | 0 / 12 / 16 | ~20 % of ideas developed at standard size; split by the exploration knob |
+| Re-critique critics per developed idea | 3 | Checks fixes without repeating the full critique |
+| Finals matches per finalist (quick / standard / deep) | 6 / 8 / 12 | Incomplete round robin; with 12 finalists, 8 matches gave the coverage in §10 |
+| Pairs per judge dispatch | 10 | Short contexts; both orders of a pair never share one |
+| Boundary rule | P(top-k) in [0.2, 0.8] -> +4 matches | Extra evidence (+50 % at standard) only where shortlist membership is uncertain |
+| Prior scale $\tau$ | 1.5 logits | §10; sensitivity at $\tau/2$ and $2\tau$ is reported |
+| Bootstrap threshold | 30 clusters | Coverage study, §10 |
+| Draws | 1000 | Standard for 95 % percentile intervals [[5]](#ref-efron-tibshirani-1993) |
+| Retries / minimum phase success | 1 / 50 % | One corrective chance; below half the phase's evidence is too thin |
+| Top families shown | 5 | The owner's stated use: several ideas to take forward |
+| Returning champions | 3 | Benchmark against the previous best without crowding the finals |
+| Wave size | 10 | Below the documented default of 20 concurrent subagents |
+| Band shares $q_b$ | §6 table | Hypotheses; every band non-zero by construction |
 
 ### Overrides
 
@@ -504,93 +458,118 @@ draft `agent-evolve.yaml` with placeholders.
 
 ## 10. Scoring
 
-- **Model**: Bradley–Terry over all pairwise outcomes
-  [[1]](#ref-bradley-terry-1952) (Plackett–Luce
-  [[2]](#ref-luce-1959)[[3]](#ref-plackett-1975) for critics' batch
-  rankings), fitted **once** after all judgments are in (not online Elo,
-  which is order-dependent on static data; Chatbot Arena moved to
-  Bradley–Terry for the same reason [[6]](#ref-chiang-2024)).
-- **Scale shown to humans**: "chance of beating an average idea in this
-  run" (0–100 %), converted from the log-odds strength.
-- **Uncertainty**: bootstrap [[4]](#ref-efron-1979) (1000 resamples)
-  **clustered by judge** [[7]](#ref-field-welsh-2007) (one judge's calls
-  are correlated); report **rank ranges** ("#3, 95 % CI #2–#6") and
-  **tiers** of statistically tied ideas.
+Two strata are fitted separately and never merged (§21, review item B3):
+**finalists** (developed versions, from finals verdicts) and **all first
+versions** (from critics' batch rankings). They are different objects, and
+finalists were selected on the preliminary score, so one scale would be
+misleading. The report ranks finalists first, then every other idea on its
+own scale, each with its own tiers.
 
-### Formulation
+### Model
 
-Each idea $i \in \{1, \dots, N\}$ has a positive worth $\pi_i$, with
-$\beta_i = \log \pi_i$. The Bradley–Terry model states
+Each idea $i$ has a strength $\beta_i$. A finals verdict on the ordered pair
+(first $f$, second $s$) is won by $f$ with probability
 
 $$
-P(i \succ j) = \frac{\pi_i}{\pi_i + \pi_j}
-            = \frac{1}{1 + e^{-(\beta_i - \beta_j)}}
-            = \sigma(\beta_i - \beta_j).
+P(f \succ s) = \sigma(\beta_f - \beta_s + \gamma), \qquad \sigma(x) = \frac{1}{1 + e^{-x}},
 $$
 
-Only differences $\beta_i - \beta_j$ enter, so $\beta$ is identified up to
-an additive constant; the constraint $\sum_i \beta_i = 0$ fixes it. With
-$w_{ij}$ the number of matches $i$ won against $j$, the log-likelihood is
+the Bradley–Terry model [[1]](#ref-bradley-terry-1952) with a global
+position-bias parameter $\gamma$ ($\gamma > 0$: judges favour the idea shown
+first). Every verdict is used, and $\gamma$ itself is reported as a bias
+measurement.
+
+A critic's truncated ranking $\rho_1 \succ \dots \succ \rho_k$ of its batch
+$S$ (top 3 of 6) is Plackett–Luce [[2]](#ref-luce-1959)[[3]](#ref-plackett-1975):
+successive choices of the best remaining idea, stopping after $k$,
 
 $$
-\ell(\beta) = \sum_{i \neq j} w_{ij} \log \sigma(\beta_i - \beta_j).
+P(\rho) = \prod_{t=1}^{k} \frac{e^{\beta_{\rho_t}}}{\sum_{m \in R_t} e^{\beta_m}},
+\qquad R_1 = S,\ R_{t+1} = R_t \setminus \{\rho_t\}.
 $$
 
-A tie (the two presentation orders disagree, §5 Phase 6) contributes half a
-win to each side, $w_{ij} \mathrel{+}= \tfrac12$ and
-$w_{ji} \mathrel{+}= \tfrac12$. An idea that wins every match has no finite
-maximum-likelihood estimate ($\beta_i \to \infty$), so the fit maximises the
-penalised likelihood
+Truncation avoids trusting the unreliable tail of a long listwise ranking.
+
+### Estimation
+
+With the prior $\beta_i, \gamma \sim \mathcal N(0, \tau^2)$, the fit maximises
 
 $$
-\ell_\lambda(\beta) = \ell(\beta) - \frac{\lambda}{2} \sum_i \beta_i^2,
+\ell_\tau(\theta) = \ell(\theta) - \frac{\lVert \theta \rVert^2}{2\tau^2}, \qquad \theta = (\beta, \gamma).
 $$
 
-equivalent to a Gaussian prior $\beta_i \sim \mathcal N(0, 1/\lambda)$;
-$\lambda$ is set small enough that it only matters for undefeated or
-winless ideas (value to be fixed during implementation and documented).
+For a pairwise term with $x = \pm(\beta_f - \beta_s + \gamma)$,
+$\frac{d}{dx}\log\sigma(x) = \sigma(-x)$ and
+$\frac{d^2}{dx^2}\log\sigma(x) = -\sigma(x)\sigma(-x) < 0$; for a
+Plackett–Luce stage with softmax probabilities $p$ over $R_t$, the
+Hessian is $-(\operatorname{diag} p - p p^\top)$, which is negative
+semidefinite. The penalty adds $-\tau^{-2} I$, so $\ell_\tau$ is strictly
+concave and Newton's method with step halving converges to the unique
+maximiser. Every likelihood term is unchanged by adding a constant to all
+$\beta$, so the likelihood gradient sums to zero over the $\beta$
+components; stationarity then forces $\sum_i \beta_i / \tau^2 = 0$, so the
+centring $\sum_i \beta_i = 0$ holds automatically.
 
-A critic's ranking $\rho = (\rho_1, \dots, \rho_K)$ of a batch of $K$ ideas
-enters through the Plackett–Luce likelihood, which treats the ranking as
-successive choices of the best remaining idea:
+$\tau = 1.5$ logits: two ideas one prior standard deviation apart differ by
+$\sigma(1.5) \approx 0.82$ in win probability, a plausible spread for ideas
+answering the same brief. The ridge shrinks every strength, most where
+data are scarce, so the report states whether the top-$k$ set changes at
+$\tau/2$ and $2\tau$.
 
-$$
-P(\rho) = \prod_{k=1}^{K} \frac{\pi_{\rho_k}}{\sum_{m=k}^{K} \pi_{\rho_m}}.
-$$
+**Connectivity.** Strengths in disconnected parts of the comparison graph
+are not comparable (the likelihood is unchanged by shifting one part);
+code computes the components and the report labels them instead of
+ranking across them.
 
-For $K = 2$ this reduces to the Bradley–Terry probability, so both kinds of
-evidence share one set of worths.
+### Uncertainty
 
-The reported score is $p_i = \sigma(\beta_i - \bar\beta) = \sigma(\beta_i)$
-(since $\bar\beta = 0$): the probability of beating a hypothetical idea of
-exactly average strength. It is not the mean of $i$'s pairwise win
-probabilities; it is chosen because it is monotone in $\beta_i$ and
-readable.
+- **Laplace approximation** (default below 30 clusters): draws from
+  $\mathcal N(\hat\theta, (-H(\hat\theta))^{-1})$.
+- **Cluster bootstrap** (30 clusters or more)
+  [[4]](#ref-efron-1979)[[7]](#ref-field-welsh-2007): resample whole
+  *dispatches*, one subagent context each, whose judgments are correlated,
+  and refit.
 
-**Bootstrap.** Let $J$ be the set of judges (critics in the preliminary
-fit; judge × panel seat in the finals). For $b = 1, \dots, B$: draw $|J|$
-judges from $J$ with replacement, take all judgments of each drawn judge,
-refit $\beta^{(b)}$, and record each idea's rank $r_i^{(b)}$. The 95 %
-rank interval of idea $i$ is the 2.5th to 97.5th percentile of
-$\{r_i^{(b)}\}$. Resampling whole judges rather than individual judgments
-keeps each judge's internal correlation, which a naive resample would
-destroy and thereby understate uncertainty.
+The threshold comes from a coverage study
+(`docs/studies/uncertainty_coverage.py`): standard finals (12 finalists, 8
+matches each, about 20 dispatches) simulated from known strengths, 40
+replications each.
 
-**Tiers.** Sort ideas by point estimate. Tier 1 contains the top idea and
-every idea whose rank interval overlaps the top idea's interval; tier 2
-starts from the best remaining idea, and so on.
+![95 % rank-interval coverage by uncertainty method](figures/uncertainty_coverage.png)
 
-**Few-judge caveat.** The finals have only 3–5 judges, and a cluster
-bootstrap with so few clusters gives unreliable intervals. The finals
-bootstrap design is an open item (§16.11).
-- **Axes**: the main ranking is **value**. Per-criterion fits (novelty,
-  feasibility, upside, …) give additional axes and a secondary
-  quality × novelty Pareto view.
-- **Preliminary scores** (from critique) choose workshop value slots;
-  **final scores** (from finals) produce the report ranking.
-- **Stated limitation, in every report**: intervals measure judge *noise*,
-  not judge *bias*. If every judge shares a blind spot the interval is
-  narrow and wrong.
+*The Laplace approximation is the only method at or above the 95 % target
+in both scenarios. Each dot is the share of true ranks that fell inside the
+reported 95 % rank interval over 480 idea-replications; the dashed line is
+the 95 % target. Blue: independent verdicts. Orange: verdicts that share a
+per-dispatch idiosyncrasy (each dispatch perturbs every strength by
+$\mathcal N(0, 0.7^2)$). With about 20 clusters the dispatch bootstrap falls
+to 0.90 under correlation (the small-cluster bias). The Laplace intervals
+are about 10 % wider. Monte Carlo error is roughly ±0.02-0.03 per dot.*
+
+| Method | Coverage (independent / correlated) | Mean interval width (ranks) |
+|---|---|---|
+| dispatch bootstrap | 0.954 / 0.900 | 6.8 / 7.5 |
+| naive bootstrap | 0.958 / 0.927 | 6.8 / 7.2 |
+| Laplace | 0.988 / 0.979 | 7.5 / 7.8 |
+
+The critique-stage bootstrap (about 60 dispatches at standard size) has not
+yet been validated by simulation (§20).
+
+### Reported quantities
+
+- **Rank and 95 % rank interval** from the draws (primary display).
+- **$P(\text{top-}k)$**: the share of draws in which the idea ranks in the
+  top $k$.
+- **Tiers**: a new tier starts where the tier leader beats the next idea
+  in at least 95 % of draws; otherwise ideas share a tier.
+- **Mean win**: $\bar p_i = \frac{1}{N-1}\sum_{j \neq i}\sigma(\beta_i - \beta_j)$,
+  the average chance of beating each other idea in the stratum. It
+  replaces $\sigma(\beta_i)$, which referred to a fictional average idea
+  and saturated near 1 for finalists (§21, review item S3).
+- **$\gamma$** and the bias checks in §15.
+
+Intervals measure judge *noise*, not judge *bias*: if every judge shares a
+blind spot the interval is narrow and wrong. Every report says so.
 
 ## 11. Storage and privacy
 
@@ -624,6 +603,16 @@ bootstrap design is an open item (§16.11).
 - **Tool allowlists per role** via agent definitions (§13); shell access
   for generators restricted to the sandbox wrapper. *Enforcement mechanism
   to be verified* (§16).
+- **Enforcement.** Each role agent declares a tool allowlist, which Claude
+  Code enforces, and a `PreToolUse` hook, `brainswarm guard`, in its
+  frontmatter. The hook allows Bash only for
+  `brainswarm sandbox run <script>` with no shell control operators, and
+  file writes only to JSON under the run's `out/` folder or to a sandbox
+  scratch folder. Roles without research duties (ideator, clusterer,
+  checker, advocate, judge, auditor) get no web and no shell. When role
+  agents are not installed, the referee falls back to general-purpose
+  subagents that read their role file; the allowlists and hook are then
+  **not** enforced, and the digest says so.
 - **Scratch backtests are sanity checks, not evidence.** Held-out ranges are
   fixed by the referee; real performance claims belong to evolve.
 
@@ -634,49 +623,54 @@ code enforces what prose cannot.**
 
 ```
 agent-brainswarm/
-  .claude/skills/brainswarm/SKILL.md     # the one user-facing skill (referee)
-  .claude/agents/brainswarm-*.md         # role prompts + tool allowlists
+  .claude/skills/brainswarm/SKILL.md     # the referee: a thin loop over next / ingest
+  .claude/agents/brainswarm-*.md         # 9 roles: allowlists + guard hook
   src/agent_brainswarm/                  # the "hands"
-  docs/DESIGN.md                         # this file
-  examples/                              # demo brief, config, recorded run
-  tests/
-  install.py                             # (planned) symlink skill + agents into ~/.claude/
+  docs/DESIGN.md  docs/studies/  docs/figures/
+  examples/                              # demo manifest, recorded demo run, replay script
+  tests/  tests/reports/
+  install.py                             # uv tool install + symlink skill and agents
 ```
 
-**Roles** (agent definitions; models are defaults, configurable):
+**Roles** (models are defaults; the referee passes each dispatch's model):
 
-| Role | Phase | Tools | Default model |
-|---|---|---|---|
-| generator | 1, 2 | web search/fetch, read, sandbox | mix of Opus / Sonnet / Fable |
-| clusterer | 3 | none (reads staged files) | Sonnet |
-| critic | 4, 5 | targeted web lookups, read | Sonnet (mixed where possible) |
-| advocate | 5 | read | Sonnet |
-| workshop | 5 | web search/fetch, read, sandbox | a model different from the author |
-| judge | 6 | read (fact-checker variant: web) | Opus + Fable panel |
-| rubric auditor | 0 | read | Sonnet |
+| Role | Phases | Tools |
+|---|---|---|
+| ideator | angle round, ideate | Read, Write |
+| generator | research | Read, Write, WebSearch, WebFetch, Bash (sandbox only) |
+| clusterer | angle clusters, idea clusters | Read, Write |
+| critic | critique, re-critique, fact-check | Read, Write, WebSearch, WebFetch |
+| checker | substitution test | Read, Write |
+| advocate | graveyard advocate | Read, Write |
+| workshop | workshop | Read, Write, WebSearch, WebFetch, Bash (sandbox only) |
+| judge | finals, boundary | Read, Write |
+| rubric-auditor | audit | Read, Write |
 
-Roles are **agent definitions** rather than skills because agent
-definitions can carry tool allowlists. All dispatch happens from the
-referee (subagents cannot spawn subagents).
+Subagents can spawn their own subagents (up to three levels by default),
+but brainswarm keeps all dispatch in the referee so the state machine sees
+every call.
 
-**Python package `agent_brainswarm`** (planned modules; currently stubs):
+**Python package `agent_brainswarm`:**
 
 | Module | Responsibility |
 |---|---|
-| `models` | frozen dataclasses: brief, rubric, idea card, critique, judgment, run config |
-| `config` | presets (size × exploration), `brainswarm.yaml` overrides, validation |
-| `rubric` | rubric freeze and hash check |
-| `assign` | angle/domain banding and stratified slot assignment |
-| `critique` | schema validation, quote matching, generic-critique filter |
-| `library` | idea library, lineage, new/variant/repeat tagging |
-| `scoring` | Bradley–Terry / Plackett–Luce, clustered bootstrap, tiers |
-| `select` | family-aware top-k, wildcard and workshop slot selection |
-| `sandbox` | containerised code runner (pattern copied from agent-evolve) |
+| `pipeline` | the state machine: per-phase plan / check / finish, `next`, `ingest`, retries |
+| `models` | frozen dataclasses and a validating loader for everything agents write |
+| `config` | size x exploration presets, overrides, largest-remainder allocation |
+| `rubric` | rubric rules, freeze, hash check |
+| `assign` | popularity bands and stratified slot assignment |
+| `schedule` | critic block design, finals schedule, boundary rule |
+| `critique` | quote matching, flags, substitution-test merge |
+| `scoring` | Bradley–Terry / Plackett–Luce with position bias; Laplace and bootstrap |
+| `select` | gates, workshop slots, wildcards, family-aware top-k |
+| `records` | read helpers over a run's data |
+| `report` | digest, `report.md`, self-contained `report.html` |
+| `library` | idea library, known-false ledger, feedback, champions |
 | `usage` | token accounting from transcripts |
-| `state` | run folder, checkpoints, resume |
-| `report` | digest, markdown, HTML |
-| `export` | export bundles |
-| `cli` | `brainswarm validate / report / export / resume / feedback` |
+| `export` | agent-evolve bundles |
+| `sandbox` | Docker runner |
+| `guard` | the role hook |
+| `state`, `cli` | run folders; the command line |
 
 ## 14. Logging and telemetry
 
@@ -712,7 +706,7 @@ reliability note until verified.
 | Rubric misinferred (autonomous) | rubric-audit disagreements; assumptions log | shown in preflight so the user can interrupt |
 | Critics harsher on novel ideas | novelty–rank correlation | tighten the "unproven" rule |
 | Generic filter miscalibrated | flag rate; random spot-checks | recalibrate substitution test |
-| Judge position bias [[10]](#ref-zheng-2023) | order-swap disagreement rate | more judges / other models |
+| Judge position bias [[10]](#ref-zheng-2023) | estimated $\gamma$ (§10) | both orders are always judged; $\gamma$ is removed from the strengths |
 | Judge verbosity bias | length–rank correlation | length caps are enforced |
 | Judge self-preference | win rate when judge and author share a model | mixed panels |
 | Anonymity leaks via writing style | judge verdicts tracking author family beyond chance | stricter card structure |
@@ -726,33 +720,45 @@ reliability note until verified.
 | False rigour of intervals | — | report states noise ≠ bias |
 | Harmful/illegal ideas | legality gate hits | fatal gate; stays visible, never shortlisted |
 
-## 16. Gaps to verify before building
+## 16. Gaps and platform facts
 
-1. **Per-role tool restriction in Claude Code**: confirm agent-definition
-   tool allowlists are enforced for subagents, and find a reliable way to
-   limit generator shell use to the sandbox wrapper (e.g. a hook).
-2. **Referee context budget**: digest-only reading; checkpoint and resume.
-3. **Ephemeral storage** in cloud sessions (§11).
-4. **Trigger collisions**: `/brainswarm` must not fire on "brainstorm";
-   must not collide with `/evolve` ("improve X"). Could be tested with the
-   skills-arena SDK.
-5. **Partial failures**: one retry on malformed output, then continue
-   without that agent; report the count.
-6. **Environment differences**: web search availability, concurrency
-   limits, long local runs killed by laptop sleep. Preflight reports what
-   degrades.
-7. **Reproducibility**: seeds for all code-level randomness; model IDs and
-   prompt hashes logged.
-8. **Fixture mode**: canned agent outputs drive the Python layer end to end
-   (tests and the offline demo) at zero token cost.
-9. **Transcript token accounting**: confirm fields, dedupe, output-token
-   reliability.
-10. **Does brainswarm beat one strong agent?** Benchmark (§18) is the first
-    milestone after the MVP.
-11. **Finals bootstrap with few judges.** A judge-clustered bootstrap with
-    3–5 clusters is unreliable [[7]](#ref-field-welsh-2007). Candidates:
-    resample judgments within judge (stratified), or treat judge × match
-    order as the cluster; to be decided with simulated data.
+Status as of 2026-09-29:
+
+1. **Per-role tool restriction.** Claude Code enforces agent allowlists,
+   and agents may declare hooks in frontmatter (documentation). The guard
+   is implemented and tested through its stdin / exit-code interface.
+   *Observed in the demo (cloud session):* user-level agents installed
+   mid-session appeared as agent types only after several minutes (the
+   skill appeared at once), so the demo's early phases used the
+   general-purpose fallback and later phases the real role agents. Role
+   agents also used far fewer tokens per dispatch (~12-35k vs ~55k),
+   because they do not load the general-purpose system prompt. To confirm
+   in a fresh session: that the frontmatter hook fires for role agents.
+2. **Referee context budget.** Resolved by the state machine (§5).
+3. **Ephemeral storage.** `init` warns in cloud sessions; `--here` keeps
+   runs in the project.
+4. **Trigger collisions.** The description excludes "brainstorm" and is
+   tested; live trigger behaviour still needs a fresh session.
+5. **Partial failures.** Resolved: one retry, then drop; phases need half
+   their dispatches (§5).
+6. **Environment differences.** The preflight probes the CLI, the role
+   agents, and web search, with fallbacks. User-level hooks in
+   `~/.claude/settings.json` are reportedly not used in cloud sessions
+   (documentation), which is why the roles carry their hooks in
+   frontmatter.
+7. **Reproducibility.** Seeds for all code randomness; model ids, prompts
+   and task files kept per run; `brainswarm replay` re-runs the code layer
+   over recorded agent outputs.
+8. **Fixture mode.** Resolved: deterministic fake agents drive full runs in
+   the test suite.
+9. **Token accounting.** Resolved with a caveat: subagent transcripts
+   rarely log a message's final usage, so output tokens are estimated from
+   content length (a lower bound) and labelled (§14).
+10. **Does brainswarm beat one strong agent?** Open; benchmark in
+    `PROJECT_PLAN.md`. Judging it with the same LLM judges would be
+    circular: it needs human ratings or briefs with a measurable outcome.
+11. **Finals uncertainty with few clusters.** Resolved by the coverage
+    study (§10).
 
 ## 17. Demo
 
@@ -811,12 +817,36 @@ like *evolve*.
 
 ## 20. Open questions
 
-- Demo brief: flaky tests (leaning) or solo card game.
-- Tool-restriction mechanism for roles (§16.1).
-- Default workshop/judge model assignments once measured.
-- Whether to add an optional `seed_hypotheses` field to agent-evolve later.
-- Finals bootstrap design with few judges (§16.11).
-- Penalty strength $\lambda$ for the Bradley–Terry fit (§10).
+- Coverage of the critique-stage bootstrap (~60 dispatches) by simulation.
+- Whether the guard hook fires for role agents in a fresh session.
+- Default model assignment per role once runs are logged.
+- Band-share defaults and generator count, once per-band yield and the
+  yield curve are logged.
+- Whether to add an optional `seed_hypotheses` field to agent-evolve.
+
+## 21. Design review
+
+`DESIGN.md` was reviewed independently by a Fable and an Opus subagent
+before implementation (2026-09-29). Their findings converged; the
+dispositions:
+
+| Finding (severity) | Disposition |
+|---|---|
+| B1 Critic batches of ~18 cards overflow contexts; rankings of 18 are position-dominated (blocking) | Accepted: ~6 cards per dispatch, lookups budgeted per dispatch, top-3 rankings |
+| B2 Full finals round robin infeasible; one judge seeing both orders defeats the swap (blocking) | Accepted: incomplete schedule, both orders in different dispatches, <= 10 pairs per dispatch |
+| B3 One scale for all ideas mixes v1/v2 objects and selection effects (blocking) | Accepted: two strata, connectivity check |
+| B4 Referee context and orchestration unspecified (blocking) | Accepted: `next` / `ingest` state machine with a file contract |
+| B4' Tertile banding degenerates with singleton clusters (blocking) | Accepted: fixed thresholds, empty-band redistribution |
+| B5 "Code clusters" free text impossibly (important) | Accepted: LLM clusterer, code validates and counts |
+| Pre-registration unenforceable inside one agent (important) | Accepted: separate no-web ideate dispatch |
+| S1 Both-orders tie rule discards data (important) | Accepted: position-bias parameter $\gamma$ |
+| S2 Ridge shrinks everything; choose it as a prior (important) | Accepted: $\tau = 1.5$ with sensitivity; centring is automatic |
+| S3 Judge-clustered bootstrap with 3 judges meaningless (blocking) | Accepted and tested: dispatch clusters; the coverage study then showed Laplace is needed below ~30 clusters |
+| S5 Overlap tiers are order-dependent (important) | Accepted: tiers by bootstrap separation; P(top-k) reported |
+| S6 $\sigma(\beta_i)$ misleading display (minor) | Accepted: mean win against the field |
+| Benchmark with LLM judges is circular (important) | Accepted: human ratings or measurable briefs |
+| Cut library, sandbox, angle round, advocate, export, HTML from v1 (important) | Rejected for scope: the owner asked for these. Mitigated: each is isolated so the core pipeline does not depend on it |
+| Headless `claude -p` / SDK orchestration as an alternative (suggestion) | Deferred: the Agent-tool loop works within a subscription session; revisit if allowlist enforcement proves unreliable |
 
 ## References
 

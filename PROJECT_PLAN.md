@@ -5,43 +5,40 @@ This document outlines the planned phases and tasks for developing agent-brainsw
 1.  [completed] Research prior art (skillsarena.ai, zhjai/agent-arena, oyi77/agent-arena-skill) and agent-evolve conventions.
 2.  [completed] Design discussion and decisions recorded in `docs/DESIGN.md`.
 3.  [completed] Scaffold: skill and role stubs, package skeleton, scaffold tests.
-4.  [completed] Toolchain and documentation compliance.
-    - [completed] `uv` project with `uv.lock`; `ruff`, `ty`, `detect-secrets`, `pre-commit` as dev dependencies
-    - [completed] `.gitignore` entries for `.env`, `.DS_Store`, `venv/`, `.venv/`
-    - [completed] README with directory tree, documentation index, logic and mathematics
-    - [completed] References section in `docs/DESIGN.md`
-    - [completed] Scaffold test report
-5.  [pending] Independent critique of `docs/DESIGN.md` by Fable and Opus subagents; merge accepted changes.
+4.  [completed] Toolchain and documentation compliance (`uv`, `ruff`, `ty`, secret scanning, `pre-commit` hooks; README; references; test report).
+5.  [completed] Independent critique of `docs/DESIGN.md` by Fable and Opus subagents; dispositions recorded in `DESIGN.md` §21.
 
 ## Phase 2: Verification of platform assumptions
-6.  [pending] Per-role tool restriction in Claude Code (`DESIGN.md` §16.1).
-    - [pending] Confirm agent-definition tool allowlists are enforced for subagents
-    - [pending] Restrict generator shell use to the sandbox wrapper
-7.  [pending] Trigger behaviour: `/brainswarm` fires on "brainswarm …", never on "brainstorm", and does not collide with `/evolve`.
-8.  [pending] Transcript token accounting: fields, message-id dedupe, output-token reliability.
-9.  [pending] Bootstrap design for few judges in the finals (`DESIGN.md` §16.11).
+6.  [completed] Per-role tool restriction (`DESIGN.md` §16.1).
+    - [completed] Documentation: agent allowlists are enforced; agents may declare hooks in frontmatter
+    - [completed] `brainswarm guard` hook implemented and tested through its stdin / exit-code interface
+    - [pending] Confirm in a fresh session that the hook fires for installed role agents (not picked up mid-session in a cloud session)
+7.  [in-progress] Trigger behaviour: description excludes "brainstorm" (tested); live check needs a fresh session.
+8.  [completed] Transcript token accounting: message-id dedupe; output tokens estimated where final usage is missing.
+9.  [completed] Finals uncertainty with few clusters: coverage study (`docs/studies/uncertainty_coverage.py`); Laplace below 30 clusters.
 
 ## Phase 3: Python layer with fixture mode
-10. [pending] `models`, `config` (size × exploration presets, overrides), `rubric` (freeze and hash).
-11. [pending] `assign` (banding, stratified allocation), `critique` (schema, quote match, generic filter).
-12. [pending] `scoring` (Bradley–Terry, Plackett–Luce, clustered bootstrap, tiers), `select` (family-aware top-k, slots).
-13. [pending] `state` (run folder, checkpoints, resume), `usage`, `report`, `export`, `sandbox`, `cli`.
-14. [pending] Fixture mode: canned agent outputs drive the full pipeline at zero token cost; tests and test reports.
+10. [completed] `models`, `config`, `rubric`.
+11. [completed] `assign`, `critique`, `schedule`.
+12. [completed] `scoring` (Bradley–Terry, Plackett–Luce, position bias, Laplace and bootstrap, tiers, P(top-k)), `select`.
+13. [completed] `pipeline` state machine, `state`, `records`, `usage`, `report`, `export`, `sandbox`, `guard`, `cli`.
+14. [completed] Fixture mode: deterministic fake agents drive full runs; tests and test reports.
 
 ## Phase 4: Protocol prompts
-15. [pending] `/brainswarm` referee SKILL.md (prime directives, phases, failure modes, "do not" list).
-16. [pending] Role prompts for generator, clusterer, critic, advocate, workshop, judge, rubric auditor.
+15. [completed] `/brainswarm` referee `SKILL.md`.
+16. [completed] Role agents: ideator, generator, clusterer, critic, checker, advocate, workshop, judge, rubric auditor.
 
 ## Phase 5: Demo and installation
-17. [pending] Tier 2 live mini demo run; record its output.
-18. [pending] Tier 1 offline replay demo (`examples/demo_run.py`) from the recording.
-19. [pending] `install.py` (symlink skill and agents into `~/.claude/`), usage documentation.
+17. [in-progress] Live mini demo run on a concrete trading brief; record its outputs.
+18. [pending] Offline replay demo (`examples/demo_run.py`) from the recording.
+19. [completed] `install.py` (editable uv tool; symlink skill and agents).
 
 ## Phase 6: Evaluation
-20. [pending] Benchmark: brainswarm versus a single strong agent asked for 20 ideas, on 3–5 briefs.
+20. [pending] Benchmark: brainswarm versus a single strong agent asked for 20 ideas, on 3–5 briefs, judged by humans or by a measurable outcome.
 21. [pending] Ablations: no critique, no workshop, no angle round.
-22. [pending] Dated benchmark reports; recalibrate the size table from logged actuals.
+22. [pending] Coverage study for the critique-stage bootstrap (~60 dispatches).
+23. [pending] Recalibrate the size table from logged runs.
 
 ## Phase 7: Repeat runs and extensions
-23. [pending] Idea library, lineage, new/variant/repeat tagging, returning champions.
-24. [pending] External CLIs as generators; data-driven band-mix defaults.
+24. [completed] Idea library, lineage, new/variant/repeat tagging, returning champions, known-false ledger, feedback (fixture-tested).
+25. [pending] External CLIs as generators; data-driven band-share defaults.

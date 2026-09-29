@@ -637,9 +637,14 @@ def _critic_items(d: Dispatch, data: Any) -> list[dict[str, Any]]:
 
 
 def _ranking_problems(order: Any, batch: Sequence[str], name: str) -> list[str]:
+    """A ranking may be longer than the required depth: its prefix is the truncated ranking.
+
+    Rejecting a longer, otherwise valid ranking would force a full, costly
+    rewrite of the critic's output for no gain (observed in the demo run).
+    """
     depth = min(RANKING_DEPTH, len(batch))
-    if not isinstance(order, list) or len(order) != depth:
-        return [f"{name} must list exactly {depth} idea ids"]
+    if not isinstance(order, list) or len(order) < depth:
+        return [f"{name} must list at least the top {depth} idea ids"]
     if len(set(order)) != len(order) or not set(order) <= set(batch):
         return [f"{name} must be distinct ids from this batch"]
     return []
@@ -689,7 +694,8 @@ def finish_critique(run: Run, results: dict[str, Any]) -> list[str]:
         items, _ = check_items(_critic_items(d, data), texts, did)
         checked += items
         for crit, key in (("overall", "ranking"), ("novelty", "novelty_ranking")):
-            rankings.append(dump(Ranking(did, d.model, tuple(data[key]), crit)))
+            depth = min(RANKING_DEPTH, len(_batch(run, did)))
+            rankings.append(dump(Ranking(did, d.model, tuple(data[key][:depth]), crit)))
         ratings += [{**x, "critic_id": did} for x in data["ratings"]]
     _store_checked(run, checked)
     run.write(rankings, "data", "rankings.json")

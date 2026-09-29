@@ -1,0 +1,31 @@
+# Live mini demo (~0.3-0.8M new tokens, ~15-25 min). Run by saying:
+#   "run the brainswarm demo"  ->  brainswarm init --manifest examples/brainswarm-demo.yaml
+# A reduced `quick` run with a small workshop so every phase is exercised.
+# Web is off to keep the cost down; the multi-run library is not exercised.
+brief: >
+  Design a rule-based, long-only trading strategy for a universe of 10 liquid ETFs
+  (US large cap, US small cap, developed ex-US, emerging markets, US Treasuries 7-10y,
+  TIPS, investment-grade credit, gold, broad commodities, US REITs). It must trade on at
+  least 3 days per week, keep weekly turnover at or below 20%, and use only daily
+  closing prices. Optimise long-run growth while keeping maximum drawdown below 20%
+  and staying diversified across asset classes.
+size: quick
+exploration: balanced
+seed: 20260929
+overrides:
+  generators: 4
+  ideas_per_generator: 2
+  angles_per_generator: 2
+  domains_per_generator: 2
+  critics_per_idea: 2
+  cards_per_critic: 4
+  workshop_slots: 4
+  workshop_rounds: 1
+  recritique_critics: 1
+  finals_matches_per_idea: 3
+  pairs_per_judge: 6
+  draws: 500
+  web: false
+  generator_models: [sonnet, opus]
+  critic_models: [sonnet]
+  judge_models: [sonnet, opus]
