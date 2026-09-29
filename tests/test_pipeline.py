@@ -134,10 +134,12 @@ def test_replay_reproduces_ranking_with_zero_agents(tmp_path: Path) -> None:
     assert replayed.read("data", "final.json")["rank"] == run.read("data", "final.json")["rank"]
 
 
-def test_second_run_uses_library_and_champions(tmp_path: Path) -> None:
-    first = new_run(tmp_path)
+@pytest.mark.parametrize("web", [False, True])
+def test_second_run_uses_library_and_champions(tmp_path: Path, web: bool) -> None:
+    # web=True regression: fact-check read cards before champions were imported (KeyError).
+    first = new_run(tmp_path, web=web)
     drive(first)
-    second = new_run(tmp_path, returning_champions=2)
+    second = new_run(tmp_path, returning_champions=2, web=web)
     drive(second)
     champions = second.read("data", "champions.json")
     assert len(champions) == 2 and set(champions) <= set(second.read("data", "final.json")["ids"])

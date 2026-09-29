@@ -1160,9 +1160,10 @@ def _finalists(run: Run) -> list[str]:
 
 def plan_factcheck(run: Run) -> list[Dispatch]:
     cfg = _config(run)
+    finalists = _finalists(run)  # first: it imports returning champions into cards.json
     cards = _cards(run)
     out = []
-    for n, x in enumerate(_finalists(run)):
+    for n, x in enumerate(finalists):
         body = (
             f"## Idea\n\n{_card_md(cards[x])}\n\n## Your job\n\nIdentify the idea's load-bearing "
             f"factual claims and check each with at most {cfg.critic_lookups} web lookups."

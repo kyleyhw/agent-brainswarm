@@ -1,6 +1,6 @@
 ---
 name: brainswarm
-description: Generate ideas at scale and rank them honestly. Invoke ONLY as `/brainswarm` or when the user explicitly says "brainswarm ..." (e.g. "brainswarm trading strategies that trade on many days and optimise growth"), or passes a path to a `brainswarm.yaml`. Runs a swarm of independent agents that research and propose ideas, justified critique, a workshop round, and pairwise finals; reports a ranked list of every idea plus the top idea families. Costs millions of tokens — do NOT trigger on "brainstorm", "mull it over", or casual requests for a few ideas. Never acts on its ideas.
+description: Use this skill whenever the user's message begins with the word "brainswarm" (e.g. "brainswarm ways to cut our CI time", "brainswarm trading strategies that trade on many days") or is `/brainswarm`, or passes a path to a `brainswarm.yaml`. "brainswarm" is the name of this command, never a typo for "brainstorm". Runs a multi-agent idea search (independent generators, justified critique, workshop, pairwise finals) and reports a ranked list of every idea plus the top idea families. It costs millions of tokens, so do NOT use it when the user says "brainstorm", "mull it over", or asks casually for a few ideas without the word "brainswarm". Never acts on its ideas.
 argument-hint: "<natural-language brief> | path/to/brainswarm.yaml"
 ---
 
