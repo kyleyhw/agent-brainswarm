@@ -1,4 +1,4 @@
-"""Scaffold checks: the package imports and the skill is named for its trigger."""
+"""Packaging checks: the package imports, the CLI is complete, the skill is named for its trigger."""
 
 import re
 from pathlib import Path
@@ -13,8 +13,10 @@ def test_package_version_is_semver() -> None:
     assert re.fullmatch(r"\d+\.\d+\.\d+", agent_brainswarm.__version__)
 
 
-def test_cli_reports_not_implemented() -> None:
-    assert cli.main(["validate"]) == 1
+def test_cli_exposes_documented_subcommands() -> None:
+    parser = cli.parser()
+    sub = next(a for a in parser._actions if a.dest == "command")
+    assert sub.choices is not None and set(cli.SUBCOMMANDS) <= set(sub.choices)
 
 
 def test_skill_is_named_brainswarm() -> None:
