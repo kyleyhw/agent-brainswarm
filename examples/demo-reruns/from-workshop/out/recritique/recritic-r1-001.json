@@ -1,0 +1,155 @@
+{
+  "response_verdicts": [
+    {"critique_id": "critic-003-01", "holds": true},
+    {"critique_id": "critic-004-04", "holds": true},
+    {"critique_id": "critic-003-02", "holds": true},
+    {"critique_id": "critic-004-06", "holds": true},
+    {"critique_id": "critic-003-03", "holds": true},
+    {"critique_id": "critic-003-04", "holds": true},
+    {"critique_id": "critic-004-05", "holds": true},
+    {"critique_id": "critic-004-07", "holds": false},
+    {"critique_id": "critic-001-06", "holds": true},
+    {"critique_id": "critic-001-07", "holds": true},
+    {"critique_id": "critic-001-08", "holds": true},
+    {"critique_id": "critic-001-09", "holds": true},
+    {"critique_id": "critic-001-10", "holds": true},
+    {"critique_id": "critic-004-11", "holds": true},
+    {"critique_id": "critic-004-12", "holds": true},
+    {"critique_id": "critic-004-13", "holds": true},
+    {"critique_id": "critic-004-14", "holds": true},
+    {"critique_id": "critic-001-01", "holds": true},
+    {"critique_id": "critic-001-02", "holds": true},
+    {"critique_id": "critic-001-03", "holds": true},
+    {"critique_id": "critic-001-04", "holds": true},
+    {"critique_id": "critic-002-04", "holds": true},
+    {"critique_id": "critic-001-05", "holds": true},
+    {"critique_id": "critic-002-05", "holds": true},
+    {"critique_id": "critic-002-06", "holds": true},
+    {"critique_id": "critic-002-07", "holds": true},
+    {"critique_id": "critic-002-08", "holds": true},
+    {"critique_id": "critic-002-09", "holds": true},
+    {"critique_id": "critic-002-10", "holds": true},
+    {"critique_id": "critic-004-08", "holds": true},
+    {"critique_id": "critic-004-09", "holds": true},
+    {"critique_id": "critic-002-11", "holds": true},
+    {"critique_id": "critic-002-12", "holds": false},
+    {"critique_id": "critic-002-13", "holds": true},
+    {"critique_id": "critic-004-10", "holds": true}
+  ],
+  "same_idea": [
+    {"idea_id": "I008-v2", "same": true},
+    {"idea_id": "I003-v2", "same": true},
+    {"idea_id": "I004-v2", "same": true},
+    {"idea_id": "I002-v2", "same": true}
+  ],
+  "critiques": [
+    {
+      "idea_id": "I008-v2",
+      "target": "Sigma = 0.5*(stress covariance about its own mean) + 0.5*(500-day covariance)",
+      "mechanism": "The stress set is selected on the level of the equal-weight (EW) return (worst 10% of days). Centering the stress covariance on the subset's own mean removes the term that carries the crash loss and leaves only the variance truncated by the selection. For a Gaussian EW factor the lower-10% tail has variance ratio 1 - b*lambda - lambda^2 = 0.169 (b = -1.28, lambda = phi/Phi = 1.755). Each asset's stress variance is therefore cut by about 0.83*R^2_i, where R^2_i is its fit to the EW factor. Equities (R^2 about 0.8-0.9) lose about 70% of their variance, and Treasuries (R^2 about 0) lose none. In a calm 500-day window the stress covariance therefore understates equity risk relative to bond risk, the opposite of the pitch ('full-sample risk parity understates crisis risk'). It exceeds S_500 only when a crisis sits inside the window, and then S_500 already contains it, so the estimator is procyclical. The 'stock-bond correlation turns positive' shift also depends on within-slice correlations, which range restriction on the EW factor distorts. The response to critic-004-07 calls the selection bias 'a conservative upward bias'. That has the wrong sign for selection on return level. Forbes-Rigobon's upward bias comes from conditioning on high variance, not on the level of the return.",
+      "evidence": "Truncated-normal moments: for X<b with b = Phi^-1(0.1) = -1.2816, Var = 1 - b*phi(b)/Phi(b) - (phi(b)/Phi(b))^2 = 1 + 2.249 - 3.080 = 0.169. The Gaussian conditional covariance is Sigma - (1-v) Sigma e e' Sigma/(e' Sigma e), with v = 0.169. Boyer-Gibson-Loretan (1999) show that conditioning on a tail of one variable lowers correlations under normality. The card's own ablation 'stress covariance adds nothing' is the kill test, which suggests the author is unsure whether it adds anything.",
+      "severity": "major",
+      "falsifier": "On 2006-2025 ETF data, compute the diagonal of the worst-50-of-500 own-mean covariance divided by the 500-day diagonal. If equity variances are at least 1x that of the full sample in calm windows, and ERC weights move toward bonds and real assets rather than toward equities, the critique is wrong. Alternatively, add back the mean outer product or use a 2-state variance estimate.",
+      "gate": null
+    },
+    {
+      "idea_id": "I008-v2",
+      "target": "with c = clip(250-day correlation of equal-weight Growth and Rates baskets, 0, 0.5)",
+      "mechanism": "The 2022 drawdown estimate of 7-12% relies on Rates being cut to 1/6 of risk (about 40% weight). A 250-day rolling correlation averages the pre-flip regime with the post-flip regime. If the pre-flip correlation is about -0.2 and the post-flip correlation about +0.6, then c reaches 0.25, a meaningful budget shift, only after about 0.56 of the window, roughly 140 trading days (7 months) after the flip. The stock-bond flip occurred around Jan-Feb 2022, so c passes 0.25 around Aug-Sep 2022. By then IEF, LQD and TIP had already lost most of their 2022 drawdown, so in the fastest phase of the loss the book still holds 60-65% duration. The remaining protection is the SMA200 halving and the CPPI floor, and the response counts c as a third line of defence. The response concedes the lag in general terms but still uses c = 0.5 weights in the headline estimate.",
+      "evidence": "Pooled-window arithmetic: mean is approximately (0.6 - (-0.2))*f - 0.2 = 0.8f - 0.2. Setting this to 0.25 gives f = 0.56, i.e. 140 of 250 days. The card gives 2022 bond leg losses of IEF -15%, LQD -18%, TIP -12%, with about 9-10% NAV loss at 65% duration weight. The card's 7-12% estimate leans on the c cut, which arrives late.",
+      "severity": "minor",
+      "falsifier": "A backtest series of c during Jan-Jun 2022. If c is already at least 0.3 by March 2022 because IG credit and TIPS were already positively correlated with equities through 2021, the critique fails. Otherwise the fix is to base the budget on a 60-day correlation or on the sign of a fast-slow correlation difference.",
+      "gate": null
+    },
+    {
+      "idea_id": "I008-v2",
+      "target": "cap = min(0.035, 0.195 - turnover realised this calendar week incl. drift)",
+      "mechanism": "There is no floor at zero. If realised turnover including drift exceeds 0.195 (a large-drift week), cap is negative and x = G*min(0.2, cap/(0.5*sum|G|)) has the opposite sign to G, so the strategy trades away from target. This contradicts the claim that the weekly cap holds 'by construction'. The spec also omits the fill convention (whether the signal at close t is filled at close t or t+1). It does not say whether G, and the 0.5*sum|.| in the turnover sum, include cash as an eleventh weight. Two coders would obtain different turnover accounting, and cash-inclusive counting is twice as strict for de-risking. The rules also do not say how cash earns return, which matters for the 'net CAGR trails cash by under 2 points' kill test.",
+      "evidence": "Direct reading of the formula: for cap < 0 the min() returns a negative number. The card states neither cash handling nor fill timing in the Operational spec, whereas the sibling cards I002, I003 and I004 state that cash is counted or trades fill at t+1. Reaching cap < 0 needs drift above roughly 5-9% of NAV in a week, so it is rare, but the rule as written is wrong.",
+      "severity": "minor",
+      "falsifier": "Add max(0, .) around the cap, and state the fill convention and whether cash counts. Then the spec is deterministic and the critique no longer applies.",
+      "gate": "turnover_cap"
+    },
+    {
+      "idea_id": "I003-v2",
+      "target": "Peak H_t = max(NAV_t, H_{t-1}(1-0.03/252))",
+      "mechanism": "Decay lets the reference peak fall below the true all-time peak, so the 16% floor and 4% reserve hold only relative to H, not relative to the all-time peak that defines maximum drawdown. Since H = H_true*exp(-0.03*tau) while underwater for tau years, the worst true drawdown is bounded by 1 - 0.84*exp(-0.03*tau). This is 18.5% at tau = 1 year and 20% at tau = 1.6 years, so the '4% slippage reserve' is consumed by time. A chained second leg is not covered by the single-event estimate of about 12%. After a first event ends at 12% DD and NAV recovers only partly, H has decayed while NAV is still under the true peak. A second event of the same relative size then reaches 1 - 0.88*exp(-0.03*tau) in true drawdown, which is 17% at tau = 2 years. The response analyses only a single event and a persistent grind, not two chained events in a 2-3 year underwater stretch, which is what a bond-heavy book saw in 2020-2023.",
+      "evidence": "Algebra: NAV/H >= 0.84 by design, so NAV/H_true >= 0.84*exp(-0.03*tau). The card's own line gives the same 1.6-year breach time (response to critic-001-07). Card estimates single-event DD at about 10-13%.",
+      "severity": "minor",
+      "falsifier": "Backtest max drawdown measured from the true all-time peak across 2004-2025. If it is under 17% (the card's own kill level) including chained episodes, the critique fails. Making the decay conditional on being at the floor would also remove it.",
+      "gate": null
+    },
+    {
+      "idea_id": "I003-v2",
+      "target": "E_t = 0.90·clip((0.16-DD_t)/0.12, 0, 1)",
+      "mechanism": "The 0.90 cap creates the permanent 10% zero-return cash reserve and is not derived; the 4% deadband, 0.16 floor and 3%/yr decay are also set by judgement. The cap does little for drawdown control because the cushion-proportional law already scales exposure down from DD > 4%, so a fixed 10% haircut in calm markets is pure drag: about 10% x book return, roughly 0.4%/yr of a claimed 3.5-4.5%. The decay rate matters even more, because it sets both the lock-out time and the erosion of the drawdown bound (1.6 years to a 20% true DD), and no principle picks 3% over 1% or 6%. That is four to five free constants for a strategy claiming principled parameters, and the growth estimate sits inside the noise of these choices.",
+      "evidence": "Structure of the law: at DD = 0.04, E = 0.90 by clip, and cushion-proportional exposure above DD = 0.04 has slope 7.5 regardless of the cap. Removing the cap (cap 1.0) changes the multiplier only from 7.5 to 8.3. Card lists constants as '20% bound (given), 4% slippage reserve, 4% deadband, 3%/yr decay, 10% cash, 3.5% cap, each with a stated basis', but the 10% has only the 'spinning reserve' analogy as basis.",
+      "severity": "minor",
+      "falsifier": "A backtest ablation with the cap at 1.0 and decay at 1% and 6% showing net CAGR within 0.3% and max DD unchanged. That would show the constants do not matter.",
+      "gate": null
+    },
+    {
+      "idea_id": "I004-v2",
+      "target": "Weekly turnover <= 17.5% plus drift; trades daily.",
+      "mechanism": "The daily caps (3.5% if exposure falls, otherwise 1.75%) bound traded weight only. The spec has no realised weekly turnover budget, unlike I003-v2 and I008-v2, which subtract week-to-date turnover including drift from a 19.5% allowance. Gaps are computed against drifted weights, so drift is not budgeted at all. In a crash week, when the cap binds all five days, price drift is about 2% of NAV. Using delta w_i approximately w_i*(r_i - r_p), a week like March 2020 with 19% equity at -15%, 25% real at -10% and 50% duration at about -3% gives about 2.1%. The sum of trades plus drift is then about 19.6%. Any drift above 2.5% breaks the gate 'by construction'. Cash-inclusive counting of de-risking trades (a sale into cash counts as its full size) gives some slack because the ETF-only measure is about half. But the full 17.5% is reachable through ETF-to-ETF rebalancing when the ERC mix and gate flags flip in the same week.",
+      "evidence": "Card text says 'plus drift' and its kill test says 'Kill if ... a turnover or no-trade breach occurs', which concedes that the cap is not guaranteed. The sibling cards I003-v2 ('19.5% - week-to-date turnover including price drift') and I008-v2 ('0.195 - turnover realised this calendar week incl. drift') carry the budget in the rule. Drift arithmetic as above.",
+      "severity": "major",
+      "falsifier": "Add a cap of the form min(0.035, 0.195 - WTD turnover including drift) as the sibling cards do. Or show, in a backtest that includes March 2020 and October 2008, that maximum weekly turnover measured with drift stays under 20%.",
+      "gate": "turnover_cap"
+    },
+    {
+      "idea_id": "I004-v2",
+      "target": "Priors bound 20-day cluster losses",
+      "mechanism": "The stated assumption is false for the Equity cluster in two of the three crises the card names. The Equity prior L = 22% is below the realised 20-day loss of the inverse-vol equity cluster: about -28% to -30% in Oct 2008 (SPY roughly 1213 to 876) and about -30% in Feb-Mar 2020 (SPY -30%, EEM -30%, VNQ -40% over 20 sessions). The card says the prior comes from episodes like 1987, where the S&P 500 fell about 28-30% over a comparable 20-day window, so the prior is inconsistent with its own source. In 2008 and 2020 the equity exceedance of 8-10 points, times an ERC weight of about 0.19, costs 1.5-1.9 points. Real (DBC about -25% to -30% in 20 days against a 15% prior) adds about 1 point. That is about 3 of the 4 points of margin (16% design level vs the 20% bound) consumed before any margin for the ramp, the 0.2 floor (2.4%) or a second leg. The 12-13% crisis estimates hold only because lambda is at most 0.95, not because S bounds the loss.",
+      "evidence": "S = 0.19*22 + 0.57*7 + 0.24*15 = 11.8%, whereas realised is about 0.19*30 + 0.57*7 + 0.24*16 = 13.5%. Loss at lambda 0.95 is about 12.8%, so the estimate is 12-13% by exceedance and not by the S bound. The hand numbers (SPY, EEM, VNQ) are approximate and rounded from memory of the 2008 and 2020 price paths.",
+      "severity": "minor",
+      "falsifier": "A backtest table of realised 20-day cluster losses against L_c for 2008 and 2020, showing exceedance under 2 points. Raising the Equity prior to 30% and re-deriving the floor would also answer this.",
+      "gate": null
+    },
+    {
+      "idea_id": "I004-v2",
+      "target": "Across clusters: ERC on 63-day covariance.",
+      "mechanism": "The v2 spec drops the definition of the cluster return series. The v1 spec said 'Cluster returns use current within-cluster weights'; v2 does not say how cluster returns are built for the 63-day covariance or for L_c (the 'overlapping 20-day cluster losses'). Options include static inverse-vol a_i, gated a_i*m_i, or current weights applied backwards. These give different cluster covariances and different tail percentiles, especially because m_i changes with the 200-day SMA. Data start (ETF inception versus 2004 proxies) is also unstated, while the priors and the 'expanding percentile' depend on it. Two coders could not reproduce the same S, lambda and weights, so the specificity anchor 'every lookback, threshold, weight formula' fails.",
+      "evidence": "Comparison of the v1 spec ('Cluster returns use current within-cluster weights') with the v2 spec, in which that sentence is gone. Card text: 'L_c = max(prior, expanding 1st percentile of overlapping 20-day cluster losses)' with no return construction.",
+      "severity": "minor",
+      "falsifier": "State the cluster return construction (for example a_i at time t applied over the whole window, ungated) and the data start. This resolves the critique.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002-v2",
+      "target": "equal budgets, Spinu form",
+      "mechanism": "Equal risk budgets are set per ETF (10% each), and five of the ten ETFs (SPY, IWM, EFA, EEM, VNQ) are equity-like. So by rule half of portfolio variance comes from equity-like assets at every date, versus 1/3 in the cluster-budgeted siblings (I003, I004, I008). Because the equity-like assets are correlated at about 0.7-0.9 with each other, their factor is the dominant single source of risk. It is close to the weak anchor 'effectively an equity-beta bet' in the rubric's diversification item. In the sample first factor, high loadings on equities plus REITs make this worse when the stress prior is on. The taper limits the damage but does not change the composition. Higher equity-like risk share also raises the size of the first-week loss on which the stylised drawdown path depends.",
+      "evidence": "Equal budgets: each of 10 ETFs contributes 10% of variance, and 5 of 10 are equity-like, so they contribute 50% of variance by construction (RC shares sum to 1). I003-v2 gives the equity cluster a standalone risk of 1/3, and I008-v2 gives Growth 1/3 of risk with a cap of 1/2 for any class.",
+      "severity": "minor",
+      "falsifier": "Add class budgets (for example Growth 1/3 spread over the five equity-like ETFs). Or show that in a 2006-2025 backtest the equity-like risk share stays well under 50% because of the mixture.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002-v2",
+      "target": "S* keeps the sample's first-component loadings with their signs, amplified toward 0.8 correlation",
+      "mechanism": "S* = D(l*l*' + diag(1 - l*^2))D is a rank-1 plus diagonal fit built from the same 120-day correlation matrix as S. It is only a stress prior in name. (1) Amplification c = max(1, sqrt(0.8)/max|l|) acts only when the largest loading is below 0.894, which is exactly when the absorption ratio, and hence p, is low. When p is high, lambda1 is already large (A >= q95 means lambda1 + lambda2 is large), the loadings are already near or above 0.9, and c is about 1. (2) The rank-1 fit discards every within-group correlation not aligned with factor 1. Suppose IEF and TIP both load about -0.3. S* implies corr = 0.09, whereas their realised correlation is about 0.6-0.9. So exactly when p has weight, the covariance treats the duration trio as near-independent hedges, and ERC gives them an inflated combined weight. (3) What remains of the stress effect is the max(sigma_20, sigma_120) vol swap, a fast-vol overlay that could be applied to S directly. So the mixture's added value is in doubt, and it is inaccurate for the bond pairs in stress.",
+      "evidence": "Loading algebra: l_i = sqrt(lambda1)*v1_i, sum of l_i^2 = lambda1, so mean l^2 = lambda1/10. For lambda1 of about 5 (implied by A at q95), l is about 0.7 on average and roughly 0.9 for equities, so c is about 1. Pair correlation in S* is l_i*l_j; for l = -0.3 on both, that is 0.09. Card kills only if 'the mixture does not beat sample-only ERC', so the author has no argument that it adds value.",
+      "severity": "minor",
+      "falsifier": "Ablation showing ERC weights under S* mixture differ materially from ERC on S with the max(sigma_20, sigma_120) vol swap applied, and that the mixture beats it on max drawdown. Adding a second factor (lambda2 loadings) would also remove the bond-pair error.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002-v2",
+      "target": "Weekly ≤18%; 2% drift reserve",
+      "mechanism": "The turnover gate is met only if drift stays within a fixed 2% reserve, and the response itself says 'I read the gate as measuring traded weight changes'. There is no realised-turnover budget, unlike I003-v2 and I008-v2. The rubric defines turnover as the sum of absolute weight changes over each calendar week, and a weight change includes drift. In a high-dispersion week with ETF-to-ETF rebalancing on all three sessions (for example when p moves and ERC weights jump), the reserve is about 2% and can be exceeded: about 2.1% in a March 2020 type week by the estimate delta w_i approximately w_i*(r_i - r_p). Two things soften the risk. First, the cash-inclusive 6% cap counts sales into cash at their full size, so a crash week with exposure cuts is about 9% ETF-only plus drift. Second, calm weeks have low drift. So a breach is unlikely, but the gate says 'by construction'.",
+      "evidence": "Card spec: 'Weekly ≤18%; 2% drift reserve.' Response to critic-002-12: 'In extreme weeks drift could exceed 2% if the gate counts drift; I read the gate as measuring traded weight changes'. Sibling cards budget drift explicitly (19.5% minus week-to-date turnover including drift).",
+      "severity": "minor",
+      "falsifier": "Add a weekly budget cap including drift. Or a backtest showing weekly turnover including drift under 20% in every week, including 2008 and 2020.",
+      "gate": "turnover_cap"
+    },
+    {
+      "idea_id": "I002-v2",
+      "target": "A linear drawdown taper (CPPI, multiplier 1/0.18) caps exposure.",
+      "mechanism": "The taper starts at DD = 0 (e = 1 - DD/0.18) and references the all-time peak with no decay or re-entry rule, so exposure is throttled for as long as NAV sits below its old peak. The cushion C = 0.18 - DD regrows only at the rate of the book's return, dC/dt = e*mu = mu*C/B, which is exponential at mu/B. For mu = 5% this rate is about 0.28 per year, so recovering from DD 10% to DD 2% takes ln(0.16/0.08)/0.28 = 2.5 years. After each of 2008 (DD of 10% or more), 2011, 2013, 2015, 2018, 2020 and 2022 the book runs at reduced exposure, so the average exposure over 2006-2025 is likely 0.6-0.7 and the CAGR about 0.65*5% = 3.3% before costs. That is at or below the card's 3.5-4.5% and about the cash return of the period. The card gives no estimate of mean exposure, which is the main determinant of net growth.",
+      "evidence": "Card's own failure mode: 'Cash lock: at 10% drawdown exposure ≤0.44; recovery ~2–3 years.' Recovery time is computed from the ODE above. Card kill test 'the mixture does not beat sample-only ERC on CAGR/maxDD' does not test the taper itself.",
+      "severity": "minor",
+      "falsifier": "A backtest showing mean exposure above 0.8 over 2006-2025 and net CAGR of at least 3.5% (cash return plus 1.5% or more). A decayed or windowed peak (as in I003 and I004) would also answer this.",
+      "gate": null
+    }
+  ]
+}

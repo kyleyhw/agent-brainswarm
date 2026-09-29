@@ -1,0 +1,76 @@
+{
+ "card": {
+  "title": "Crisis-correlation risk budgeting with trend gates, drawdown floor and staggered daily rebalancing",
+  "pitch": "Budget risk across growth, rates and real-asset classes using stress-day covariance, shift budget from rates to real assets when stock-bond correlation turns positive, halve downtrending assets into cash, and trade a fifth of the target gap each day.",
+  "mechanism": "Stress set: worst 50 of the last 500 days of equal-weight 10-ETF return. Sigma = 0.5*(stress covariance about its own mean) + 0.5*(500-day covariance). Class budgets: Growth (five equity/REIT ETFs) 1/3; Rates (UST, IG, TIPS: duration assets) (1-c)/3; Real (gold, commodities) (1+c)/3, with c = clip(250-day correlation of equal-weight Growth and Rates baskets, 0, 0.5). Equal within class; ERC weights w. Cash arises from the vol cap k, trend gate g_i (0.5 below SMA200) and a CPPI drawdown floor m = clip(6*(1-0.8*HWM/NAV), 0, 1), never renormalised away. Target T = k*m*g*w. Daily, a fifth of the gap to T is traded (a rolling 20% sleeve), capped so turnover holds by construction.",
+  "rationale": "Correlations rise in sell-offs (Longin-Solnik 2001), so full-sample risk parity understates crisis risk. Trend gates cut drawdowns (Faber 2007; Hurst et al. 2017); a CPPI floor bounds losses (Black-Perold 1992). Staggering reduces timing luck (Hoffstein et al. 2020). Hand estimate, not backtested: net 4-5% CAGR at about 5% volatility; 2008, 2020, 2022 drawdowns roughly 6-12%.",
+  "assumptions": [
+   "50 stress days with 50% shrinkage give a stable matrix",
+   "Stress co-movement persists for weeks",
+   "Costs 5-10 bp per trade"
+  ],
+  "failure_modes": [
+   "Fast crash outruns 3.5%/day trading",
+   "Trend whipsaw",
+   "Unlevered book lags equity bull runs",
+   "Floor drags after V-shaped recoveries",
+   "250-day correlation lags regime change"
+  ],
+  "cheapest_test": "Backtest 2008-2025 with 5 and 10 bp costs; ablate stress covariance, gate, floor, dynamic budgets. Report 2008/2020/2022 drawdowns, CAGR, maximum weekly turnover. Kill if drawdown exceeds 15%, net CAGR trails cash by under 2 points, or stress covariance adds nothing.",
+  "effort": "3-4 days.",
+  "sources": [
+   "Longin and Solnik (2001), JF 56(2)",
+   "Faber (2007), JWM",
+   "Hurst, Ooi, Pedersen (2017), JPM",
+   "Hoffstein, Faber, Braun (2020), Newfound Research",
+   "Spinu (2013), SSRN",
+   "Black and Perold (1992), JEDC"
+  ],
+  "spec": "Gap G = T - actual weights. Trade x = G*min(0.2, cap/(0.5*sum|G|)); cap = min(0.035, 0.195 - turnover realised this calendar week incl. drift). k = min(1, 6%/sqrt(w'Sigma w)). ERC by Newton, tol 1e-8; stress ties: earlier day. Holidays: no catch-up.",
+  "raw_index": 0,
+  "transfer": null
+ },
+ "responses": [
+  {
+   "critique_id": "critic-003-01",
+   "resolution": "fixed",
+   "response": "The critique is correct: renormalising after the gate cancels it. The gate now multiplies weights after the vol cap, T = k*m*g*w, with k = min(1, 6%/sigma(w)) computed on the UNGATED ERC weights (which sum to 1, so k <= 1 and there is no levering). The residual is cash and is never rescaled. A uniform gate of 0.5 now halves exposure: all assets below SMA200 gives 50% invested. Exposure is cut by the gate itself, not only by the lagging vol target and the drawdown rule."
+  },
+  {
+   "critique_id": "critic-004-04",
+   "resolution": "fixed",
+   "response": "Same defect as critic-003-01, same fix: k is computed before the gate and no 1/sum(w) renormalisation follows. Algebra: with uniform gate g, exposure = k*g*sum(w) = k*g, which scales with g. Partial gating leaves cash equal to k*sum_i (1-g_i) w_i. This now matches Faber/Hurst, where a signal-off asset moves to cash."
+  },
+  {
+   "critique_id": "critic-003-02",
+   "resolution": "fixed",
+   "response": "Accepted that 20/7 = 2.9 sigma was a weak sanity check and that a 13-17% estimate left too little margin. Three changes. (1) The drawdown rule is now a stateless CPPI floor at 0.8*HWM with multiplier 6, so target exposure is continuous: m starts falling at about 4% drawdown, is about 0.5 at 12.7%, and is 0 at 20%. There is no 12% trigger with 8 points of headroom. (2) Unlevered vol is about 4.5-5%, not 7%, because ERC weights put roughly 60-65% in low-vol duration (my hand calculation with vols of 5-6% for UST/IG/TIPS gives about 65% rates weight). That lowers iid MDD (the sigma^2/(2 mu) scaling gives roughly 8-11%), and the floor truncates the tail. (3) 2022 is the binding case: the bond leg (IEF -15%, LQD -18%, TIP -12%, approximate) would lose about 9-10% of NAV at 65% duration weight, but the correlation rule can cut Rates from 1/3 to 1/6 of risk (weight about 40%), the SMA200 gate halves bonds by early 2022, and the floor engages from -4%. My hand estimate is 7-12%. Not backtested; the kill criterion is a backtested drawdown above 15%. Gap risk is conceded: CPPI guarantees the floor only if the loss between trades stays under 1/6 of exposed assets, and the 3.5%/day trade cap means a 2020-type week can arrive faster than exposure falls."
+  },
+  {
+   "critique_id": "critic-004-06",
+   "resolution": "fixed",
+   "response": "Points (a), (c) and (d) accepted: the two-state 12%/8% brake, its 3.5% vol target (not binding for a 4-6% vol book) and the 0.92 HWM re-entry are removed. The CPPI floor is continuous, acts from about 4% drawdown, has no re-entry threshold, and restores exposure smoothly as NAV approaches HWM, so there is no multi-year half-risk state; a partial drag while below HWM remains as a known cost. Point (b), execution lag, is conceded as a real limit: at 3.5% per day, going from 100% to 50% exposure takes about 14 trading days. Mitigation is only partial: the floor starts scaling at 4% not 12%, and the book is mostly low-volatility bonds, so a 20% loss inside 14 days needs an extreme joint shock. A March 2020-type shock is the dominant residual risk."
+  },
+  {
+   "critique_id": "critic-003-03",
+   "resolution": "fixed",
+   "response": "Correct that budgets were constant, so nothing moved to gold or cash, and that TIPS is a duration asset. Fixes: (1) TIPS moves into a Rates class with UST and IG (three duration ETFs); Real is gold and commodities only; Growth stays five ETFs including REITs. (2) Budgets are now dynamic: c = clip(250-day correlation of the Growth and Rates baskets, 0, 0.5); Rates get (1-c)/3 and Real (1+c)/3, so at c = 0.5 Rates fall to 1/6 and Real rise to 1/2. Real is capped at 1/2 of risk, so no class exceeds 1/2 by rule. (3) Cash arises through k, m and g; I no longer claim that budget moves to cash. The 250-day window responds faster than the 500-day matrix; the remaining lag is conceded and partly offset by the gate."
+  },
+  {
+   "critique_id": "critic-003-04",
+   "resolution": "fixed",
+   "response": "g was undefined and is now defined. T is the global target and G = T - actual weights (including drift) is the gap; each day a fifth of G is traded (a rolling 20% sleeve, equivalent to rebalancing one equal sleeve on its weekday), scaled so the one-way trade is at most 3.5% of NAV. Sleeve NAVs no longer exist, so they cannot drift apart. Slow chasing of the signal on days when the cap binds is conceded; it binds mainly in large regime moves, where smoothing is acceptable."
+  },
+  {
+   "critique_id": "critic-004-05",
+   "resolution": "fixed",
+   "response": "Accepted: 5 x 4% = 20% left no margin and drift was ignored. The daily cap is now 3.5% (5 x 3.5 = 17.5%), plus a hard weekly budget: cap_d = min(0.035, 0.195 - realised turnover so far this calendar week), where realised turnover is the running sum of 0.5*sum|weight change| between consecutive closes (trades plus price drift). That sum upper-bounds the net weekly definition by the triangle inequality, so the 20% gate holds by construction rather than by a statistical margin. Three-days rule: the gap is non-zero every day because volatility, correlation and SMA inputs change daily, so a trade occurs on every trading day unless the weekly budget is exhausted; Monday to Wednesday trades total at most 10.5%, so exhaustion before Wednesday would need more than 9% of drift in two days, which is implausible even in 2020. Holiday weeks trade on all remaining days."
+  },
+  {
+   "critique_id": "critic-004-07",
+   "resolution": "fixed",
+   "response": "Accepted. The stress covariance is now computed about the stress subset's own mean (a conditional covariance), removing the mean-outer-product term. I also tightened the stress set to the worst 50 (10%) of 500 days so it differs more from S_500, and keep 50% shrinkage against estimation noise (N/T = 0.2). Forbes-Rigobon selection bias in conditional correlations is real and remains; I keep it deliberately as a conservative upward bias, and the ablation against full-sample covariance in the cheapest test checks whether it adds value. Longin-Solnik is extreme-value evidence and serves as motivation, not proof."
+  }
+ ],
+ "grafts": []
+}

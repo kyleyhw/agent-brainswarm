@@ -199,6 +199,13 @@ def test_replay_until_branches_a_live_run(tmp_path: Path) -> None:
     drive(branch)  # new agents finish the branch
     assert branch.status["phase"] == "done"
     assert branch.read("data", "final.json")["ids"] == run.read("data", "final.json")["ids"]
+    # Regression: a second branch must not import the first branch's finalists as champions.
+    # (Renamed, as branches kept side by side are: the library skips entries whose run folder
+    # has the current run's name, which hid the collision while both kept the recorded name.)
+    second = cli.replay(run.root, tmp_path / "branch2", until="finals")
+    second = Run(second.root.rename(second.root.with_name("second-branch")))
+    drive(second)
+    assert second.read("data", "finalists.json") == run.read("data", "finalists.json")
 
 
 def test_judge_verdicts_name_winner_and_criterion(tmp_path: Path) -> None:

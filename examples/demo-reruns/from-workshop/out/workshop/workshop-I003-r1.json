@@ -1,0 +1,79 @@
+{
+  "card": {
+    "title": "Droop-governed cluster risk parity: cushion droop, decaying peak, budgeted ramp",
+    "pitch": "Three-cluster inverse-volatility risk parity whose exposure droops with the strategy's own drawdown, executed through a weekly-budgeted daily ramp that makes the turnover and frequency gates part of the control law.",
+    "mechanism": "Clusters: equity-like (LC, SC, DM, EM, REIT), duration-credit (UST, TIPS, IG), real (gold, commodities). Within-cluster weights u_i ∝ 1/σ_i (63-day stdev of daily close returns). Cluster weight B_c ∝ 1/s_c, s_c = 63-day stdev of the u-weighted cluster return; b_i = B_c u_i. Standalone risk is equal across clusters by rule.\nPeak H_t = max(NAV_t, H_{t-1}(1-0.03/252)); DD_t = 1 - NAV_t/H_t; E_t = 0.90·clip((0.16-DD_t)/0.12, 0, 1). Target w* = E_t·b; post-trade cash = 1-Σw ≥ 10%. Zero exposure at 16% DD leaves a 4% slippage reserve under the 20% bound; the 4% deadband is one annual sigma of the ~4%-vol base; peak decay prevents lock-out.\nDaily one-way cap = min(3.5%, 19.5% - week-to-date turnover including price drift - 0.05%×remaining days).",
+    "rationale": "Cluster risk parity balances equity, duration and real-asset risk (Qian 2005; Maillard et al. 2010). Exposure proportional to the cushion above 84% of peak is the Grossman-Zhou (1993) form, so a steady decline approaches but never reaches 16%. Hand calculation, no code run: a 15% base fall in 17 days ends near 12% DD; a 60-day grind near 10%. Net growth ~3.5-4.5% nominal: unlevered, deliberately modest.",
+    "assumptions": [
+      "Unlevered book vol ~4%",
+      "Losses build over 3+ weeks",
+      "One-way cost 5 bp",
+      "Cash earns zero"
+    ],
+    "failure_modes": [
+      "A base loss above ~25% within four weeks outruns the ramp",
+      "A multi-year grind loses ~3%/year (peak decay rate)",
+      "2022-style stock-bond correlation hits the ~60% bond weight",
+      "Slow re-risking after V-shaped recoveries costs growth"
+    ],
+    "cheapest_test": "Backtest 2004-2025 (index proxies pre-inception), 1-day lag, 5 bp: crisis max DD, weekly turnover with drift, cluster risk shares, CAGR versus static cluster parity. Kill if max DD exceeds 17% or net CAGR trails static parity by over 1%/year.",
+    "effort": "Low: ~150 lines of pandas, one day.",
+    "sources": [
+      "Qian (2005) Risk Parity Portfolios, PanAgora",
+      "Maillard, Roncalli, Teiletche (2010) J. Portfolio Management 36(4)",
+      "Grossman and Zhou (1993) Mathematical Finance 3(3)",
+      "Kundur (1994) Power System Stability and Control, ch. 11"
+    ],
+    "spec": "Close t: compute b, E_t, w*. Trade at close t+1: g = w*-w over 11 positions incl. cash; if T=Σ|g|/2 exceeds the cap, g *= cap/T. If T < 0.0005, swap 0.0005 from argmin g_i to argmax g_i among ETFs, cash untouched. Ties: lowest index.",
+    "raw_index": 0,
+    "transfer": "partial"
+  },
+  "responses": [
+    {
+      "critique_id": "critic-001-06",
+      "resolution": "fixed",
+      "response": "Accepted. The base is now two-level: inverse-vol inside three clusters (equity-like, duration-credit, real), then cluster weights proportional to 1/s_c so that standalone cluster risk is equal by rule. With rough vols the equity-like cluster (u-weighted vol ~15%) gets ~16% of weight, duration-credit (~4%) ~60%, real (~11%) ~22%. Under equal standalone risk the equity share of variance is 1/3 exactly if cross-correlations are equal, and 1/3 even at rho=1 across the board. With asymmetric cross-correlations (e.g. equity-real 0.5, others 0) the worst share I computed by hand is ~0.375. Correlated stress therefore cannot raise the equity share far above a third by rule. The price is a bond-heavy book (see the 2022 failure mode) and lower growth. Grafted the three-bucket structure from I007."
+    },
+    {
+      "critique_id": "critic-001-07",
+      "resolution": "fixed",
+      "response": "The critique is correct that a trailing 252-day peak turns DD into a rolling one-year loss with an unbounded equilibrium loss (my check: d = g·E(d) gives ~7%/yr at g=10%). Fix: the peak is now an exponentially decaying high-water mark H_t = max(NAV_t, H_{t-1}·(1-0.03/252)), and the droop is cushion-proportional, reaching zero exposure at 16% DD. Equilibrium under a persistent underlying decline g satisfies E·g = r (the peak decays as fast as NAV falls), so NAV loss is capped at r = 3%/yr, not 7-8%/yr, and it occurs only if the base keeps losing over about 10%/yr for years, which no unlevered multi-asset inverse-vol book has done historically (my recollection of 2008 and 2022 base losses is roughly 8-12% in a year; not verified by code). Within a single event, NAV/H is bounded near 16%, and the gap to the true all-time peak is at most 1-(0.84)·exp(-r·tau), which passes 20% only after tau of about 1.6 years at the floor. I concede that a multi-year grind still loses ~3%/yr (kept as a failure mode) and that a decaying peak is a deliberate departure from the literal Grossman-Zhou running maximum, traded for avoiding a permanent lock-out. My reason for the decay is that with a fixed all-time peak, exposure at the floor earns only its own tiny return, so DD would never heal."
+    },
+    {
+      "critique_id": "critic-001-08",
+      "resolution": "fixed",
+      "response": "Headroom now exists by rule. The daily cap is min(3.5%, 19.5% - week-to-date realised turnover including price drift - 0.05% x remaining trading days). Realised turnover counts both drift (pre-trade weights vs prior post-trade weights) and trades, summed absolutely, which is a conservative triangle-inequality upper bound on the net weekly measure. The nominal ramp of 3.5% x 5 = 17.5% leaves 2.5% for drift, and the budget clause guarantees the 19.5% total even in high-dispersion weeks; the 0.05% reserve per remaining day keeps the trade-on-3-days gate satisfied."
+    },
+    {
+      "critique_id": "critic-001-09",
+      "resolution": "fixed",
+      "response": "Accepted. The law is now E = 0.90·clip((0.16-DD)/0.12, 0, 1): linear in the cushion above a floor at 84% of the peak, reaching zero at the floor, as in Grossman-Zhou (except for the decaying peak, disclosed above). The old gain 8 and the 0.25 floor are gone; gain is implied (0.90/0.12 = 7.5). The 16% floor is derived from the 20% bound less a 4% reserve for ramp slippage. Constants remaining: 20% bound (given), 4% slippage reserve, 4% deadband, 3%/yr decay, 10% cash, 3.5% cap, each with a stated basis."
+    },
+    {
+      "critique_id": "critic-001-10",
+      "resolution": "fixed",
+      "response": "Accepted. The nudge no longer touches cash. On days when the gap turnover is below 5 bp, 5 bp is swapped between ETFs from the argmin to the argmax of g_i, which is a rebalance toward the target within the risky sleeve. Cash-floor breaches via drift are repaired first inside the cap accounting, so post-trade cash >= 10% is a hard rule. The cash floor and trade-frequency gate no longer conflict."
+    },
+    {
+      "critique_id": "critic-004-11",
+      "resolution": "fixed",
+      "response": "Partly conceded and partly fixed. The new base has ~4% vol (equal-risk clusters, unlevered), so the 4% deadband is about one annual sigma and a typical 1-year drawdown vs a decaying peak is smaller than the ~7% quoted for a 6% vol book; I estimate DD exceeds 4% on roughly 15-20% of days and mean E of ~0.85, not 0.7-0.8 (unverified by code, the backtest tests it). Growth is restated honestly as ~3.5-4.5% nominal. The gain and window are no longer free constants: gain follows from the floor, and the 252-day window is replaced by the decaying peak. Buy-back lag after mild pullbacks is conceded and appears as a failure mode."
+    },
+    {
+      "critique_id": "critic-004-12",
+      "resolution": "fixed",
+      "response": "Same fix as critic-001-10. The trade-frequency filler is a 5 bp swap inside the ETF sleeve toward the gap-vector extremes, cash untouched, so the cash floor holds and it cannot buy an asset the gap vector says to sell (argmax of g_i is the asset with the largest target shortfall; the swap sells the argmin). The daily round trip is limited to at most 5 bp of NAV; the cost is about 0.05% x 5 bp = negligible. I accept it is a frequency-satisfying patch, but it acts only when the control law itself is within 5 bp of idle, so it does not fight the signal."
+    },
+    {
+      "critique_id": "critic-004-13",
+      "resolution": "fixed",
+      "response": "See critic-001-08. The weekly turnover is now budgeted at 19.5% including drift, with a nominal daily cap of 3.5%, so the capped week measures at most 19.5% under the conservative summed measure. I graft the 19.5% figure from the I001/I002 headroom convention."
+    },
+    {
+      "critique_id": "critic-004-14",
+      "resolution": "fixed",
+      "response": "Same as critic-001-06: cluster-level equal standalone risk replaces per-ETF inverse-vol weighting as the base; within-cluster weights remain inverse-vol. The full ERC (with correlations) is not adopted, to keep the rules simple and the specification unambiguous. Bond-heavy exposure to a 2022-type shock is conceded as a failure mode; the droop law is the mitigation, not a mix change."
+    }
+  ],
+  "grafts": ["I007"]
+}

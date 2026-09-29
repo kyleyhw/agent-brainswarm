@@ -22,6 +22,7 @@ import argparse
 import json
 import shutil
 import sys
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -188,7 +189,10 @@ def replay(recorded: Path, into: Path, until: str | None = None) -> Run:
     run.root.mkdir(parents=True)
     run.path("brief.md").write_text(source.brief)
     run.write(config, "config.json")
-    run.write({**pipeline.init_status(), "project": f"replay-{source.root.name}"}, "status.json")
+    # A project of its own: replays of one recording must not feed each other's idea library
+    # (a second branch would import the first one's finalists as returning champions).
+    project = f"replay-{source.root.name}-{uuid.uuid4().hex[:8]}"
+    run.write({**pipeline.init_status(), "project": project}, "status.json")
     shutil.copy(source.path("rubric_draft.json"), run.path("rubric_draft.json"))
     while True:
         if until is not None and run.status["phase"] == until:

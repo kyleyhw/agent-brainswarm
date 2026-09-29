@@ -1,0 +1,29 @@
+{
+ "card": {
+  "title": "Contingency-reserve cluster risk parity with asymmetric ramps",
+  "pitch": "Hold cash so one stress-tail 20-day loss of all clusters together keeps drawdown under 16%; shed risk twice as fast as it is restored.",
+  "mechanism": "Clusters: Equity (US LC, US SC, dev ex-US, EM, REIT), Duration (7-10y, TIPS, IG), Real (gold, commodities). Within cluster: a_i = inverse 63-day vol (sum 1); m_i = 0.5 if close < 200-day SMA else 1; not renormalised, so halved weight goes to cash. Across clusters: ERC on 63-day covariance. L_c = max(prior, expanding 1st percentile of overlapping 20-day cluster losses); priors 22/7/15% (Equity/Duration/Real). S = sum_c w_c L_c. DD = drop from highest NAV close in last 756 days. lambda = clip((0.16 - DD)/S, 0.20, 0.95). Weight_i = lambda w_c a_i m_i; rest cash.",
+  "rationale": "Grid N-1 reserve, with stress correlation 1 so the reserve is the full tail sum; cushion/S is CPPI with a tail-loss multiplier. Floor 0.20 is derived: 0.2 S (about 2.4%) + 16% < 20%. Twenty days is what 0.035/day shedding needs for about 0.7 exposure. ERC caps cluster risk at 1/3 (Maillard 2010); trend-to-cash follows Faber 2007. Net 3.5-4.5%/yr; hand-estimated drawdowns, unverified: 2008 ~13%, 2020 ~12%, 2022 ~10%.",
+  "assumptions": ["Priors bound 20-day cluster losses; 5 bp costs; one-day lag."],
+  "failure_modes": ["Shock beyond priors eats the 4-point margin", "N-2 while at the floor", "756-day peak lets chained episodes exceed 16% all-time", "Average exposure near 0.8 limits return"],
+  "cheapest_test": "Backtest 2004-2025, 1-day lag; log realised 20-day cluster losses against L_c and max drawdown per crisis. Kill if any crisis drawdown exceeds 18%, net CAGR is below cash plus 1%, or a turnover or no-trade breach occurs.",
+  "effort": "Moderate: 2-3 days.",
+  "sources": ["Maillard 2010 JPM 36(4)", "Spinu 2013 SSRN 2297383", "Faber 2007", "Moskowitz 2012 JFE", "NERC TPL-001"],
+  "spec": "ERC: Newton on min 0.5 w'Sigma w - (1/3) sum ln w_c (Spinu). Signal at t, trade at t+1 close: g = target - drifted weights incl. cash; cap sum|g|/2 at 0.035 if exposure falls else 0.0175, scaling g proportionally. If scaled turnover < 0.0005, swap 0.0005 from most overweight to most underweight ETF vs target (ties by list order). Weekly turnover <= 17.5% plus drift; trades daily.",
+  "raw_index": 0,
+  "transfer": null
+ },
+ "responses": [
+  {"critique_id": "critic-001-01", "resolution": "fixed", "response": "Correct: renormalising cancels the halving when a whole cluster is below trend. Weights are now a_i*m_i without renormalisation, so a bear-market cluster holds half its normal weight and the balance sits in cash. The trend filter now cuts exposure, as in the Faber and Moskowitz cash leg."},
+  {"critique_id": "critic-001-02", "resolution": "fixed", "response": "Agreed on the lock. At the card's numbers the recovery ODE dDD/dt = -lambda*mu gives multi-year recovery (probably shorter than the critic's 10 years, still costly), and with the larger S below it would be worse. Two changes: the reference peak is the highest NAV in the last 756 days, so the cushion refills as old peaks age out, and lambda has a floor of 0.20 so compounding never stops. The floor is derived: 0.20*S is about 2.4%, so 16% + 2.4% stays under 20% after one shock. Growth claim cut to 3.5-4.5%. Conceded cost: the 16% guarantee holds over 3-year windows, not strictly all-time."},
+  {"critique_id": "critic-001-03", "resolution": "fixed", "response": "S is now the full sum of w_c*L_c (stress correlation 1). The sag factor and the special largest-cluster term are removed. Cost: lower average exposure, about 0.8."},
+  {"critique_id": "critic-001-04", "resolution": "fixed", "response": "Conceded that 1260 overlapping days is about 63 independent windows and procyclical. L_c now uses the whole history since data start, floored at fixed ex ante priors (22/7/15%) from episodes such as 1987, 1994 and 1980, so calm windows cannot shrink S. The 1-in-100 claim is dropped; exceedance logging in the backtest still tests the bound. Caveat: the priors are informed by hindsight for a 2004 start, so 2008 results carry leak risk."},
+  {"critique_id": "critic-001-05", "resolution": "fixed", "response": "The dust trade is now a cash-neutral swap between the most overweight and most underweight ETF versus target, so no cash floor is involved. When one gap mixes exposure and rebalancing, a single cap applies (0.035 if exposure falls, else 0.0175) and all trades scale proportionally, which removes the ambiguity."},
+  {"critique_id": "critic-002-04", "resolution": "fixed", "response": "Same fix as critic-001-04: expanding history plus fixed priors. Conceded as a limitation: any backward-looking estimator is blind to a shock larger than the priors; the 4-point margin and the floor bound that case."},
+  {"critique_id": "critic-002-05", "resolution": "fixed", "response": "Sag factor removed. S = sum_c w_c L_c, the bound when cluster tails coincide, so the 0.67 understatement is gone."},
+  {"critique_id": "critic-002-06", "resolution": "fixed", "response": "The dust move no longer draws on cash. It swaps 0.0005 between the most overweight and most underweight ETF versus target, so a trade occurs every trading day whether or not the 0.95 clip binds. Ties by list order."},
+  {"critique_id": "critic-002-07", "resolution": "fixed", "response": "Same as critic-001-01: no renormalisation, so the halved weight goes to cash and trend reduces total exposure."},
+  {"critique_id": "critic-002-08", "resolution": "fixed", "response": "The 756-day reference peak and the 0.20 floor bound the lock. Return claim revised to 3.5-4.5% net, and the failure mode about chained episodes exceeding 16% all-time is stated on the card."}
+ ],
+ "grafts": []
+}
