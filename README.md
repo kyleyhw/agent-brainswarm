@@ -24,28 +24,29 @@ weak ideas are ranked low, not hidden.
 
 ## Install
 
-```bash
-git clone https://github.com/kyleyhw/agent-brainswarm && cd agent-brainswarm
-uv run python install.py      # brainswarm CLI as a uv tool; skill + 9 role agents into ~/.claude/
+In any Claude Code session (local or on the web), say:
+
+```
+install brainswarm from https://github.com/kyleyhw/agent-brainswarm
 ```
 
-Then, in any Claude Code session, say "brainswarm …". The skill never
-triggers on "brainstorm".
-
-**Claude Code on the web.** Cloud containers start fresh, so install at
-container start by adding this to the environment's setup script:
+Claude clones the repository and runs its installer. By hand, that is:
 
 ```bash
-git clone --depth 1 https://github.com/kyleyhw/agent-brainswarm ~/agent-brainswarm \
-  && (cd ~/agent-brainswarm && uv run python install.py)
+git clone https://github.com/kyleyhw/agent-brainswarm ~/agent-brainswarm
+cd ~/agent-brainswarm && uv run python install.py   # CLI as a uv tool; skill + 9 role agents into ~/.claude/
 ```
 
-Without the setup script, the skill runs the installer itself on first use;
-role agents installed mid-session can take a few minutes to appear. The role
-files live in `agents/` rather than `.claude/agents/` on purpose: Claude Code
-runs a project-level agent's guard hook only after workspace trust, which
-cloud sessions never grant, so only the installed user-level links are
-guaranteed to be guarded.
+Then say "brainswarm …". The skill never triggers on "brainstorm". The skill
+is usable at once; role agents installed mid-session can take a few minutes
+to appear, and the skill writes the rubric meanwhile. A cloud container is
+discarded when the session ends, so each new cloud session needs the one-line
+install again.
+
+The role files live in `agents/` rather than `.claude/agents/` on purpose:
+Claude Code runs a project-level agent's guard hook only after workspace
+trust, which cloud sessions never grant, so only the installed user-level
+links are guaranteed to be guarded.
 
 ## Documentation
 

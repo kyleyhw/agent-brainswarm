@@ -93,6 +93,10 @@ def main(argv: list[str] | None = None) -> int:
         code = install_python()
     if not args.skip_skills:
         print("\n".join(install_skills(args.force)))
+        print(
+            "\nInstalled. Say 'brainswarm <brief>' to start. In a running session the role"
+            " agents can take a few minutes to appear; the skill waits for them."
+        )
     return code
 
 
