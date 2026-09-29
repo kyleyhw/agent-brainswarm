@@ -706,7 +706,7 @@ reliability note until verified.
 | Rubric misinferred (autonomous) | rubric-audit disagreements; assumptions log | shown in preflight so the user can interrupt |
 | Critics harsher on novel ideas | novelty–rank correlation | tighten the "unproven" rule |
 | Generic filter miscalibrated | flag rate; random spot-checks | recalibrate substitution test |
-| Judge position bias [[10]](#ref-zheng-2023) | estimated $\gamma$ (§10) | both orders are always judged; $\gamma$ is removed from the strengths |
+| Judge position bias [[10]](#ref-zheng-2023) | estimated $\gamma$ (§10); the demo measured $\gamma = 1.93$ (first shown won 11 of 12) | both orders are always judged in different dispatches and $\gamma$ is removed from the strengths; stronger prompt-level mitigation is open (§20) |
 | Judge verbosity bias | length–rank correlation | length caps are enforced |
 | Judge self-preference | win rate when judge and author share a model | mixed panels |
 | Anonymity leaks via writing style | judge verdicts tracking author family beyond chance | stricter card structure |
@@ -762,24 +762,21 @@ Status as of 2026-09-29:
 
 ## 17. Demo
 
-**Tier 1 — offline replay (0 tokens, deterministic):**
-`python examples/demo_run.py` replays a recorded run through the real code:
-rubric freeze, band assignment, critique checks rejecting a misquote and
-flagging a generic critique, workshop v1 → v2 diff, scores with tiers,
-top-families shortlist, digest, HTML report, export bundle. Doubles as an
-integration test (agent-evolve's `examples/demo_run.py` pattern).
+- **Offline, zero tokens:** `uv run python examples/demo_run.py` replays the
+  recorded live run through the real code (rubric freeze, assignment,
+  critique checks, fits, report, library) and checks that the ranking is
+  reproduced exactly.
+- **Live:** `examples/brainswarm-demo.yaml`, a concrete ETF strategy brief
+  with five user-stated gates, at reduced `quick` size with web off. The
+  recorded run cost about 0.9M new tokens and 3.9M cache reads (the
+  earlier estimate of 0.3M was low: general-purpose fallback dispatches and
+  retries cost more than role agents).
 
-**Tier 2 — live mini run (~0.3M new tokens, ~1–2M cache reads, ~10–15
-min):** "run the brainswarm demo" loads `examples/brainswarm-demo.yaml`
-(overrides on `quick`): 4 generators × 2 ideas, 1 critique each, 2 workshop
-slots, finals among the top 4, web off, mostly Sonnet. Its recorded output is
-committed and used by tier 1.
-
-Demo brief (open, §20): "ways to reduce flaky tests in a Python repo"
-(leaning: critiques are easy to judge as justified vs generic) or "core
-mechanics for a solo card game" (shows off cross-domain slots).
-
-Not demoed (too expensive): web research, the multi-run library.
+The recorded run's main finding: judges preferred the first-shown idea in
+11 of 12 verdicts ($\gamma = 1.93$). The both-orders design and the
+$\gamma$ parameter kept that bias out of the strengths, and the report
+correctly declared the four finalists not separable. Details:
+`examples/README.md`. Not demoed: web research, the multi-run library.
 
 ## 18. Build order
 
@@ -818,6 +815,7 @@ like *evolve*.
 ## 20. Open questions
 
 - Coverage of the critique-stage bootstrap (~60 dispatches) by simulation.
+- Prompt-level mitigation of the strong position bias seen in the demo (e.g. judges summarise both ideas before choosing), tested against $\gamma$.
 - Whether the guard hook fires for role agents in a fresh session.
 - Default model assignment per role once runs are logged.
 - Band-share defaults and generator count, once per-band yield and the

@@ -843,6 +843,12 @@ def prelim_selection(run: Run) -> list[str]:
     ]
 
 
+def _barred(run: Run) -> set[str]:
+    """Ideas barred by a gate. ``gates.json`` also lists *fixable* ideas, which stay in play."""
+    gates: dict[str, str] = run.read("data", "gates.json")
+    return {idea for idea, status in gates.items() if status == "barred"}
+
+
 # ---- advocate
 
 
@@ -857,7 +863,7 @@ def _slots(run: Run) -> list[Slot]:
 def plan_advocate(run: Run) -> list[Dispatch]:
     cards = _cards(run)
     chosen = {s.idea_id for s in _slots(run)}
-    barred = set(run.read("data", "gates.json"))
+    barred = _barred(run)
     rest = [c for k, c in cards.items() if k not in chosen and k not in barred and c.version == 1]
     by_idea: dict[str, list[str]] = defaultdict(list)
     for item in load_checked(run):
@@ -889,7 +895,7 @@ def check_advocate(run: Run, d: Dispatch, data: Any) -> list[str]:
 
 def finish_advocate(run: Run, results: dict[str, Any]) -> list[str]:
     slots = _slots(run)
-    taken = {s.idea_id for s in slots} | set(run.read("data", "gates.json"))
+    taken = {s.idea_id for s in slots} | _barred(run)
     cards = _cards(run)
     added = []
     for p in next(iter(results.values()), {}).get("promote", []):
@@ -1128,7 +1134,7 @@ def finish_recritique(run: Run, results: dict[str, Any]) -> list[str]:
 def _finalists(run: Run) -> list[str]:
     if run.exists("data", "finalists.json"):
         return list(run.read("data", "finalists.json"))
-    barred = set(run.read("data", "gates.json"))
+    barred = _barred(run)
     finalists = [c.id for c in _developed(run) if c.id.split("-")[0] not in barred]
     finalists += library.import_champions(run, _config(run).returning_champions)
     run.write(finalists, "data", "finalists.json")

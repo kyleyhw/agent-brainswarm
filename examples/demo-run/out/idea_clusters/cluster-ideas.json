@@ -1,0 +1,18 @@
+{"clusters": [
+{"id": "C01", "members": ["I001", "I005"]},
+{"id": "C02", "members": ["I002"]},
+{"id": "C03", "members": ["I003", "I007"]},
+{"id": "C04", "members": ["I004"]},
+{"id": "C05", "members": ["I006"]},
+{"id": "C06", "members": ["I008"]}
+],
+"library": {
+"I001": {"relation": "new", "library_id": null},
+"I002": {"relation": "new", "library_id": null},
+"I003": {"relation": "new", "library_id": null},
+"I004": {"relation": "new", "library_id": null},
+"I005": {"relation": "new", "library_id": null},
+"I006": {"relation": "new", "library_id": null},
+"I007": {"relation": "new", "library_id": null},
+"I008": {"relation": "new", "library_id": null}
+}}

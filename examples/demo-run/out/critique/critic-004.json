@@ -1,0 +1,138 @@
+{
+  "critiques": [
+    {
+      "idea_id": "I001",
+      "target": "dAR=(A20-mean(A, prior 250d))/std(A, prior 250d)",
+      "mechanism": "The numerator compares a 20-observation eigenvalue with a 60-observation eigenvalue history. The largest eigenvalue of a sample correlation matrix is biased upward, and the bias grows as T shrinks relative to N. For N=10 and pure noise, the Marchenko-Pastur edge gives A of about 0.198 at T=60 and 0.291 at T=20, a gap of about 0.09. With a real common factor (lambda about 4) the T=20 versus T=60 gap is still about 0.045. Std(A) of the 60-day series over a year is likely 0.03-0.06. So dAR sits at roughly +1 to +2.5 sd in calm markets, against a 0.5 sd threshold. Through u=clip((dAR-0.5)/2,0,1) and s=1-0.75u^2(3-2u), calm-state exposure is biased to roughly 25-88% of the base book (s=0.88 at a 1 sd offset, 0.62 at 1.5, 0.25 at 2.5). The throttle is then miscalibrated and mostly measures window mismatch, not stress. The extra noise in A20 also widens dAR dispersion, so exposure swings even without a regime change. This damages growth, and the throttle cannot separate a true fragility spike from the bias.",
+      "evidence": "Marchenko-Pastur upper edge (1+sqrt(N/T))^2: T=20 gives 2.91 (A=0.291); T=60 gives 1.98 (A=0.198). Spiked-model approximation lambda_hat about lambda(1+c/(lambda-1)), c=N/T, gives 4.67 vs 4.22 for lambda=4. The card itself concedes 'AR20 uses 20 observations for 10 assets and is noisy' but not the level bias. Kritzman et al. compare a short window against a long-window AR history built on many more assets and far fewer window mismatches. These figures are my own estimates and were not run on data.",
+      "severity": "major",
+      "falsifier": "Compute mean(A20 - A60) on the actual 10 ETFs from 2007. If it is below about 0.3 sd of A60, the bias is immaterial. A fix is to compute the short and long windows at the same T, or to standardise A20 against its own history.",
+      "gate": null
+    },
+    {
+      "idea_id": "I001",
+      "target": "Hold an inverse-volatility book of the 10 ETFs",
+      "mechanism": "Inverse-vol equalises stand-alone risk per ETF, not risk per asset class. Five of the ten ETFs (SPY, IWM, EFA, EEM, VNQ) are equity-beta with pairwise correlation about 0.75-0.9. Each gets equal stand-alone risk, so that block carries well over half of portfolio variance (my rough calc with typical correlations is about 55-60%). Three bond funds take about 55% of dollar weight, so the book is duration-heavy. Diversification therefore rests on the 10-asset count, not on class balance, and 2022 (positive stock-bond correlation) hits both blocks at once. The AR throttle then has to do all the risk control.",
+      "evidence": "Rough variance shares: with x_i=w_i*sigma_i equal, the equity block contributes about 20 (within-block, avg rho 0.75-0.8) plus about 5 (cross) out of a total of about 43 correlation-sum units, so about 55-60%. Approximate vols: IEF 6, TIP 5.5, LQD 7, GLD 14, DBC 15, SPY 16-17, IWM 22, EFA 18, EEM 20, VNQ 22, which gives bonds about 55% of inverse-vol dollar weight. The 2022 total returns for LQD, IEF and TIP were about -18%, -15% and -12%.",
+      "severity": "minor",
+      "falsifier": "Compute marginal risk contributions of the inverse-vol book by class on the 60d covariance at several dates. If the equity-like block stays near or below 40% and no class exceeds about 45%, the critique fails.",
+      "gate": null
+    },
+    {
+      "idea_id": "I001",
+      "target": "costs under 0.2% per year (my estimate)",
+      "mechanism": "Each day the book moves one fifth of the gap to a target that follows a noisy dAR, itself amplified by the 20-observation eigenvalue. The step cap of 3.9% per day binds during regime swings, so annual one-way turnover can reach several hundred percent (up to about 1000% at the cap). At 3-10 bp per round trip for EEM, DBC and VNQ, costs are plausibly 0.3-0.5% a year, not below 0.2%. The estimate is unsupported and is optimistic exactly when the signal is noisy.",
+      "evidence": "Cap arithmetic: 19.5% per week times 52 is about 1014% one-way per year. At 5 bp that is 0.5%. Average weekly turnover of only 8% still gives about 420% and 0.21%. The card gives no turnover estimate behind the 0.2% figure.",
+      "severity": "minor",
+      "falsifier": "A backtest showing mean weekly turnover below about 6% with 5 bp costs on all ten ETFs would confirm the 0.2% claim.",
+      "gate": null
+    },
+    {
+      "idea_id": "I008",
+      "target": "Scale k = min(1/sum w, tau/sqrt(w'Sigma w))",
+      "mechanism": "The trend gate halves w_i, and k then renormalises. If the volatility target is not binding, k=1/sum w undoes the halving exactly. If it is binding, k=tau/sigma(w) depends on w only through the risk level, so a uniform halving is again reversed (sigma halves, k doubles). When every risky ETF is below its SMA200, as in late 2008 and much of 2022, the gate changes the mix but not total exposure. Exposure falls only through the vol target or the NAV brake. The 'trend halving plus the brake suggest 13-17% worst case' claim leans on a de-risking effect that the formula cancels. The gate tilts weights toward ETFs above their SMA (a relative-momentum tilt), but it is not the exposure cut the pitch implies.",
+      "evidence": "Algebra: for uniform gate factor g on all ETFs, w -> g*w, so sum w -> g*sum w and k=min(1/(g*sum w), tau/(g*sigma)), giving k*g*w=min(1/sum w, tau/sigma)*w, independent of g. Partial gating: total exposure is min(1, k*sum w), which still reaches 1 whenever 1/sum w binds. Faber (2007) and Hurst et al. (2017) achieve drawdown control because the timing rule moves to cash, not because weights are renormalised.",
+      "severity": "major",
+      "falsifier": "A backtest where the gate switched on for all assets (2008-09 or 2022) still leaves total invested fraction well below its ungated value would show the critique wrong. A fix is to hold the removed weight as cash, with k capped at 1.",
+      "gate": null
+    },
+    {
+      "idea_id": "I008",
+      "target": "x = g*min(1, 0.4/sum|g|)",
+      "mechanism": "The cap is set at exactly 20% of portfolio with no headroom. It is enforced per sleeve as 20% of that sleeve's NAV, on that sleeve's weekday. Sleeve NAVs are never rebalanced against each other, so the sleeve shares of portfolio NAV drift apart. Each sleeve trades on a different day and NAV moves within the week, so the five one-way trades add up to about 20% times sum(s_i) of NAV, and sum(s_i) measured on different days is not exactly 1. Price drift also changes weights over the week beyond the trades. Whenever the cap binds five days running (any sustained de-risking), measured weekly turnover can exceed 20% by a few tenths of a percent, so the gate 'at most 20% by construction' is not guaranteed.",
+      "evidence": "Weekly one-way turnover = sum over days of 0.2*s_i*NAV_d / NAV_ref. With sleeve share errors of +/-3% and intra-week NAV moves of +/-1%, the total is 19.4-20.8% of NAV_ref. Compare I001 and I002, which use 19.5%, a 2.5% relative margin. The task defines turnover as the sum of absolute weight changes divided by 2 over the calendar week, and drift alone moves weights.",
+      "severity": "major",
+      "falsifier": "If turnover is measured strictly as traded value over same-day NAV and sleeves are guaranteed equal share at each trade (for example by rebalancing sleeve NAVs), the cap holds at exactly 20%. Setting the per-sleeve cap to 0.38 would also close the gap.",
+      "gate": "turnover_cap"
+    },
+    {
+      "idea_id": "I008",
+      "target": "3.5% when NAV < 0.88*HWM until NAV > 0.92*HWM",
+      "mechanism": "The NAV brake fails to protect a fast crash and drags growth after a slow one. (a) It only triggers after a 12% loss, leaving 8 points of headroom. (b) Execution goes through sleeves at 4% of NAV per day, so halving exposure takes about 12 days (about 2.5 weeks) after the trigger. In 2020 the move from -12% to -20% took days, so the brake cannot arrive in time. The card admits 'Fast crash (2020) outruns 4%/day', yet the 13-17% worst-case rests partly on the brake. (c) Because k cannot lever, the 7% target is probably not binding for a book with a third of risk in nominal bonds (unlevered vol about 4-6%). The 3.5% brake then cuts exposure by only about 25-40%, not by half. (d) Recovery from 0.88 to 0.92 HWM (about 4.5% gain) at half risk and roughly 2.5-3% expected annual return takes 1.5-2 years, so a single episode holds the book at reduced risk for years and growth suffers.",
+      "evidence": "Sleeve arithmetic: one-way at most 4% of NAV/day, so a 50% cut takes 12.5 days. Vol arithmetic: brake factor = 3.5%/sigma_unbraked = 0.58-0.88 for sigma 4-6%. Hysteresis: 4.5% / 2.7% per year is about 1.7 years. Estimates are mine and not run.",
+      "severity": "major",
+      "falsifier": "A backtest showing average exposure under brake near half of unbraked, and 2020 peak-to-trough DD below 15%, would answer (a)-(c). A trailing rolling high-water mark would answer (d).",
+      "gate": null
+    },
+    {
+      "idea_id": "I008",
+      "target": "Sigma = 0.5*S_stress + 0.5*S_500, zero-mean, x252.",
+      "mechanism": "The stress set is selected by the lowest 20% of equal-weight returns, and the second moment is taken about zero. Conditioning on a low EW return gives each asset a non-zero conditional mean, E[r|stress]=beta_i*E[EW|stress]. The zero-mean second moment then includes a mean-outer-product term mu mu' on top of the true conditional covariance. This adds positive co-movement between all assets whose conditional means share a sign, even when they are independent (about +0.2 correlation for 10 independent equal-vol assets). The 'crisis correlation' is partly an artifact of the selection, in the spirit of the heteroskedasticity bias in crisis-correlation estimates. The 20% cut is also not extreme: in calm windows it is ordinary down days, so the stress matrix differs little from S_500 and the two halves nearly duplicate each other.",
+      "evidence": "For independent equal-vol assets, beta_i=1 and E[EW|lowest 20%] about -1.4*sigma/sqrt(10) = -0.44 sigma, so mu_i*mu_j about 0.2 sigma^2. This is a computation I did by hand, not run. Forbes and Rigobon (2002) show conditioning on high-volatility periods biases measured correlation upward; Longin-Solnik (2001) is an extreme-value study, not a 20% cut on an EW index.",
+      "severity": "minor",
+      "falsifier": "Estimate S_stress with mean removed and compare budgets and weights with the zero-mean version. If the weight differences are below about 1 point per ETF, the effect is immaterial.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002",
+      "target": "exposure at p=1 falls to about 55-70% of calm level",
+      "mechanism": "The arithmetic assumes the 6% volatility target binds in calm, which the min(1, 0.06/sigma) cap does not guarantee. If the calm unlevered ERC vol sigma_c is below 6%, calm exposure is already 100%. At p=1 the stress covariance raises vol by about 0.91/0.61 = 1.49, so exposure is min(1, 0.06/(1.49*sigma_c)). For sigma_c=4.5% this is 0.90 (only a 10% cut); for 5% it is 0.81; only for sigma_c of at least 6% does it reach 0.67. A 10-ETF ERC book with three bond funds has typical vol of 4-6% and lower in calm years, so the throttle is often far milder than the card says. The card leans on this mechanism for drawdown control and has no separate risk-off rule.",
+      "evidence": "Calculation from the card's own numbers: 0.06/(1.49*0.045)=0.895; 0.06/(1.49*0.05)=0.805; 0.06/(1.49*0.06)=0.67. The card's statement '6% is below typical unlevered ERC vol' is asserted, not shown. Equal-correlation ratio sqrt(0.8+0.02)/sqrt(0.3+0.07)=1.49 (the card's own figures).",
+      "severity": "major",
+      "falsifier": "Compute the ERC book's sample vol from 2007. If it is at least 6% at more than 90% of dates, the target binds in calm and the 55-70% figure is right.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002",
+      "target": "Sigma=(1-p)S_s+p*S_stress",
+      "mechanism": "S_stress has one constant correlation (0.8) for every pair. For equal pairwise correlation, ERC weights are exactly proportional to inverse volatility, so as p rises the weights move to inverse 20d vol and discard the cross-asset structure in S_s. That structure is what tells the portfolio which diversifiers (gold, commodities, TIPS, Treasuries) are working in the current regime. In an inflationary stock-bond selloff like 2022 the sample covariance would have tilted away from duration. The prior instead treats Treasuries as 0.8 correlated with equities and moves toward the lowest-vol assets, which are the bond funds. The signal degrades the sizing exactly when it should be most informative. It also treats a flight-to-quality crash (Treasuries negatively correlated) the same way as 2022.",
+      "evidence": "Proof sketch: with Sigma_ij=rho*sigma_i*sigma_j (i!=j), risk contribution RC_i = w_i*sigma_i*[(1-rho)*sigma_i*w_i + rho*sum_j sigma_j*w_j]. Equal RC requires equal w_i*sigma_i, which is inverse volatility, for any rho>0. Bond funds are the lowest vol assets of the ten. In 2022 stock-bond correlation was positive while gold and DBC held up.",
+      "severity": "major",
+      "falsifier": "A backtest with the sample-only ERC (p=0) delivering a worse 2022 drawdown than the p-blended version would show the stress prior helps. Comparing weights at p=1 with inverse-vol would confirm the identity.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002",
+      "target": "a holiday session moves to Tue or Thu",
+      "mechanism": "The rule leaves the choice open, so two coders would produce different schedules. It also does not say what happens if the moved session collides with a session already held, for example a Wednesday holiday moved to Thursday next to an unmoved Friday session. The rule for weeks with three or fewer trading days ('trade daily') interacts with the 6.5% cap in ways the card does not spell out. Specificity is weakened by these open choices, and the difference matters for the 3-days-a-week gate.",
+      "evidence": "Holiday cases: Monday (MLK, Presidents, Memorial, Labor), Wednesday (Juneteenth, Christmas, July 4 in some years), Friday (Good Friday) each need a different move. The card gives one ambiguous instruction ('Tue or Thu') for all of them.",
+      "severity": "minor",
+      "falsifier": "A stated table mapping each holiday weekday to a specific replacement day, with a collision rule, would fix it.",
+      "gate": null
+    },
+    {
+      "idea_id": "I003",
+      "target": "4% deadband, gain 8, floor at 12% DD",
+      "mechanism": "The deadband sits below the typical drawdown of the base book itself. A 6% vol book with about 5% drift has a median one-year max drawdown of about 4-5%, so DD_t exceeds 4% for a large share of days and the controller is active much of the time, not only in crises. Mean exposure is then well below the assumed 0.90 (my estimate is 0.7-0.8), which puts growth at about 3.5-4% rather than the card's 4-5%. Because DD is measured against a 252-day peak, each mild pullback also causes buy-back lag on the rebound.",
+      "evidence": "Brownian approximation: expected max drawdown over one year is about 1.2*sigma*sqrt(T) at zero drift (about 7% for sigma=6%), reduced but not below 4% for Sharpe of about 0.8. Steady-state droop: dE/dDD=-8, so at DD=6% E=0.74. The gain, deadband, floor and window are four free constants the card justifies only by analogy.",
+      "severity": "minor",
+      "falsifier": "A backtest with mean E_t at or above 0.85 and CAGR at or above 4% net would answer it.",
+      "gate": null
+    },
+    {
+      "idea_id": "I003",
+      "target": "If T < 0.0005, instead move 0.0005 from cash to argmax_i(w*_i - w_i), so every trading day trades.",
+      "mechanism": "The nudge contradicts the card's own hard invariant 'cash >= 10% always'. In calm markets E_t=0.90, so cash is already at the floor of 10% and the nudge takes it to 9.95%. The next day the target pulls it back, so this creates a small daily round trip. If the gap vector says cash should rise (the controller is still de-risking, T tiny), argmax of w*_i - w_i can be negative for every asset and the nudge buys the least-bad asset, moving away from target. The rule is a trade-frequency patch that overrides the control law.",
+      "evidence": "Directly from the spec: the cash floor and the nudge cannot both hold when cash equals 0.10 and T<0.0005. Cost is small (5 bp times 0.05% of NAV per day), but it is exactly the 'constraints bolted on' pattern the constraint_fit rubric penalises.",
+      "severity": "minor",
+      "falsifier": "A version that sources the nudge from the largest overweight asset (never from cash below the floor) would show the invariant can hold.",
+      "gate": null
+    },
+    {
+      "idea_id": "I003",
+      "target": "5 x 4% = 20% per week",
+      "mechanism": "The daily cap is exactly 4% of NAV, so the weekly bound is exactly the 20% limit with no margin. During de-risking, which is when the cap binds five days running, the weekly weight change also includes price drift, and NAV changes within the week. Measured as the sum of absolute weight changes over the week divided by 2, turnover can exceed 20% by the drift term (typically several tenths of a percent). The gate is met 'by construction' only under a trades-only definition. I001 and I002 keep 2.5% headroom (19.5%) and do not have this issue.",
+      "evidence": "Weekly turnover <= sum of daily traded fractions + drift term. Drift of about 0.5-1% of weights per week at 6% vol is typical, so a capped week can measure about 20.3-20.8%.",
+      "severity": "minor",
+      "falsifier": "If the referee's turnover metric counts traded value over same-day NAV only, the bound holds at equality. Setting the daily cap to 3.8% would give margin.",
+      "gate": "turnover_cap"
+    },
+    {
+      "idea_id": "I003",
+      "target": "Base weights b_i proportional to 1/sigma_i (63-day stdev of daily close returns), summing to 1.",
+      "mechanism": "Inverse-vol equalises stand-alone risk per ETF, so the five correlated equity-like ETFs carry the largest share of variance (about 55-60% by my rough estimate) while three bond funds take about 55% of dollar weight. The drawdown law limits the total but not the mix, so a 2022-type stock-bond selloff falls on a duration-heavy book. Diversification by class is weaker than the card's 'risk parity spreads risk across equity, duration and real assets' suggests.",
+      "evidence": "Same calculation as for I001: equity block within-block correlation sum about 20-21 and cross terms about 5 out of about 43 total units. Qian (2005) and Maillard et al. (2010) describe ERC or risk parity with correlations, not per-asset inverse vol.",
+      "severity": "minor",
+      "falsifier": "Risk contributions by class from the 63d covariance staying at or below about 45% for any class at all dates would refute it.",
+      "gate": null
+    }
+  ],
+  "ranking": ["I003", "I008", "I001", "I002"],
+  "novelty_ranking": ["I002", "I008", "I001"],
+  "ratings": [
+    {"idea_id": "I001", "upside": 4, "probability": 2},
+    {"idea_id": "I002", "upside": 3, "probability": 3},
+    {"idea_id": "I003", "upside": 3, "probability": 4},
+    {"idea_id": "I008", "upside": 3, "probability": 3}
+  ]
+}

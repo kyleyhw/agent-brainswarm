@@ -1,0 +1,30 @@
+[
+  {
+    "generator_id": "G01",
+    "model": "sonnet",
+    "slot_type": "angle",
+    "angle_id": "A006",
+    "band": "middle"
+  },
+  {
+    "generator_id": "G02",
+    "model": "opus",
+    "slot_type": "cross_domain",
+    "angle_id": "D006",
+    "band": "rare"
+  },
+  {
+    "generator_id": "G03",
+    "model": "sonnet",
+    "slot_type": "angle",
+    "angle_id": "A002",
+    "band": "middle"
+  },
+  {
+    "generator_id": "G04",
+    "model": "opus",
+    "slot_type": "free",
+    "angle_id": null,
+    "band": null
+  }
+]

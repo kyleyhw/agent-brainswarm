@@ -1,0 +1,448 @@
+{
+  "I001": {
+    "id": "I001",
+    "title": "Absorption-Ratio Throttle on an Inverse-Volatility Book",
+    "pitch": "Hold an inverse-volatility book of the 10 ETFs and shrink exposure smoothly toward 25% as the absorption ratio (top-eigenvector variance share) rises above its one-year norm, with a fixed daily step cap that satisfies both trading constraints by construction.",
+    "mechanism": "Diversification benefit is treated as a state variable: when one common factor carries more cross-asset variance, the benefit of holding 10 classes has gone. No asset return is forecast.",
+    "rationale": "Kritzman, Li, Page and Rigobon (2011) found absorption-ratio spikes preceded equity drawdowns; that evidence is within-equity, so multi-asset transfer is my extrapolation. Inverse-vol is the tractable risk-parity baseline (Asness, Frazzini, Pedersen 2012). Net growth estimate: 5-6% nominal, costs under 0.2% per year (my estimate). The drawdown claim is an estimate, not a bound: the 3.9% cap means 100% to 25% invested takes at least 20 trading days. I believe, unchecked, that AR rose in Sep-Oct 2008 and Mar 2020 and drifted up in 2022 as stock-bond correlation turned positive; 2022 is the binding case, since bond-heavy books lost roughly 12-16% then.",
+    "assumptions": [
+      "The 10-asset AR reacts within days to correlated selloffs.",
+      "Gold and DBC remain partial diversifiers in inflation shocks.",
+      "Next-close fills are within a few bp of signal closes."
+    ],
+    "failure_modes": [
+      "AR lags fast gaps (Feb-Mar 2020); AR20 uses 20 observations for 10 assets and is noisy.",
+      "Slow 2022 grind: dAR rises late, exposure is cut after most losses.",
+      "Whipsaw: re-risking after a rebound forfeits recovery return."
+    ],
+    "cheapest_test": "Backtest from about 2007: max drawdown, weekly turnover, and dAR lead/lag versus 2008, 2020, 2022 peak-to-trough dates. Sandbox was unavailable, so no code was run and no numbers here are computed.",
+    "effort": "Low: about 60 lines of NumPy plus daily closes.",
+    "provenance": {
+      "generator_id": "G01",
+      "model": "sonnet",
+      "slot_type": "angle",
+      "angle_id": "A006",
+      "band": "middle",
+      "transfer": "strong",
+      "research_derived": false
+    },
+    "sources": [
+      "Kritzman, Li, Page, Rigobon (2011), J. Portfolio Management 37(4)",
+      "Asness, Frazzini, Pedersen (2012), Financial Analysts Journal 68(1)"
+    ],
+    "spec": "Universe: SPY, IWM, EFA, EEM, IEF, TIP, LQD, GLD, DBC, VNQ. At close t: r=ln(P_t/P_{t-1}); A=lambda_max(60d correlation)/10; A20 the same on 20d; dAR=(A20-mean(A, prior 250d))/std(A, prior 250d). sigma_i=60d std*sqrt(252); w_i=(1/sigma_i)/sum(1/sigma_j); sp=sqrt(w'Sw), S=60d covariance annualised; base=min(1,0.07/sp)*w, remainder cash. u=clip((dAR-0.5)/2,0,1); s=1-0.75*u^2(3-2u); target=s*base. Fill at close t+1: d=(target-w)/5; tau=0.5*sum|d|; if tau>0.039, d*=0.039/tau; w+=d. Weekly turnover <=5*3.9%=19.5%; target differs from w almost surely, so it trades every day. Starts in cash. Constants: 0.5-2.5 sd brackets ordinary to extreme states; 25% floor keeps the book diversified; 7% is near unlevered inverse-vol book vol; 1/5 is a one-week horizon; 3.9%=19.5%/5.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I002": {
+    "id": "I002",
+    "title": "Stress-Mixture Covariance Sizing with Rank-1 Stress Prior",
+    "pitch": "Put the stress state inside the covariance used for equal-risk-contribution sizing, so a high absorption ratio makes the sizing formula assume an 'everything falls together' world and hold less risk.",
+    "mechanism": "Sigma blends a shrunk 120-day sample covariance with a rank-1 stress scenario (rho=0.8, current vols) by p, the percentile rank of the absorption ratio. ERC weights and the 6% volatility scale both come from Sigma, so mix and total exposure respond through one formula with no binary switch.",
+    "rationale": "Chow, Jacquier, Kritzman, Lowry (1999) blend a turbulent-period covariance into portfolio choice; Longin and Solnik (2001) document bear-market correlation increases. My arithmetic: with equal vols, sigma_p scales as sqrt(rho+(1-rho)/10), 0.61 at rho=0.3 and 0.91 at 0.8, so exposure at p=1 falls to about 55-70% of calm level. That is milder de-risking than a hard throttle, so the drawdown case leans on the 6% target: a 5-sigma 20-day loss is 6%*sqrt(20/252)*5=8.5%, valid only if vol is well estimated, the weak point. Net growth about 5% nominal (my estimate).",
+    "assumptions": [
+      "rho=0.8 is a fair crisis correlation for risky classes plus positive stock-bond correlation.",
+      "Stress-time realised vol is not many multiples of the 20-day vol."
+    ],
+    "failure_modes": [
+      "ETF history starts about 2006, so q95 barely exists in 2008 and that test is marginal.",
+      "A crash from calm gives losses far above 5 sigma of prior vol.",
+      "55-70% exposure may leave 2022-type losses near 20%.",
+      "p may saturate at 1 for long stretches."
+    ],
+    "cheapest_test": "Backtest from 2008: max drawdown and turnover versus pure-sample ERC and fixed rho=0.8 ERC. Sandbox was unavailable, so no code was run.",
+    "effort": "Medium: ERC solver, shrinkage, scheduler; about 150 lines.",
+    "provenance": {
+      "generator_id": "G01",
+      "model": "sonnet",
+      "slot_type": "angle",
+      "angle_id": "A006",
+      "band": "middle",
+      "transfer": "partial",
+      "research_derived": false
+    },
+    "sources": [
+      "Chow, Jacquier, Kritzman, Lowry (1999), Financial Analysts Journal 55(3)",
+      "Longin, Solnik (2001), Journal of Finance 56(2)"
+    ],
+    "spec": "Universe as card 0. At close t: A=lambda_max(60d correlation)/10; q50, q95 = expanding percentiles of prior A (need >=504 days, else p=0); p=clip((A-q50)/(q95-q50),0,1). S_s=120d covariance shrunk to constant-correlation target (Ledoit-Wolf intensity); D=diag(20d vols); S_stress=D(0.8*11'+0.2I)D; Sigma=(1-p)S_s+p*S_stress. ERC: long-only, sum w=1, cyclical coordinate descent, tol 1e-8. target=min(1,0.06/sqrt(w'Sigma w))*w, remainder cash. Sessions Mon, Wed, Fri, filled at that day's next close; a holiday session moves to Tue or Thu; weeks with <=3 trading days trade daily. Sells first; scale step so one-way turnover <=6.5%. Weekly <=3*6.5%=19.5%. Constants: 0.8 approximates crisis correlation; 120d balances noise (N/T~0.08) against lag; 6% is below typical unlevered ERC vol; 6.5%=19.5%/3.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I003": {
+    "id": "I003",
+    "title": "Droop-governed risk parity: deadband drawdown droop, 4%/day ramp cap, 10% spinning-reserve cash",
+    "pitch": "Inverse-volatility risk parity whose exposure follows a grid-style droop law on the strategy's own drawdown, executed through a hard 4%-per-day ramp that makes the turnover and frequency gates the control law itself.",
+    "mechanism": "Base weights b_i proportional to 1/sigma_i (63-day stdev of daily close returns), summing to 1. Deviation DD_t = 1 - NAV_t/max(NAV, last 252 days). Droop target E_t = clip(0.90 - 8*(DD_t - 0.04), 0.25, 0.90): 4% deadband, gain 8, floor at 12% DD. Target w* = E_t*b; cash >= 10% always (spinning reserve). Execution moves along the gap vector, scaled to <= 4% one-way turnover per day; 5 x 4% = 20% per week.",
+    "rationale": "Unlevered risk parity spreads risk across equity, duration and real assets (Qian 2005; Maillard et al. 2010). Drawdown-keyed exposure is CPPI-like; Grossman and Zhou (1993) show drawdown-constrained optimal exposure is proportional to the cushion. The ramp mirrors governor slew limits: it damps whipsaw and turns the constraints into dynamics, not clipping. Hand calculation (sandbox unavailable, no code run): an underlying -18.5% fall over 17 days, harsher than risk parity's 2020 fall, is cut to ~14%; gradual 2008/2022 declines stop near 12-13%. Net growth ~4-5%/yr: unlevered RP ~5-6% less reserve and controller drag; costs <10 bp.",
+    "assumptions": [
+      "Unlevered 10-ETF inverse-vol portfolio has ~6-8% vol and positive premia",
+      "Crashes unfold over >= 2-3 weeks",
+      "One-way cost ~5 bp"
+    ],
+    "failure_modes": [
+      "A one-week gap (-3%/day for 5 days) outruns the ramp",
+      "The 252-day peak resets during a >1-year drawdown, re-risking to 0.90 while all-time DD is ~12%; a second leg could breach 20%",
+      "Positive stock-bond correlation (2022) hits the duration-heavy base",
+      "Slow re-risking after V-shaped recoveries costs growth"
+    ],
+    "cheapest_test": "Backtest 2004-2025 on ETF closes (index proxies pre-inception), 1-day lag, 5 bp cost; report crisis max DD, weekly turnover histogram, CAGR versus static inverse-vol.",
+    "effort": "Low: ~100 lines of pandas, one day.",
+    "provenance": {
+      "generator_id": "G02",
+      "model": "opus",
+      "slot_type": "cross_domain",
+      "angle_id": "D006",
+      "band": "rare",
+      "transfer": "partial",
+      "research_derived": false
+    },
+    "sources": [
+      "Qian (2005) Risk Parity Portfolios, PanAgora",
+      "Maillard, Roncalli, Teiletche (2010) J. Portfolio Management 36(4)",
+      "Grossman and Zhou (1993) Mathematical Finance 3(3)",
+      "Kundur (1994) Power System Stability and Control, ch. 11"
+    ],
+    "spec": "Close t: sigma_i, b_i, DD_t, E_t, w* = E_t*b. Trade at close t+1: g = w* - w over 11 positions incl. cash; T = sum|g|/2; if T > 0.04, g *= 0.04/T. If T < 0.0005, instead move 0.0005 from cash to argmax_i(w*_i - w_i), so every trading day trades. Ties: lowest ticker index.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I004": {
+    "id": "I004",
+    "title": "N-1 contingency reserve: cluster risk parity sized so losing the worst asset-class 'generator' cannot breach 17%, with asymmetric ramps",
+    "pitch": "Hold exactly the cash needed to survive a 1-in-100 twenty-day loss of the largest risk cluster plus half-sag in the others, restoring risk at half the speed it is cut.",
+    "mechanism": "Clusters: Equity (US LC, US SC, dev ex-US, EM, REIT), Duration (7-10y, TIPS, IG), Real (gold, commodities). Within cluster: inverse 63-day vol, halved if close < 200-day SMA, renormalized. Across clusters: equal risk contribution (ERC) on 63-day cluster covariance. L_c = |1st percentile of overlapping 20-day cluster returns, last 1260 days|. S_t = max_c(w_c*L_c) + 0.5*sum_others(w_c*L_c). Exposure lambda_t = clip((0.17 - DD_t)/S_t, 0, 0.95), DD from all-time NAV peak. Cutting ramp 4%/day, restoring ramp 2%/day.",
+    "rationale": "Grid N-1 security holds reserve against the largest single outage. The 20-day horizon is set ex ante as the time the 4% ramp needs to shed ~0.8 exposure, matching contingency window to response time. lambda = cushion/S is CPPI with a multiplier from measured tail loss, not tuning. ERC caps each cluster at 1/3 of risk at every date (Maillard et al. 2010). Trend halving adds time-series momentum (Faber 2007; Moskowitz et al. 2012). Hand estimate (sandbox unavailable): typical S ~6.5%, so de-risking begins near 11% DD and one full contingency ends <= 17%. Net growth ~4.5-5.5%/yr.",
+    "assumptions": [
+      "Five-year tail quantiles bound next-month cluster losses",
+      "0.5 sag factor covers joint tails",
+      "5 bp costs"
+    ],
+    "failure_modes": [
+      "Regime shift (2022 duration after calm years) understates L_c; only the 3-point margin covers it",
+      "N-2: a second shock after the first",
+      "All-time-peak DD can lock exposure low for years",
+      "Late de-risking leaves little room if S is wrong"
+    ],
+    "cheapest_test": "Backtest 2004-2025, 1-day lag; log realized 20-day cluster losses against L_c (exceedance should be ~1%) and max DD per crisis.",
+    "effort": "Moderate: ERC solver plus rolling quantiles, 2-3 days.",
+    "provenance": {
+      "generator_id": "G02",
+      "model": "opus",
+      "slot_type": "cross_domain",
+      "angle_id": "D006",
+      "band": "rare",
+      "transfer": "strong",
+      "research_derived": false
+    },
+    "sources": [
+      "NERC TPL-001 (N-1 planning criterion)",
+      "Maillard, Roncalli, Teiletche (2010) JPM 36(4)",
+      "Spinu (2013) SSRN 2297383",
+      "Faber (2007) J. Wealth Management 9(4)",
+      "Moskowitz, Ooi, Pedersen (2012) JFE 104(2)"
+    ],
+    "spec": "ERC: Newton on min 0.5 w'Sigma w - (1/3) sum ln w_c (Spinu 2013), normalize. Cluster returns use current within-cluster weights. w* = lambda * combined weights. Trade at close t+1: g = w* - w incl. cash; cap sum|g|/2 at 0.02 if exposure rises, else 0.04. If below 0.0005, move 0.0005 from cash (>= 5%) to most-underweight ETF, daily. Weekly turnover <= 20%.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I005": {
+    "id": "I005",
+    "title": "Effective-bets throttle with a daily turnover budget",
+    "pitch": "Scale total exposure of an inverse-volatility 10-ETF book by the effective number of independent bets in the correlation matrix, trading under a hard 3.5%-of-NAV daily budget.",
+    "mechanism": "Correlation only sets total exposure s; it forecasts no returns. Each close: correlation matrix of daily log returns over 63 and 21 days, eigenvalues lambda_i (sum 10), p_i = lambda_i/10, N_eff = exp(-sum p_i ln p_i), from 1 (one factor) to 10. Divide each window's N_eff by its trailing 756-day median (expanding after 126 days; cancels small-sample bias); s = clip(min(ratio63, ratio21), 0.25, 1). Target = s x inverse-volatility weights (63-day, 20% cap), rest cash. Constraint mechanism: one-way traded value at most 3.5% of NAV per day, so at most 17.5% per week under either turnover convention, and a trade on all 5 days.",
+    "rationale": "Drawdowns beyond 20% come from correlated sell-offs (2008, March 2020, 2022 stock-bond correlation turning positive), which compress the eigenvalue spectrum. Kritzman et al. (2011): a high absorption ratio preceded fragility; Meucci (2009) defines the entropy effective number of bets; Longin and Solnik (2001): correlation rises in bear markets (cited from memory). Unverified estimate: unthrottled book about 6% volatility and -16% in 2022; throttled -10% to -14%. Net growth 4-5% per year from equity, credit, term, inflation and commodity premia; cost drag under 0.3% per year at 3 bp.",
+    "assumptions": [
+      "Correlation compression starts before or during losses.",
+      "3-year median is a stable reference.",
+      "Drift adds under 2.5% per week to measured turnover."
+    ],
+    "failure_modes": [
+      "Fast crash: exposure falls at most 3.5% per day, so worst case is about -12% to -16% (untested).",
+      "Long high-correlation regime lifts the median and disarms the signal.",
+      "21-day N_eff is noisy and wastes budget."
+    ],
+    "cheapest_test": "Backtest 2006-2025 against constant exposure matched to mean s; the signal counts only if it beats that control on max drawdown (2008 needs pre-2006 proxies). Sandbox unavailable; no code run.",
+    "effort": "About 150 lines of NumPy.",
+    "provenance": {
+      "generator_id": "G03",
+      "model": "sonnet",
+      "slot_type": "angle",
+      "angle_id": "A002",
+      "band": "middle",
+      "transfer": "strong",
+      "research_derived": false
+    },
+    "sources": [
+      "Kritzman, Li, Page, Rigobon (2011), J. Portfolio Management",
+      "Meucci (2009), Managing Diversification, Risk",
+      "Longin and Solnik (2001), J. Finance"
+    ],
+    "spec": "r = ln(P_t/P_{t-1}); s = 1 during first 189 days. Signal at close t, trade at close t+1. w_i proportional to 1/sigma_i (63-day std), cap 0.20, excess pro rata to uncapped, iterate. Target_i = s w_i; gap g_i = target_i - current_i (post-drift). If sum(current) > s: sell only, scaled by min(1, 0.035/sum sell gaps). Else scale all gaps by min(1, 0.035/max(sum buy gaps, sum sell gaps)). Ties by listed ETF order.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I006": {
+    "id": "I006",
+    "title": "Down-day correlation gap ladder on three trade days",
+    "pitch": "Cut exposure by the share of diversification headroom lost on down days versus up days, trading only first, middle and last day of each week with a 6% cap each.",
+    "mechanism": "m_t = equal-weight mean of the 10 daily returns. Over 126 days split into down (m<0) and up (m>=0) days; rho_D, rho_U = mean pairwise correlation on each subset. E = clip(1 - (rho_D - rho_U)/(1 - rho_U), 0.25, 1): 1 when the two structures match, toward 0.25 as rho_D nears 1. Target = E x inverse-volatility weights (63-day, 20% cap), rest cash. Trade days: day 1, day ceil((n+1)/2), day n of n trading days (Mon/Wed/Fri in a full week), each at most 6% of NAV one-way: at least 3 trade days, at most 18% weekly turnover. De-risking sells first.",
+    "rationale": "Correlations rise in down markets (Longin and Solnik 2001; Ang and Chen 2002). Conditioning on the sample mean biases correlation (Forbes and Rigobon 2002), but a split on the sign of the equal-weight mean is symmetric, so the bias should cancel to first order in the gap (not verified numerically). Should fire in 2022, 2008, 2020. Three parameters (126 days, 0.25 floor, 6% cap), each principled: correlation precision, staying invested, 20% budget over three days.",
+    "assumptions": [
+      "Down-day correlation excess persists for weeks.",
+      "55-70 observations per subset suffice.",
+      "Drift adds under 2% per week to turnover."
+    ],
+    "failure_modes": [
+      "Standard error of the gap is likely 0.1-0.2, so E jitters and burns the cap.",
+      "Lags a one-week crash; worst case about -11% to -15% (estimate, not proven).",
+      "Holiday weeks with fewer than 3 days cannot reach 3 trades."
+    ],
+    "cheapest_test": "Monte Carlo of stationary constant-correlation returns to measure the standard deviation of E under the null (not run; sandbox unavailable), then backtest against constant exposure matched to mean E.",
+    "effort": "About 120 lines of NumPy; half a day.",
+    "provenance": {
+      "generator_id": "G03",
+      "model": "sonnet",
+      "slot_type": "angle",
+      "angle_id": "A002",
+      "band": "middle",
+      "transfer": "partial",
+      "research_derived": false
+    },
+    "sources": [
+      "Longin and Solnik (2001), J. Finance",
+      "Ang and Chen (2002), J. Financial Economics",
+      "Forbes and Rigobon (2002), J. Finance"
+    ],
+    "spec": "Signal from data through the close before trade day d; execute at close of d. rho as mean of 45 pairwise Pearson correlations of daily log returns. E as above. Gap g = target - current. If sum(current) > E: sell overweights only, scaled by min(1, 0.06/sum sell gaps). Else scale all gaps by min(1, 0.06/max(sum buy gaps, sum sell gaps)). Ties by listed ETF order.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I007": {
+    "id": "I007",
+    "title": "Grossman-Zhou cushion sizing of a 3-bucket risk-parity core with a daily 4% adjustment lane",
+    "pitch": "Size an unlevered three-bucket risk-parity core by the growth-optimal drawdown-constrained cushion rule, moving toward target by at most 4% one-way turnover each trading day.",
+    "mechanism": "Buckets: Growth (US LC, US SC, Dev ex-US, EM, REITs), Nominal (UST 7-10y, IG), Real (TIPS, gold, commodities). Inverse-vol within, equal risk contribution across, so each bucket carries 1/3 of core risk daily. Invested fraction f = min(1, (NAV-0.82*HWM)/(NAV*L)); cash scales buckets equally. Partial adjustment gives de-risking the whole lane: 8% of NAV exposure per day.",
+    "rationale": "Grossman-Zhou (1993): growth-optimal investing under NAV >= a*HWM holds a multiple of the cushion above the floor; 1/L is a Kelly-style multiple. Macro-bucket risk parity (Qian 2005; Maillard et al. 2010) spreads growth, rate and inflation shocks; rebalancing return ~0.3-0.5%/yr (Booth-Fama 1992). Net estimate 4.5-5.5% CAGR after ~0.25%/yr costs. Worst case: at 2008 core vol (1.2%/day) L ~12.5%, cuts start near 7-8% drawdown, exposure halves within ~6 days; estimated maximum drawdown 15-18%. Sandbox unavailable; no code run.",
+    "assumptions": [
+      "Bucket correlations mostly below 0.5",
+      "Daily core losses stay well below L (no floor gap)",
+      "Costs <= 5 bp per unit one-way turnover"
+    ],
+    "failure_modes": [
+      "Multi-day gap (March 2020) eats the cushion before the lane acts",
+      "CPPI cash-lock near the floor costs growth",
+      "0.82 floor leaves only 2 points for slippage",
+      "Tiny forced trades on quiet days may look like gate-gaming"
+    ],
+    "cheapest_test": "Backtest 2004-2025 (index proxies pre-inception), 5 bp costs; report 2008/2020/2022 drawdowns, CAGR, days at f<0.5; perturb 0.82 and 6% by 25%.",
+    "effort": "2-3 days.",
+    "provenance": {
+      "generator_id": "G04",
+      "model": "opus",
+      "slot_type": "free",
+      "angle_id": null,
+      "band": null,
+      "transfer": null,
+      "research_derived": false
+    },
+    "sources": [
+      "Grossman and Zhou (1993), Mathematical Finance 3(3)",
+      "Maillard, Roncalli, Teiletche (2010), JPM 36(4)",
+      "Qian (2005), Risk parity portfolios, PanAgora",
+      "Booth and Fama (1992), FAJ 48(3)"
+    ],
+    "spec": "Daily at close t. v_i = 1/sigma_i(120d) normalised within bucket. Bucket returns; 3x3 covariance (120d); ERC y via y_b <- y_b*sqrt((1/3)/RC_b), renormalised, 100 iterations; c_i = y_b*v_i. sigma_core = stdev of 60 core returns; L = max(0.06, 2.33*sigma_core*sqrt(20)); f = clip((NAV-0.82*HWM)/(NAV*L),0,1); T = f*c. Gap g = T-w; trade x = g*min(1, 0.08/sum|g|): one-way <= 4%/day, <= 20%/week. If max|g| < 0.05%, fill the largest-|g| ETF (ties: listed order). Execute at close t+1.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I008": {
+    "id": "I008",
+    "title": "Crisis-correlation risk budgeting: stress-day covariance with trend gates, drawdown brake and weekday sleeves",
+    "pitch": "Budget risk equally across three macro classes using covariance from sell-off days, halve downtrending assets, and rebalance one of five weekday sleeves daily.",
+    "mechanism": "Stress days: worst 20% of equal-weight 10-ETF returns over 500 days; their covariance, shrunk 50/50 to the full 500-day covariance, drives risk budgeting. When stock-bond correlation turns positive (2022), bonds' crisis risk rises and budget moves to gold, TIPS, commodities and cash. Five 20% sleeves each rebalance on their weekday.",
+    "rationale": "Correlations rise in sell-offs (Longin-Solnik 2001), so full-sample risk parity understates crisis risk. 200-day trend gates cut drawdowns across classes (Faber 2007; Hurst et al. 2017). Staggering reduces timing luck (Hoffstein et al. 2020). Net ~4.5-5.5% CAGR at 7% vol. 20% is ~2.9 annual sigmas; trend halving plus the brake suggest 13-17% worst case in 2008/2022 paths. Sandbox unavailable; no code run.",
+    "assumptions": [
+      "100 stress days with 50% shrinkage give a stable matrix",
+      "Crisis co-movement persists for weeks"
+    ],
+    "failure_modes": [
+      "Fast crash (2020) outruns 4%/day",
+      "Trend whipsaw",
+      "Growth capped at 1/3 of risk lags equity bull runs"
+    ],
+    "cheapest_test": "Backtest 2004-2025, 5 bp costs, versus the same rules on full-sample covariance; compare 2008/2022 drawdowns and CAGR.",
+    "effort": "3-4 days.",
+    "provenance": {
+      "generator_id": "G04",
+      "model": "opus",
+      "slot_type": "free",
+      "angle_id": null,
+      "band": null,
+      "transfer": null,
+      "research_derived": false
+    },
+    "sources": [
+      "Longin and Solnik (2001), JF 56(2)",
+      "Faber (2007), JWM",
+      "Hurst, Ooi, Pedersen (2017), JPM",
+      "Hoffstein, Faber, Braun (2020), Newfound Research",
+      "Spinu (2013), SSRN"
+    ],
+    "spec": "Close t: stress set = 100 lowest EW returns in [t-499,t] (ties: earlier). Sigma = 0.5*S_stress + 0.5*S_500, zero-mean, x252. Budgets b: 1/15 per Growth ETF, 1/6 per Nominal (UST, IG), 1/9 per Real (TIPS, gold, commodities). Solve min 0.5y'Sigma y - sum b_i ln y_i (Newton, tol 1e-8); w = y/sum y. Halve w_i if close < SMA200. Scale k = min(1/sum w, tau/sqrt(w'Sigma w)); tau 7%, 3.5% when NAV < 0.88*HWM until NAV > 0.92*HWM. Sleeve on its weekday: x = g*min(1, 0.4/sum|g|) (one-way <= 20% of sleeve = 4% portfolio). Holiday: sleeve skips; weekly turnover <= 20%.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I002-v2": {
+    "id": "I002-v2",
+    "title": "Stress-Mixture Covariance Sizing with Rank-1 PC1 Stress Prior",
+    "pitch": "Add an absorption-ratio-scaled rank-1 shock along the dominant factor to the ERC covariance, so weights leave co-crashing assets and exposure falls smoothly; a drawdown cushion enforces the 20% bound.",
+    "mechanism": "Sigma=D(R+p*bb')D: D=20d vols, R=shrunk 120d correlation, b=positive part of PC1 loadings, p=absorption-ratio percentile. Only PC1-loaded assets pay the stress term, so ERC shifts toward unloaded hedges (Treasuries in 2008) and away from duration when it loads (2022). R's structure is kept.",
+    "rationale": "Chow et al. (1999) blend turbulent covariance; Kritzman et al. (2011): absorption spikes precede drawdowns; Grossman-Zhou (1993): exposure proportional to drawdown cushion. Hand arithmetic, no code run: exposure can fall 18 points/week, so breaching 20% needs an unmanaged ERC loss near 22% in 20 days; my estimates: Oct-2008 -17%, Mar-2020 -12%, 2022 -17% over the year. Net growth about 4.5% nominal after ~0.3%/yr costs and ~0.3% cushion drag.",
+    "assumptions": [
+      "Unmanaged ERC book never loses >22% in 20 days.",
+      "120d PC1 identifies near-term co-crashing assets."
+    ],
+    "failure_modes": [
+      "120d structure lags abrupt stock-bond correlation flips.",
+      "Stress throttle is mild (~0.8-0.9 at p=1); the cushion carries the bound.",
+      "Cushion whipsaw near lows.",
+      "Percentiles have ~2 years of history in 2008."
+    ],
+    "cheapest_test": "Backtest 2008-2025, 3bp/side: sample ERC, uniform rho=0.8 prior, PC1 prior, PC1+cushion. Report MaxDD (overall, 2008, 2020, 2022), CAGR, weekly turnover, trade days, max class risk share. Kill if PC1 prior cuts MaxDD <2 points vs sample ERC in 2 of 3 episodes, costs >0.5%/yr, or full MaxDD >20%.",
+    "effort": "Medium, ~170 lines.",
+    "provenance": {
+      "generator_id": "G01",
+      "model": "sonnet",
+      "slot_type": "angle",
+      "angle_id": "A006",
+      "band": "middle",
+      "transfer": "partial",
+      "research_derived": false
+    },
+    "sources": [
+      "Chow et al. (1999) FAJ 55(3)",
+      "Kritzman et al. (2011) JPM 37(4)",
+      "Grossman, Zhou (1993) Math. Finance 3(3)",
+      "Ledoit, Wolf (2004) JPM 30(4)"
+    ],
+    "spec": "SPY IWM EFA EEM IEF TIP LQD GLD DBC VNQ; cash earns 0. Signals at close t-1. D=diag(20d vol). R=120d correlation, Ledoit-Wolf constant-correlation shrinkage. l=sqrt(lam1)v1, l_SPY>0; b=max(l,0). A=(lam1+lam2)/10; q50,q95 over prior A (<504 values: p=0); p=clip((A-q50)/(q95-q50),0,1). w=long-only ERC on Sigma, sum 1, coordinate descent, tol 1e-8. S=DRD; E=min(1,0.06/sqrt(w'Sw))*sqrt(w'Sw/w'Sigma*w). c=clip((0.20-DD)/0.15,0.25,1), DD from NAV peak. target=min(E,c)*w. Sessions: days 1, ceil(n/2), n of an n-day week (n>=4), else daily. Delta=target-drifted weights incl. cash; T=sum|Delta|/2; if T>6% scale to 6%; if T=0 move 0.05% most-overweight to most-underweight ETF (tie: list order). Weekly traded <=18%, 2% drift margin.",
+    "version": 2,
+    "parent_id": "I002"
+  },
+  "I003-v2": {
+    "id": "I003-v2",
+    "title": "Droop-governed 3-bucket risk parity: deadband drawdown droop, 3.5%/day slew ramp, 10% reserve cash",
+    "pitch": "Equal-risk-bucket inverse-vol portfolio whose exposure follows a deadband droop law on its own drawdown, executed through a 3.5%-per-day slew limit so the turnover and trading-frequency gates are the control dynamics.",
+    "mechanism": "Buckets: equity-like (LC, SC, DM, EM, REIT), duration/credit (UST, TIPS, IG), real (gold, commodities). Within-bucket weights proportional to 1/sigma_i (63d). Bucket weight proportional to 1/sigma_k, sigma_k = 63d stdev of the bucket's own sub-portfolio, then normalised to 1; standalone risk is equal across buckets by rule. Peak P_t = max NAV over 756 days; DD_t = 1 - NAV_t/P_t. E_t = clip(0.90 - 8*(DD_t - 0.05), 0.25, 0.90). Backstop: E_t <= 0.10 while all-time-peak DD >= 15%. Target w* = E_t*b, cash = 1 - E_t >= 10%. Each day trade at the next close along the gap vector, scaled so one-way turnover <= 3.5% (17.5%/week plus at most ~1.5% drift, under 20%).",
+    "rationale": "Bucketed risk parity spreads standalone risk over equity, duration and real assets (Qian 2005; Maillard et al. 2010). Drawdown-keyed exposure is CPPI-like and motivated by, not derived from, Grossman-Zhou (1993). The slew limit damps whipsaw.",
+    "assumptions": [
+      "Crashes unfold over 2-3 weeks or more",
+      "One-way cost about 5 bp",
+      "Cash earns 0 (conservative)",
+      "Base book vol about 4.5%"
+    ],
+    "failure_modes": [
+      "A one-week gap outruns the ramp",
+      "A grind of more than 4 years is only stopped by the 15% backstop",
+      "Slow re-risking after V-shaped recoveries",
+      "Positive stock-bond correlation (2022) hits the duration-heavy base",
+      "Net growth only about 3-4%/yr, an unrun estimate"
+    ],
+    "cheapest_test": "Backtest 2004-2025 on ETF closes (index proxies pre-inception), 1-day lag, 5 bp cost. Report max DD in 2008, 2020 and 2022, the weekly turnover histogram including drift, mean E, and CAGR versus static inverse-vol.",
+    "effort": "Low: about 100 lines of pandas, one day. Kill if max DD exceeds 20% in any crisis, weekly turnover exceeds 20%, or net CAGR is below cash.",
+    "provenance": {
+      "generator_id": "G02",
+      "model": "opus",
+      "slot_type": "cross_domain",
+      "angle_id": "D006",
+      "band": "rare",
+      "transfer": "partial",
+      "research_derived": false
+    },
+    "sources": [
+      "Qian (2005) Risk Parity Portfolios, PanAgora",
+      "Maillard, Roncalli, Teiletche (2010) J. Portfolio Management 36(4)",
+      "Grossman and Zhou (1993) Mathematical Finance 3(3)",
+      "Kundur (1994) Power System Stability and Control, ch. 11"
+    ],
+    "spec": "Close t: sigma_i, sigma_k, b, P_t, DD_t, E_t, w* = E_t*b (cash = 1 - E_t). Trade at close t+1: g = w* - w over 11 positions incl. cash; T = sum|g|/2; if T > 0.035, g *= 0.035/T. If T < 0.0005, swap 0.0005 from argmin_i to argmax_i of (w*_i - w_i) over the 10 ETFs (cash untouched, always toward target). Ties: lowest ticker index.",
+    "version": 2,
+    "parent_id": "I003"
+  },
+  "I004-v2": {
+    "id": "I004-v2",
+    "title": "N-1 contingency reserve: cluster risk parity with stress-memory reserve and asymmetric ramps",
+    "pitch": "Hold the cash needed to survive a stressed 20-day loss of the largest cluster plus the simulated joint loss; cut risk twice as fast as it is restored.",
+    "mechanism": "Clusters: Equity (5 ETFs), Duration (3), Real (gold, commodities). Mix u: inverse 63d vol within cluster; ERC across clusters on 63d cluster covariance. Trend: ETFs below 200d SMA have u_i halved, freed weight goes to cash (no renormalisation). Reserve S uses unfiltered u: S = max(max_c u_c L_c + 0.5*sum_others u_c L_c, HS), where HS = |1% quantile of 20d returns of current u, last 1260d|. L_c and HS are floored at half the worst 20d loss since 2004 and at 2.33*sqrt(20)*63d vol. lambda = clip((0.17 - DD)/S, 0, 0.95), DD from trailing 504d NAV peak. Ramps: cut 4%/day, restore 2%/day. Target w* = lambda * filtered u.",
+    "rationale": "Grid N-1 reserves against the largest outage; here it is CPPI with a measured, stress-floored multiplier (Maillard 2010 ERC; Faber 2007 trend-to-cash). Net growth 3.5-4.5%/yr after 5bp costs.",
+    "assumptions": [
+      "Stress floor plus joint simulation bounds next-month loss within about 3 points",
+      "A 2-year peak suffices as drawdown reference",
+      "5bp costs; cash earns 0"
+    ],
+    "failure_modes": [
+      "Multi-year grind: rolling peak forgets, so all-time DD can exceed 17% by staircase (conceded)",
+      "Unprecedented shock beyond twice the historical worst",
+      "Stress floor lowers exposure in calm years, costing growth"
+    ],
+    "cheapest_test": "Backtest 2004-2025, 1-day lag. Log realised 20d portfolio loss vs S (exceedance target <=2%), max DD in 2008, 2020, 2022, and net CAGR. Kill if max DD >20% in any crisis, net CAGR <2.5%, or S exceedance >4%.",
+    "effort": "Moderate: 2-3 days.",
+    "provenance": {
+      "generator_id": "G02",
+      "model": "opus",
+      "slot_type": "cross_domain",
+      "angle_id": "D006",
+      "band": "rare",
+      "transfer": "strong",
+      "research_derived": false
+    },
+    "sources": [
+      "NERC TPL-001",
+      "Maillard, Roncalli, Teiletche (2010) JPM",
+      "Spinu (2013) SSRN 2297383",
+      "Faber (2007) JWM"
+    ],
+    "spec": "Signal at close t, trade at close t+1. g = w* - w incl. cash; T = sum|g|/2. Cap = 0.02 if exposure rising, else 0.04; scale g by min(1, cap/T). Weekly turnover <= 5*0.04 = 0.20. If scaled T < 0.0005, swap 0.0005 from most overweight to most underweight ETF vs w* (ties alphabetical); needs no cash. 5% cash floor via lambda <= 0.95.",
+    "version": 2,
+    "parent_id": "I004"
+  },
+  "I008-v2": {
+    "id": "I008-v2",
+    "title": "Crisis-correlation risk budgeting: stress-day covariance, trend gates, drawdown brake, weekday sleeves",
+    "pitch": "Budget risk equally across growth, duration and real classes using sell-off-day covariance, cut exposure to cash in downtrends and drawdowns, and trade one of five weekday sleeves daily.",
+    "mechanism": "A covariance blended from worst-20% days and the full sample lowers weights of assets that co-move in crises. Gate and brake are multiplicative cuts to cash, never renormalised. Staggered sleeves make every trading day trade with turnover headroom.",
+    "rationale": "Crisis correlation exceeds calm correlation (Longin-Solnik 2001). Trend rules to cash cut drawdowns (Faber 2007; Hurst et al. 2017). Staggering removes rebalance-date luck (Hoffstein et al. 2020). Expected net CAGR 4-5% at 4-5% vol; a 12-16% worst-case drawdown is an untested estimate.",
+    "assumptions": [
+      "Stress-day covariance is a useful crisis proxy despite selection bias",
+      "Gate and graded brake cut exposure faster than losses accrue in multi-week sell-offs"
+    ],
+    "failure_modes": [
+      "2020-style crash outruns the 17.5%/week cut speed",
+      "Trend whipsaw",
+      "Growth risk capped at 1/3 lags equity bull runs",
+      "500-day window lags 2022; only SMA200 reacts fast"
+    ],
+    "cheapest_test": "Backtest 2008-2025, 5 bp costs, against full-sample covariance and the old renormalising gate. Kill if max drawdown exceeds 18% in 2008, 2020 or 2022, net CAGR is below 2.5%, or stress covariance cuts 2022 drawdown by under 2 points.",
+    "effort": "3-4 days",
+    "provenance": {
+      "generator_id": "G04",
+      "model": "opus",
+      "slot_type": "free",
+      "angle_id": null,
+      "band": null,
+      "transfer": null,
+      "research_derived": false
+    },
+    "sources": [
+      "Longin and Solnik (2001), JF 56(2)",
+      "Faber (2007), JWM",
+      "Hurst, Ooi, Pedersen (2017), JPM",
+      "Hoffstein, Faber, Braun (2020), Newfound Research",
+      "Forbes and Rigobon (2002), JF 57(5)"
+    ],
+    "spec": "Close t: stress set = 100 lowest equal-weight-10 returns in [t-499,t] (ties: earlier). Sigma = 252*(0.5*S_stress about stress mean + 0.5*S_500 zero-mean). Budgets: Growth (US LC, US SC, DM, EM, REIT) 1/15 each; Duration (UST, IG, TIPS) 1/9 each; Real (gold, commodities) 1/6 each. Solve min 0.5y'Sigma y - sum b_i ln y_i (Newton, tol 1e-8); w=y/sum y. v_i = w_i*(0.5 if close<SMA200 else 1); v *= min(1, 5%/s), s = max(sqrt(v'Sigma v), 21-day realised vol of v). Brake: v *= clip(1-(DD-0.03)/0.08, 0.25, 1), DD vs trailing-252-day NAV high. Target T=v, rest cash, no upward renormalisation. Five 20%-NAV sleeves, one per weekday (holiday: skipped). Sleeve at close: g=T-u (u = post-drift sleeve weights); x=g*min(1, 0.35/sum|g|), one-way at most 3.5% NAV. Stop trading once week-to-date turnover incl. drift reaches 19.5%, unless fewer than 3 days have traded.",
+    "version": 2,
+    "parent_id": "I008"
+  }
+}

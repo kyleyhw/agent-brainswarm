@@ -443,7 +443,7 @@ def build(run: Run) -> list[str]:
     blocks: list[Block] = [
         ("h", 1, f"brainswarm report: {run.root.name}"),
         ("p", f"**Brief.** {run.brief.strip()}"),
-        ("p", "\n".join(digest[1:-1]) if len(digest) > 2 else ""),
+        ("list", digest[1:-1]),
         ("h", 2, "Top idea families"),
         (
             "p",

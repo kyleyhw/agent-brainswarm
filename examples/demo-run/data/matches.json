@@ -1,0 +1,110 @@
+[
+  {
+    "judge_id": "finals-001",
+    "judge_model": "sonnet",
+    "first": "I008-v2",
+    "second": "I002-v2",
+    "preferred": "first",
+    "criterion": "overall",
+    "reason": "I008 layers a trend gate, vol cap and drawdown brake on class-level risk budgets, giving a firmer drawdown and diversification case than I002, whose stress throttle is admittedly mild and whose 0.25 cushion floor still leaves 25% exposure at a 20% drawdown."
+  },
+  {
+    "judge_id": "finals-001",
+    "judge_model": "sonnet",
+    "first": "I004-v2",
+    "second": "I008-v2",
+    "preferred": "first",
+    "criterion": "overall",
+    "reason": "I004 sizes a cash reserve from a stress-floored, simulated 20-day loss with asymmetric cut and restore ramps, which argues the 20% bound directly, while I008 leans on more tuned components and admits a 2020-style crash outruns its cut speed."
+  },
+  {
+    "judge_id": "finals-001",
+    "judge_model": "sonnet",
+    "first": "I003-v2",
+    "second": "I002-v2",
+    "preferred": "first",
+    "criterion": "overall",
+    "reason": "I003 is a simple, few-parameter design in which the slew limit doubles as the turnover mechanism and an explicit droop plus backstop controls drawdown, whereas I002 rests on a fragile PC1 stress prior and lets its cushion carry the bound."
+  },
+  {
+    "judge_id": "finals-001",
+    "judge_model": "sonnet",
+    "first": "I003-v2",
+    "second": "I008-v2",
+    "preferred": "first",
+    "criterion": "overall",
+    "reason": "I003 gets equal-risk buckets, an explicit drawdown law and turnover with a drift margin from very few principled parameters, while I008 stacks many tuned components on a selection-biased stress-day covariance."
+  },
+  {
+    "judge_id": "finals-001",
+    "judge_model": "sonnet",
+    "first": "I004-v2",
+    "second": "I002-v2",
+    "preferred": "first",
+    "criterion": "overall",
+    "reason": "I004 gives a reasoned worst-case reserve and a trend-to-cash mechanism for return, while I002's drawdown bound depends on unrun hand arithmetic and a mild throttle, and its ERC over 10 assets leaves equity-like risk heavy."
+  },
+  {
+    "judge_id": "finals-001",
+    "judge_model": "sonnet",
+    "first": "I004-v2",
+    "second": "I003-v2",
+    "preferred": "first",
+    "criterion": "overall",
+    "reason": "I004 adds a trend-to-cash filter and a stress-floored reserve, which give a stronger growth and drawdown case and more novelty than I003's purely drawdown-reactive droop, though its lack of a drift margin on the 20% turnover cap is a fixable weakness."
+  },
+  {
+    "judge_id": "finals-002",
+    "judge_model": "opus",
+    "first": "I002-v2",
+    "second": "I003-v2",
+    "preferred": "first",
+    "criterion": "overall",
+    "reason": "I002 pairs a volatility target with a drawdown cushion measured from the all-time NAV peak and backs the 20% bound with explicit per-episode worst-case arithmetic, and its PC1 stress prior is genuinely novel, whereas I003 is a plain bucketed inverse-vol CPPI with no vol targeting and an admitted duration-heavy exposure in 2022."
+  },
+  {
+    "judge_id": "finals-002",
+    "judge_model": "opus",
+    "first": "I008-v2",
+    "second": "I004-v2",
+    "preferred": "first",
+    "criterion": "overall",
+    "reason": "I008 counts drift inside its turnover cap (stops at 19.5%) and budgets risk equally across classes by rule, while I004's 5x4% cap sits exactly at 20% with no drift margin and it concedes that its rolling-peak reserve can staircase past the bound."
+  },
+  {
+    "judge_id": "finals-002",
+    "judge_model": "opus",
+    "first": "I008-v2",
+    "second": "I003-v2",
+    "preferred": "first",
+    "criterion": "overall",
+    "reason": "I008 equalises risk contributions across the three classes using stress-day covariance and layers a trend gate, a 5% vol target and a drawdown brake, which gives it more convincing correlated-stress control than I003's single drawdown droop on a duration-heavy inverse-vol base."
+  },
+  {
+    "judge_id": "finals-002",
+    "judge_model": "opus",
+    "first": "I002-v2",
+    "second": "I004-v2",
+    "preferred": "first",
+    "criterion": "overall",
+    "reason": "I002 meets the turnover gate with a stated margin and measures drawdown from the all-time peak, whereas I004's cap sits exactly at 20% before drift and its 504-day rolling peak openly allows staircase drawdowns beyond the bound."
+  },
+  {
+    "judge_id": "finals-002",
+    "judge_model": "opus",
+    "first": "I003-v2",
+    "second": "I004-v2",
+    "preferred": "first",
+    "criterion": "overall",
+    "reason": "I003 satisfies the gates cleanly (3.5%/day, drift margin, an all-time-peak 15% backstop) with few parameters, whereas I004's more elaborate reserve still leaves turnover at exactly 20% and concedes a rolling-peak breach mode."
+  },
+  {
+    "judge_id": "finals-002",
+    "judge_model": "opus",
+    "first": "I002-v2",
+    "second": "I008-v2",
+    "preferred": "second",
+    "criterion": "overall",
+    "reason": "I008 enforces equal class risk contributions at every date and cuts exposure through three layers (trend gate, vol target, brake), while I002's 10-asset ERC lets the five equity-like ETFs carry about half the risk and it admits its stress prior only mildly throttles exposure."
+  }
+]

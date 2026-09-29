@@ -1,0 +1,77 @@
+[
+  {
+    "criterion": "legal_and_ethical",
+    "problem": "A gate the user did not state (user_stated is false). It is also non-discriminating: a rule-based long-only ETF strategy on daily closes cannot plausibly involve manipulation or non-public information, so it filters nothing while breaking the rule that inferred constraints must be judged criteria, not gates.",
+    "suggestion": "Delete it, or demote it to a single-line note in assumptions. If kept, make it a judged criterion with a zero-weight veto only for a flagrantly illegal idea, not a gate."
+  },
+  {
+    "criterion": "long_only_fixed_universe",
+    "problem": "'Holds only non-negative weights in the 10 listed ETFs' with no leverage/other instruments leaves cash ambiguous. If weights must sum to 1 across the 10 ETFs, the most natural drawdown mechanism (moving to cash or T-bills when trend or volatility deteriorates) is silently banned. The brief only says long-only and a 10-ETF universe; it does not forbid a cash residual. The gate may therefore reject valid ideas or leave critics to guess.",
+    "suggestion": "State explicitly in the definition and assumptions: weights are >= 0, sum to <= 1, and the residual is uninvested cash earning 0% (or an explicit assumed rate). If the referee wants to forbid cash, say so as an assumption because the user did not. Keep 'no leverage, no shorting, no derivatives, no instruments outside the 10 ETFs'."
+  },
+  {
+    "criterion": "trades_three_days_per_week",
+    "problem": "Two weaknesses. (1) 'in a typical week' is weaker than the brief's 'at least 3 days per week' and lets an idea trade 3 days in some weeks and 1 in others. (2) With no minimum trade size, a rule that nudges a weight by 0.01% on three days satisfies the gate trivially, so the gate can be gamed and does not test the intent.",
+    "suggestion": "Reword: 'the rules produce trades on at least 3 trading days in every full week, and in shortened holiday weeks as well as trading days allow'. Add a materiality threshold (e.g. a trade counts only if it changes some weight by at least 0.5 percentage points, or it is at least a stated fraction of portfolio value) and record the threshold under assumptions. Add a judged criterion (see the new-criterion issue) for whether the trading frequency is driven by real signal rather than artificial trades."
+  },
+  {
+    "criterion": "turnover_cap",
+    "problem": "'Weekly one-way turnover is at most 20%' picks a definition the brief does not fix; two-way turnover of 20% equals one-way 10%, a factor-of-two difference in what ideas survive. 'By construction' is also ambiguous between a hard cap on every week and an average. The definition sits in the criterion, not in assumptions, so it is not visible as an interpretive choice.",
+    "suggestion": "Move the interpretation to assumptions and state it: 'turnover = sum of absolute weight changes / 2 over the week, for every calendar week (a hard per-week cap, not an average), measured from drifted pre-trade weights'. Consider flagging in assumptions that the stricter two-way reading was not adopted. Require the idea to show the mechanism that enforces the cap (e.g. per-week trade budget), otherwise ideas that only hit 20% on average should fail."
+  },
+  {
+    "criterion": "daily_close_data_only",
+    "problem": "Restricts signals to closing prices 'of the universe'. The brief says only 'use only daily closing prices' and does not restrict which instruments' closes may be used. As written the gate would reject ideas using, say, VIX or Treasury yield closes or a benchmark index close, which are daily closing prices. It also over-specifies by excluding volume-derived closes without the user saying so beyond 'closing prices'.",
+    "suggestion": "Reword to what the user stated: 'signals use only daily closing prices (and quantities derived from them: returns, volatility, correlations, moving averages); no intraday, volume, fundamental, or alternative data'. Put 'closes of instruments outside the 10 ETFs' as an explicit assumption (allowed or not) rather than silently forbidding it."
+  },
+  {
+    "criterion": "growth",
+    "problem": "The strong anchor ('a credible, documented source of return') rewards familiarity and published effects, which biases against novel ideas and conflicts with the novelty criterion. The weak anchor mixes two different failure modes (cost erosion and overfitting). There is no middle anchor and no reference to the growth/drawdown trade-off the brief requires ('optimise long-run growth while keeping drawdown below 20%'), so growth is not judged risk-adjusted.",
+    "suggestion": "Rewrite the anchors: strong = 'a clearly stated economic or statistical mechanism for return, with a rough net-of-cost estimate of CAGR and an argument that it survives 2-5 bp costs at the stated turnover; evidence may be documented or argued from first principles'; middle = 'plausible mechanism but no cost estimate or magnitude'; weak = 'return relies on a parameter fit, a single regime, or an effect smaller than the cost of trading it'. Split overfitting into its own robustness criterion. State that growth is judged conditional on meeting the drawdown limit, e.g. 'higher growth at the same drawdown risk'."
+  },
+  {
+    "criterion": "drawdown_control",
+    "problem": "Only two anchors and both are vague ('explicit risk mechanism', 'left to chance'); there is no middle and no test regime. A 20% drawdown limit is very demanding for a portfolio containing equities and commodities (2008, 2020 and 2022 all breached it for typical mixes, and 2022 hit stocks and bonds together), so ideas that use diversification alone should not be scored as strong.",
+    "suggestion": "Anchors: strong = 'explicit de-risking rule (e.g. trend/volatility/drawdown trigger) plus a reasoned estimate of worst-case loss, addressed to correlated stress such as 2008, March 2020 and 2022, and compatible with the turnover cap'; middle = 'a risk mechanism exists (e.g. volatility targeting) but no argument that it holds at 20% or in stress with stock-bond correlation'; weak = 'relies on static diversification or unspecified stops'. Also require the idea to say whether the risk mechanism is compatible with the turnover cap, because fast de-risking can hit it."
+  },
+  {
+    "criterion": "diversification",
+    "problem": "The strong anchor 'risk-balanced across classes over time' favours risk-parity-style ideas and is unmeasurable as written ('over time' - average or at every date?). A trend or rotation strategy that legitimately holds 3 of 10 classes at a time would be scored weak even though it satisfies the brief's 'staying diversified across asset classes'. It also overlaps with drawdown_control, since diversification is one drawdown mechanism, so an idea can be credited twice for it.",
+    "suggestion": "Define diversification measurably and at each date: e.g. 'no asset class above X% of capital (suggest 40%) and equity-like risk (large cap, small cap, developed, EM, REITs) not above Y% of portfolio variance; at least N classes held at nearly all times'. Anchors: strong = 'stated concentration limits that hold at every date, including in risk-off states'; middle = 'diversified on average but can concentrate in a few classes'; weak = 'can end up effectively in one class'. Tell critics to score drawdown_control only on the tail-risk mechanism and diversification only on concentration, so that one feature is not rewarded twice."
+  },
+  {
+    "criterion": "feasibility",
+    "problem": "Empty anchors, and the 'one person in a week' standard is an invented constraint the brief does not state. It also overlaps heavily with specificity (both ask whether the idea can be coded from the stated data), so implementability is double-counted. It ignores a concrete feasibility issue: the ETFs have different inception dates (e.g. TIP, EEM, DBC/GSG-type commodity funds, and REIT funds start in different years), which limits the backtest history for the 10-ETF universe.",
+    "suggestion": "Either merge feasibility into specificity or restrict feasibility to what is distinct: 'runs on the stated data and the 10-ETF universe (accounting for the shortest inception history) with realistic execution at the close'. Add anchors: strong = 'every input is a closing price or derived; needs no data that is unavailable for the common history'; weak = 'needs data outside the brief or a history longer than the ETFs offer'. Drop 'one person in a week' or put it in assumptions as a soft standard."
+  },
+  {
+    "criterion": "specificity",
+    "problem": "Empty anchors, so critics will score it inconsistently. It also duplicates feasibility (see above).",
+    "suggestion": "Give concrete anchors: strong = 'every parameter (lookbacks, thresholds, rebalance days, weight formula, tie-breaks, cash handling) is stated so two coders would get the same trades'; middle = 'structure is clear but 1-2 parameters or the trade-scheduling rule are unspecified'; weak = 'a concept such as \"use momentum and risk parity\" with no rules'. Score it once, alongside feasibility as a single implementability criterion."
+  },
+  {
+    "criterion": "novelty",
+    "problem": "The brief never asks for novelty, and the rubric is for a strategy that must optimise growth under constraints. This criterion is the only one that is biased toward unfamiliar ideas, is a proxy that can reward exotic but overfit or complicated rules, and it conflicts with growth's 'documented' anchor. Empty anchors, and 'textbook momentum or 60/40' is a narrow reference class (60/40 is not a rule-based active strategy). Taken with growth, it pulls scores in opposite directions.",
+    "suggestion": "Delete it, or keep it with a small weight and explicit anchors (strong = 'a new mechanism or a new combination of known mechanisms with a stated reason it should help under the trade-frequency/turnover constraints'; weak = 'a standard trend/momentum or risk-parity recipe with default parameters'). If kept, tell critics that novelty must never be credited as evidence of growth. Preferably replace it with a criterion for whether the idea handles the brief's unusual tension (>= 3 trading days per week with turnover <= 20%)."
+  },
+  {
+    "criterion": null,
+    "problem": "Missing criterion: robustness / overfitting. The brief's core aims (long-run growth, drawdown below 20%) can only be judged if the idea is not a fit to one history. Overfitting appears only as a clause inside growth's weak anchor and is not scored anywhere else (e.g. parameter sensitivity, regime dependence, sample-period luck).",
+    "suggestion": "Add a judged criterion 'robustness': strong = 'few parameters, chosen on a stated principle, expected to work across regimes (2008, 2013 taper, 2020, 2022) and not sensitive to a small change in the lookback'; middle = 'moderate parameter count but stated rationale'; weak = 'many tuned parameters or dependent on one regime'."
+  },
+  {
+    "criterion": null,
+    "problem": "Missing criterion: how the strategy uses the trade-frequency and turnover constraints. The brief's two constraints (trade on >= 3 days per week, turnover <= 20%/week) pull against each other, and the gates only check pass/fail. Nothing scores whether the trading is purposeful (small, signal-driven daily adjustments) or artificial (dummy trades), nor whether there is headroom under the cap, and cost drag from trading at the cap is left inside growth.",
+    "suggestion": "Add a judged criterion 'constraint_fit' (or extend specificity): strong = 'a stated mechanism producing trades on most days (e.g. staggered/tranched rebalancing, daily partial adjustment) with expected weekly turnover comfortably (say <= 15%) below the cap'; weak = 'trades on 3 days only through token trades, or expected turnover sits at the cap so any misestimate breaks the gate'."
+  },
+  {
+    "criterion": null,
+    "problem": "No aggregation, scale or weights are given. Six judged criteria are listed with two or three anchors each (and three with none), but there is no scoring scale or weighting. Implementability and novelty (feasibility, specificity, novelty) would carry as much as the actual objective (growth and drawdown), although the brief is about growth under a drawdown limit and diversification.",
+    "suggestion": "State a 1-5 scale for every judged criterion with anchors at 1, 3 and 5, and give weights that reflect the brief: e.g. growth and drawdown_control highest, diversification and robustness medium, implementability and any novelty lowest. Say that the gates are pass/fail before scoring."
+  },
+  {
+    "criterion": null,
+    "problem": "Assumptions are thin: the 2-5 bp cost figure has no source and likely understates wider spreads/impact for EM, commodity and REIT ETFs; there is no statement of execution timing (trade at the same close as the signal or at the next close, a look-ahead trap for a 'daily closes only' rule), no assumption about cash yield, and no statement that turnover/trade-day definitions were chosen by the referee.",
+    "suggestion": "Add assumptions: (a) costs 2-5 bp for large liquid ETFs and up to about 10 bp for the less liquid ones, labelled as an estimate; (b) signals computed on close t are executed at close t+1 (or at close t only if the idea says so, with the look-ahead risk called out); (c) the cash treatment; (d) the turnover and trade definitions chosen in the gate issues above."
+  }
+]

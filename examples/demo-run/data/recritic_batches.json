@@ -1,0 +1,12 @@
+[
+  {
+    "dispatch_id": "recritic-r1-001",
+    "ideas": [
+      "I008-v2",
+      "I003-v2",
+      "I004-v2",
+      "I002-v2"
+    ],
+    "model": "sonnet"
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "idea_id": "I004",
+    "kind": "value",
+    "reason": "high preliminary value"
+  },
+  {
+    "idea_id": "I003",
+    "kind": "value",
+    "reason": "high preliminary value"
+  },
+  {
+    "idea_id": "I008",
+    "kind": "value",
+    "reason": "high preliminary value"
+  },
+  {
+    "idea_id": "I002",
+    "kind": "wildcard",
+    "reason": "most novel"
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "dispatch_id": "critic-001",
+    "ideas": [
+      "I004",
+      "I003",
+      "I006",
+      "I007"
+    ],
+    "model": "sonnet"
+  },
+  {
+    "dispatch_id": "critic-002",
+    "ideas": [
+      "I007",
+      "I004",
+      "I002",
+      "I005"
+    ],
+    "model": "sonnet"
+  },
+  {
+    "dispatch_id": "critic-003",
+    "ideas": [
+      "I008",
+      "I006",
+      "I001",
+      "I005"
+    ],
+    "model": "sonnet"
+  },
+  {
+    "dispatch_id": "critic-004",
+    "ideas": [
+      "I001",
+      "I008",
+      "I002",
+      "I003"
+    ],
+    "model": "sonnet"
+  }
+]

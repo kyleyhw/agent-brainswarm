@@ -5,14 +5,8 @@ skill. Written with the goal of producing diverse, rigorously critiqued
 ideas that can be handed to [agent-evolve](https://github.com/kyleyhw/agent-evolve)
 for testing and improvement.
 
-> **Status: design phase.** The protocol is specified in
-> [`docs/DESIGN.md`](docs/DESIGN.md) and the work is tracked in
-> [`PROJECT_PLAN.md`](PROJECT_PLAN.md). The repository currently holds a
-> scaffold only; `/brainswarm` reports that it is not implemented yet.
-
 Like agent-evolve, this is a skills bundle installed once and used across
-projects. The commands below are instructions given to Claude, not shell
-commands:
+projects. You drive it by talking to Claude:
 
 ```
 brainswarm trading strategies that trade on many days and optimise growth and diversification
@@ -20,110 +14,133 @@ brainswarm ways to cut our CI time — quick, surprise me
 /brainswarm path/to/brainswarm.yaml
 ```
 
-**brainswarm the ideas, evolve the code.**
+**brainswarm the ideas, evolve the code.** A run sends a swarm of
+independent agents to research and propose ideas, has other agents attack
+every idea with justified criticism, develops the most promising and the
+most unusual ones, and ranks the result with honest uncertainty. You get
+every idea with its full critique record, the top idea families, labelled
+wildcards, and export bundles for agent-evolve. Nothing is deleted:
+weak ideas are ranked low, not hidden.
+
+## Install
+
+```bash
+git clone https://github.com/kyleyhw/agent-brainswarm && cd agent-brainswarm
+uv run python install.py      # brainswarm CLI as a uv tool; skill + 9 role agents into ~/.claude/
+```
+
+Then, in any Claude Code session, say "brainswarm …". The skill never
+triggers on "brainstorm".
 
 ## Documentation
 
 | Document | Content |
 |---|---|
-| [`docs/DESIGN.md`](docs/DESIGN.md) | Full design specification: purpose, pipeline, knobs, scoring, privacy, security, logging, watch list, references |
+| [`docs/DESIGN.md`](docs/DESIGN.md) | Design specification: purpose, pipeline, knobs, fixation controls, scoring and its derivation, privacy, security, architecture, logging, watch list, design review, references |
+| [`docs/studies/uncertainty_coverage.py`](docs/studies/uncertainty_coverage.py) | Coverage study behind the choice of uncertainty method |
 | [`PROJECT_PLAN.md`](PROJECT_PLAN.md) | Development phases and task status |
+| [`examples/README.md`](examples/README.md) | Live and offline demos |
 | [`tests/reports/`](tests/reports/) | Dated test reports |
-| [`examples/README.md`](examples/README.md) | Planned demos |
 
 ## Directory structure
 
 ```
 agent-brainswarm/
 ├── .claude/
-│   ├── skills/brainswarm/SKILL.md   # /brainswarm: the referee (user-facing skill)
-│   └── agents/brainswarm-*.md       # role definitions with tool allowlists
-│                                    #   generator, clusterer, critic, advocate,
-│                                    #   workshop, judge, rubric-auditor
-├── src/agent_brainswarm/            # Python "hands": enforcement, scoring, reports
-│   ├── models.py  config.py  rubric.py  assign.py  critique.py
-│   ├── library.py  scoring.py  select.py  sandbox.py  usage.py
-│   └── state.py  report.py  export.py  cli.py
-├── docs/DESIGN.md                   # design specification
-├── examples/                        # demo brief, config, recorded run (planned)
-├── tests/
-│   ├── test_scaffold.py
-│   └── reports/                     # dated test reports
-├── PROJECT_PLAN.md
-├── CLAUDE.md                        # repository notes for Claude sessions
-├── pyproject.toml  uv.lock          # uv-managed project
-├── .pre-commit-config.yaml          # ruff, ruff-format, detect-secrets, ty
-└── .secrets.baseline                # detect-secrets baseline
+│   ├── skills/brainswarm/SKILL.md   # /brainswarm: the referee, a thin loop over next/ingest
+│   └── agents/brainswarm-*.md       # 9 roles with tool allowlists and the guard hook:
+│                                    #   ideator, generator, clusterer, critic, checker,
+│                                    #   advocate, workshop, judge, rubric-auditor
+├── src/agent_brainswarm/
+│   ├── pipeline.py                  # the state machine (plan / check / finish per phase)
+│   ├── scoring.py                   # Bradley–Terry / Plackett–Luce, Laplace, bootstrap
+│   ├── schedule.py  assign.py       # critic and finals designs; slot banding
+│   ├── critique.py  select.py       # critique checks; gates, slots, top families
+│   ├── report.py  records.py        # digest, report.md, report.html
+│   ├── library.py  usage.py         # idea library; token accounting
+│   ├── export.py  sandbox.py        # agent-evolve bundles; Docker runner
+│   └── guard.py  models.py  config.py  rubric.py  state.py  cli.py
+├── docs/  DESIGN.md  studies/  figures/
+├── examples/                        # demo manifest, recorded demo run, offline replay
+├── tests/                           # unit + end-to-end tests with fake agents; reports/
+├── install.py  PROJECT_PLAN.md  CLAUDE.md
+└── pyproject.toml  uv.lock  .pre-commit-config.yaml  .secrets.baseline
 ```
 
 ## Main logic
 
-A run is a fixed sequence of phases. The session running `/brainswarm`
-acts as a referee that dispatches every role and never contributes ideas
-or judgments itself.
+The session running `/brainswarm` is a **referee**: it frames the brief and
+the rubric, then loops over two commands and launches the subagents they
+name. It never contributes an idea or a verdict.
 
 ```
-Frame ─ Angle & domain round ─ Generate ─ Cluster ─ Critique
-      ─ Workshop + re-critique ─ Finals ─ Aggregate & report ─ stop
+brainswarm next <run>    ->  referee action, or a list of dispatches (role, model, prompt)
+(subagents read their task file, write JSON to their output file, reply one line)
+brainswarm ingest <run>  ->  validate; one retry for invalid output; advance
 ```
 
-1. **Frame.** The brief is turned into a rubric (gates, judged criteria,
-   optional measured criteria), audited by a separate agent, and frozen by
-   hash before any agent is dispatched.
-2. **Angle and domain round.** Each generator blindly proposes approach
-   angles and distant domains; code bands them by popularity and distance.
-3. **Generate.** ~20 generators (standard size) each write 3 idea cards,
-   ideating before searching the web, then researching and sanity-checking
-   in a sandbox. Generation never sees other generators' ideas or earlier
-   runs, to prevent design fixation.
-4. **Cluster.** Near-duplicates merge; variants are kept as siblings;
-   ideas are tagged against the idea library.
-5. **Critique.** ~6 critics per idea write justified critiques (quoted
-   target, mechanism, evidence, severity, falsifier); generic critiques are
-   down-weighted by code.
-6. **Workshop.** Top-value, wildcard and deepen slots are developed into a
-   second version that answers every serious critique, then re-critiqued.
-7. **Finals.** Pairwise matches judged in both orders by a mixed-model
-   panel.
-8. **Report.** Every idea is ranked with uncertainty; the top idea families
-   (default 5) and labelled wildcards are highlighted; nothing is removed.
+```
+rubric -> audit -> freeze -> angle round -> clusters -> ideate (no web) -> research
+  -> clusters -> critique -> checker -> advocate -> workshop -> re-critique
+  -> [fact-check] -> finals -> boundary -> report
+```
 
-Two independent knobs control a run: **size** (`quick` / `standard` /
-`deep`, trading tokens for thoroughness) and **exploration**
-(`conservative` / `balanced` / `wild`, shifting where effort goes without
-changing its cost). Neither knob changes how ideas are judged.
+- **Blind generation.** Generators propose angles and far domains blind;
+  code bands them by popularity and assigns slots across common, middle
+  and rare bands. Generators sketch ideas with no web access first (a
+  pre-registration), then research them. Generation never sees other
+  ideas or earlier runs.
+- **Justified critique.** Every criticism quotes the card, gives a
+  mechanism, evidence, severity and falsifier. Code checks the quote;
+  generic and templated critiques are flagged and carry no weight.
+- **Workshop.** Top-value, wildcard and advocate-promoted ideas are
+  developed by a different model, which answers every serious critique.
+  Fresh critics then judge whether the answers hold.
+- **Finals.** An incomplete round robin in which both presentation orders
+  of every pair go to different judge dispatches.
+
+Two knobs: **size** (`quick` / `standard` / `deep`: ~2M / ~8M / ~13M new
+tokens) and **exploration** (`conservative` / `balanced` / `wild`: where
+effort goes, at the same cost). Neither changes how ideas are judged.
 
 ### Scoring model
 
-Pairwise outcomes are modelled with the Bradley–Terry model
-[[1]](docs/DESIGN.md#ref-bradley-terry-1952). Each idea $i$ has a latent
-strength $\beta_i$, and
+Finals verdicts use the Bradley–Terry model with a position-bias parameter
+$\gamma$:
 
 $$
-P(i \succ j) = \sigma(\beta_i - \beta_j), \qquad \sigma(x) = \frac{1}{1 + e^{-x}},
+P(\text{first} \succ \text{second}) = \sigma(\beta_\text{first} - \beta_\text{second} + \gamma),
+\qquad \sigma(x) = \frac{1}{1+e^{-x}}.
 $$
 
-with the identifiability constraint $\sum_i \beta_i = 0$. Critics' batch
-rankings enter through the Plackett–Luce extension. The reported quantity
-is $\sigma(\beta_i)$, the probability of beating a hypothetical idea of
-average strength. Uncertainty comes from a bootstrap that resamples judges
-(clusters of correlated judgments) and refits $\beta$; ideas whose rank
-intervals overlap are reported as one tier. Derivations and caveats are in
-[`docs/DESIGN.md` §10](docs/DESIGN.md#10-scoring).
+Critics' top-3 rankings use Plackett–Luce, which reduces to the same model
+for two items. With the prior $\beta_i, \gamma \sim \mathcal N(0, \tau^2)$
+($\tau = 1.5$), the log-posterior is strictly concave, so Newton's method
+finds the unique maximum, and $\sum_i \beta_i = 0$ holds automatically at
+it. Finalists and non-finalists are fitted separately and never put on one
+scale. Uncertainty comes from the Laplace approximation (below 30 dispatch
+clusters) or a dispatch-level bootstrap. A coverage study showed the
+bootstrap under-covers with ~20 clusters (90 % for a nominal 95 %) while
+Laplace holds ≥ 97.9 %. Reported per idea: rank with its 95 % interval,
+$P(\text{top-}k)$, tier, and mean win probability against the field.
+Derivations are in [`docs/DESIGN.md` §10](docs/DESIGN.md#10-scoring).
 
-### Slot assignment
+## Demo
 
-Generator slots in a band $b$ (common, middle, rare) are allocated as
-$n_b = \operatorname{round}(n\,q_b)$ with largest-remainder rounding, where
-$n$ is the number of assigned slots and $q_b$ is the exploration knob's
-band share, so every band receives slots at every setting
-([`docs/DESIGN.md` §6](docs/DESIGN.md#6-the-two-knobs-size-and-exploration)).
+- **Offline, zero tokens:** `uv run python examples/demo_run.py` replays a
+  recorded live run through the real code and checks that the ranking is
+  reproduced exactly.
+- **Live, ~0.9M new tokens:** in Claude Code, say "run the brainswarm demo"
+  (`brainswarm init --manifest examples/brainswarm-demo.yaml`). The brief
+  is a concrete ETF trading strategy with stated gates.
+
+See [`examples/README.md`](examples/README.md) for the recorded results.
 
 ## Development
 
 ```bash
-uv sync                          # create the environment from uv.lock
-uv run pytest                    # tests
+uv sync
+uv run pytest                        # 62 tests incl. end-to-end runs with fake agents
 uv run ruff check . && uv run ty check
-uv run pre-commit install        # ruff, ruff-format, detect-secrets, ty on commit
+uv run pre-commit install            # ruff, ruff-format, secret scanning, ty on commit
 ```

@@ -16,6 +16,19 @@ import numpy as np
 
 from agent_brainswarm.state import Run
 
+# Distinct failure mechanisms so a fake critic is not flagged as templated.
+MECHANISMS = [
+    "Weekly rebalancing incurs turnover that erodes the edge after costs.",
+    "Momentum signals crash after sharp reversals, as in 2009 and 2020.",
+    "The volatility estimate lags regime shifts by weeks, sizing risk too late.",
+    "Correlations converge to one in crises, so diversification fails exactly when needed.",
+    "Parameter choices were tuned on one sample and will not survive out of sample.",
+    "Bond and equity drawdowns coincided in 2022, breaking the hedge assumption.",
+]
+
+# Tests set this to make critics cite a gate (at whatever severity they draw).
+GATE_CITATIONS: dict[str, str] = {}
+
 ANGLE_POOL = [
     "momentum across assets",
     "mean reversion after shocks",
@@ -135,11 +148,13 @@ def respond(run: Run, phase: str, dispatch_id: str) -> dict[str, Any]:
                 {
                     "idea_id": x,
                     "target": " ".join(words),
-                    "mechanism": f"Weekly rebalancing for {x} incurs turnover that erodes the edge after costs.",
+                    "mechanism": MECHANISMS[
+                        int(_rng("mech:" + x + dispatch_id).integers(len(MECHANISMS)))
+                    ],
                     "evidence": "Typical ETF spreads of 2-5 bp times weekly turnover.",
                     "severity": ["fatal", "major", "minor"][int(rng.integers(3))],
                     "falsifier": "A cost-inclusive backtest with positive net return.",
-                    "gate": None,
+                    "gate": GATE_CITATIONS.get(phase),
                 }
             )
         out: dict[str, Any] = {"critiques": crits}

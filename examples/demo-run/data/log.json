@@ -1,0 +1,138 @@
+[
+  {
+    "phase": "audit",
+    "at": "2026-09-29T13:49:48Z",
+    "lines": [
+      "rubric audit: 15 issue(s); revise rubric_draft.json, then run freeze"
+    ]
+  },
+  {
+    "phase": "angles",
+    "at": "2026-09-29T13:50:57Z",
+    "lines": [
+      "angle round: 8 angles, 8 domains from 4 generators"
+    ]
+  },
+  {
+    "phase": "angle_clusters",
+    "at": "2026-09-29T13:51:18Z",
+    "lines": [
+      "slots: angle/middle=2, cross_domain/rare=1, free/-=1"
+    ]
+  },
+  {
+    "phase": "ideate",
+    "at": "2026-09-29T13:52:58Z",
+    "lines": [
+      "pre-registered 8 raw ideas from 4 generators at 2026-09-29T13:52:58Z"
+    ]
+  },
+  {
+    "phase": "research",
+    "at": "2026-09-29T13:56:25Z",
+    "lines": [
+      "research: 8 idea cards (0 research-derived)"
+    ]
+  },
+  {
+    "phase": "idea_clusters",
+    "at": "2026-09-29T13:56:49Z",
+    "lines": [
+      "clusters: 6 distinct among 8 ideas; 0 repeat(s) of library ideas"
+    ]
+  },
+  {
+    "phase": "critique",
+    "at": "2026-09-29T14:02:52Z",
+    "lines": [
+      "retry critic-001: critic-001.critiques[1]: missing field 'severity'",
+      "retry critic-002: ranking must list exactly 3 idea ids",
+      "retry critic-004: ranking must list exactly 3 idea ids"
+    ]
+  },
+  {
+    "phase": "critique",
+    "at": "2026-09-29T14:09:06Z",
+    "lines": [
+      "critique: 66 critiques from 4 critics; 0 flagged by code checks"
+    ]
+  },
+  {
+    "phase": "checker",
+    "at": "2026-09-29T14:09:46Z",
+    "lines": [
+      "generic filter: 3 failed the substitution test",
+      "workshop slots: value=3, wildcard=1; 0 barred by gates"
+    ]
+  },
+  {
+    "phase": "advocate",
+    "at": "2026-09-29T14:10:04Z",
+    "lines": [
+      "advocate promoted 0: none"
+    ]
+  },
+  {
+    "phase": "workshop",
+    "at": "2026-09-29T14:15:47Z",
+    "lines": [
+      "retry workshop-I004-r1: workshop-I004-r1.cards[0]: 533 words exceeds the 400-word cap",
+      "retry workshop-I008-r1: workshop-I008-r1.cards[0]: 455 words exceeds the 400-word cap",
+      "retry workshop-I002-r1: workshop-I002-r1.cards[0]: 694 words exceeds the 400-word cap"
+    ]
+  },
+  {
+    "phase": "workshop",
+    "at": "2026-09-29T14:17:23Z",
+    "lines": [
+      "workshop: 4 ideas developed"
+    ]
+  },
+  {
+    "phase": "recritique",
+    "at": "2026-09-29T16:00:04Z",
+    "lines": [
+      "re-critique: 12 critiques of developed ideas; drift flagged: none"
+    ]
+  },
+  {
+    "phase": "finals",
+    "at": "2026-09-29T16:01:36Z",
+    "lines": [
+      "rolled back to finals after fixing a bug that excluded ideas with fixable gate citations; no verdicts existed"
+    ]
+  },
+  {
+    "phase": "finals",
+    "at": "2026-09-29T16:02:24Z",
+    "lines": [
+      "judged 12 ordered matches so far"
+    ]
+  },
+  {
+    "phase": "boundary",
+    "at": "2026-09-29T16:02:24Z",
+    "lines": [
+      "judged 12 ordered matches so far"
+    ]
+  },
+  {
+    "phase": "report",
+    "at": "2026-09-29T16:02:25Z",
+    "lines": [
+      "brainswarm 20260929-134819-36e5: 12 cards, 4 finalists (quick/balanced)",
+      "Top families:",
+      "1. Crisis-correlation risk budgeting: stress-day covariance, trend gates, drawdown brake, weekday sleeves [I008-v2]: rank 1 (95% 1-4), P(top 5) 100%, mean win 72%",
+      "2. N-1 contingency reserve: cluster risk parity with stress-memory reserve and asymmetric ramps [I004-v2]: rank 2 (95% 1-4), P(top 5) 100%, mean win 50%",
+      "3. Droop-governed 3-bucket risk parity: deadband drawdown droop, 3.5%/day slew ramp, 10% reserve cash [I003-v2]: rank 3 (95% 1-4), P(top 5) 100%, mean win 50%",
+      "4. Stress-Mixture Covariance Sizing with Rank-1 PC1 Stress Prior [I002-v2]: rank 4 (95% 1-4), P(top 5) 100%, mean win 28%",
+      "Wildcards:",
+      "- Down-day correlation gap ladder on three trade days [I006]",
+      "- Effective-bets throttle with a daily turnover budget [I005]",
+      "Tokens (subagents): ~0.90M new, ~3.95M cache reads",
+      "Limitations: generic filter: 3 failed the substitution test; finals had only 2 judge dispatches; uncertainty uses the Laplace approximation, not the bootstrap; the top-k set changes with the prior scale; treat the cutoff as soft",
+      "Report: /root/.agent-brainswarm/runs/20260929-134819-36e5/report.html",
+      "library now holds 8 ideas for project brainswarm-demo"
+    ]
+  }
+]

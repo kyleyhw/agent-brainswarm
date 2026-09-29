@@ -1,0 +1,57 @@
+{
+  "size": "quick",
+  "exploration": "balanced",
+  "generators": 4,
+  "ideas_per_generator": 2,
+  "angles_per_generator": 2,
+  "domains_per_generator": 2,
+  "critics_per_idea": 2,
+  "critic_lookups": 10,
+  "generator_web_calls": 40,
+  "web": false,
+  "workshop_slots": 4,
+  "workshop_rounds": 1,
+  "recritique_critics": 1,
+  "finals_matches_per_idea": 3,
+  "top_k": 5,
+  "wildcards_shown": 2,
+  "returning_champions": 3,
+  "wave_size": 10,
+  "cards_per_critic": 4,
+  "pairs_per_judge": 6,
+  "draws": 500,
+  "prior_scale": 1.5,
+  "slot_mix": [
+    0.5,
+    0.25,
+    0.25
+  ],
+  "angle_bands": [
+    0.34,
+    0.33,
+    0.33
+  ],
+  "distance_bands": [
+    0.34,
+    0.33,
+    0.33
+  ],
+  "workshop_split": [
+    2,
+    1,
+    1
+  ],
+  "generator_models": [
+    "sonnet",
+    "opus"
+  ],
+  "critic_models": [
+    "sonnet"
+  ],
+  "judge_models": [
+    "sonnet",
+    "opus"
+  ],
+  "checkpoint": false,
+  "seed": 20260929
+}

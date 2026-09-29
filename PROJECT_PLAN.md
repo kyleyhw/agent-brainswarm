@@ -29,8 +29,8 @@ This document outlines the planned phases and tasks for developing agent-brainsw
 16. [completed] Role agents: ideator, generator, clusterer, critic, checker, advocate, workshop, judge, rubric auditor.
 
 ## Phase 5: Demo and installation
-17. [in-progress] Live mini demo run on a concrete trading brief; record its outputs.
-18. [pending] Offline replay demo (`examples/demo_run.py`) from the recording.
+17. [completed] Live mini demo run on a concrete trading brief; recorded in `examples/demo-run/`.
+18. [completed] Offline replay demo (`examples/demo_run.py`); reproduces the ranking exactly.
 19. [completed] `install.py` (editable uv tool; symlink skill and agents).
 
 ## Phase 6: Evaluation

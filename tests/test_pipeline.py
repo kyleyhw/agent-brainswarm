@@ -163,3 +163,26 @@ def test_cli_init_and_validate(
     manifest.write_text(yaml.safe_dump({"brief": BRIEF, "size": "deep", "exploration": "wild"}))
     assert cli.main(["validate", str(manifest)]) == 0
     assert "deep/wild" in capsys.readouterr().out
+
+
+def test_fixable_gate_citations_do_not_remove_ideas_from_finals(tmp_path: Path) -> None:
+    # Regression: gates.json lists fixable ideas too; only "barred" ones may be excluded.
+    import tests.fake_agents as fakes
+
+    fakes.GATE_CITATIONS["critique"] = "trades_daily"
+    try:
+        run = new_run(tmp_path)
+        drive(run)
+    finally:
+        fakes.GATE_CITATIONS.clear()
+    gates = run.read("data", "gates.json")
+    assert "fixable" in gates.values()
+    barred = {k for k, v in gates.items() if v == "barred"}
+    finalists = run.read("data", "final.json")["ids"]
+    assert finalists and not {f.split("-")[0] for f in finalists} & barred
+    fixable_developed = [
+        k
+        for k, v in gates.items()
+        if v == "fixable" and f"{k}-v2" in run.read("data", "cards.json")
+    ]
+    assert all(f"{k}-v2" in finalists for k in fixable_developed)

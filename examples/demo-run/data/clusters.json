@@ -1,0 +1,46 @@
+{
+  "cluster_of": {
+    "I001": "C01",
+    "I005": "C01",
+    "I002": "C02",
+    "I003": "C03",
+    "I007": "C03",
+    "I004": "C04",
+    "I006": "C05",
+    "I008": "C06"
+  },
+  "library": {
+    "I001": {
+      "relation": "new",
+      "library_id": null
+    },
+    "I005": {
+      "relation": "new",
+      "library_id": null
+    },
+    "I002": {
+      "relation": "new",
+      "library_id": null
+    },
+    "I003": {
+      "relation": "new",
+      "library_id": null
+    },
+    "I007": {
+      "relation": "new",
+      "library_id": null
+    },
+    "I004": {
+      "relation": "new",
+      "library_id": null
+    },
+    "I006": {
+      "relation": "new",
+      "library_id": null
+    },
+    "I008": {
+      "relation": "new",
+      "library_id": null
+    }
+  }
+}

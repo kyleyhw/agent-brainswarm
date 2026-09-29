@@ -1,0 +1,183 @@
+{
+  "critiques": [
+    {
+      "idea_id": "I007",
+      "target": "Partial adjustment gives de-risking the whole lane: 8% of NAV exposure per day.",
+      "mechanism": "The spec scales gaps so that sum|x| = 0.08. In a pure de-risk every gap is a sell, so 8% of NAV is sold per day and cash rises by 8%. The card's 'one-way <= 4%/day' only holds by dividing the ETF-only sum by 2, which assumes buys equal sells. Actual one-way traded value is 8% per day, or 40% per week, and counting cash as a weight gives 8% per day under the rubric formula too. The card's own claim that exposure halves in ~6 days requires this 8%/day selling. The fast de-risking that supports the drawdown claim therefore depends on a turnover convention that the trades do not satisfy. Even on the ETF-only reading, 5 x 4% = 20.0% leaves zero margin, so any weight drift counted as a weight change breaches the cap.",
+      "evidence": "Spec: x = g*min(1, 0.08/sum|g|). Exposure 1.0 -> 0.5 in 6 days needs 0.5/6 = 8.3% of NAV sold per day. Selling 8% x 5 days = 40% of NAV one-way per week versus the 20% cap. Compare I004, whose g includes cash, so its 4% cap means 4% of exposure per day.",
+      "severity": "major",
+      "falsifier": "Show the rubric turnover is computed on ETF weights only and that drift is excluded, or cap the de-risk step at 4% of NAV sold per day and restate the halving time as ~12 days.",
+      "gate": "turnover_cap"
+    },
+    {
+      "idea_id": "I007",
+      "target": "1/L is a Kelly-style multiple",
+      "mechanism": "1/L comes from a Gaussian 99% 20-day loss quantile. That is the standard CPPI gap-risk multiplier, not a growth-optimal one. The Grossman-Zhou multiple is set by the Merton ratio (mu - r)/(gamma sigma^2) and carries no loss quantile. The card itself supplies no return forecast, so no growth optimisation occurs. Because f is clipped at 1, f = 1 whenever the cushion exceeds L x NAV, which is true until drawdown reaches ~12.8% when L = 0.06. For nearly all of the sample the strategy is a plain unlevered 3-bucket ERC book with a stop-loss in the last 5 points of drawdown. The 4.5-5.5% CAGR is then the unlevered core return, not a result of the Grossman-Zhou mechanism. The 'growth-optimal' framing therefore adds no growth. The Gaussian 2.33*sigma*sqrt(20) also understates fat-tailed 20-day losses.",
+      "evidence": "f < 1 requires NAV < 0.82/(1 - L) x HWM. For L = 0.06 this is 0.872, a 12.8% drawdown. The cushion at HWM is 18%, which is 3x L. The log-optimal multiple mu/sigma^2 with mu ~ 2.5% and sigma ~ 5% is ~10, a different number that depends on a return forecast.",
+      "severity": "major",
+      "falsifier": "A backtest showing days at f < 1 are frequent, or that a different multiple lowers CAGR. Or a derivation linking the 99% quantile to log-optimality.",
+      "gate": null
+    },
+    {
+      "idea_id": "I007",
+      "target": "L = max(0.06, 2.33*sigma_core*sqrt(20))",
+      "mechanism": "The sigma-scaled term is inactive most of the time. The core is an unlevered, inverse-vol, equal-risk-across-buckets book with a daily vol of about 0.3-0.4%. The term then equals 2.33 x 0.0035 x 4.47 = 3.6%, below the 0.06 floor. L therefore equals the unexplained constant 0.06 in calm regimes, and the volatility-adaptive rule is only live in stress. In a crash starting from calm, L is 0.06 while the target f falls 16.7 points per 1 point of loss. The 8%/day lane caps the cut, so realised exposure lags the target by a wide margin exactly when cuts matter. The estimate 'cuts start near 7-8% drawdown, exposure halves within ~6 days; estimated maximum drawdown 15-18%' uses the 2008 case with L = 12.5%, which is the most favourable case for the rule. A March 2020 or 2022 start from a calm regime gets no cut until a 12.8% drawdown.",
+      "evidence": "Cuts begin at 1 - 0.82/(1 - L). For L = 0.125 this is 6.3%, and for L = 0.06 it is 12.8%. Target slope is 1/L = 16.7 exposure points per point of NAV loss versus a lane of 8 points per day. Twelve days of -0.6% core returns after a 12.8% drawdown adds about 5% more loss with the lane binding, so a breach of 18-20% is plausible.",
+      "severity": "major",
+      "falsifier": "Report the fraction of days the floor of 0.06 binds and the 2020 and 2022 drawdowns from a backtest. If max drawdown is under 18% with the floor binding, this critique fails.",
+      "gate": null
+    },
+    {
+      "idea_id": "I004",
+      "target": "L_c = |1st percentile of overlapping 20-day cluster returns, last 1260 days|",
+      "mechanism": "1260 daily observations of overlapping 20-day returns hold only ~63 independent windows. A 1% quantile then lies below the sample minimum in independent terms, so the estimate is the single worst episode in the window. In a 5-year window without a crash, L_c is the calm-regime maximum. Such windows cover 2003-07, 2012-17 and 2021, the runs before 2008, 2020 and 2022. The estimator is therefore blind to the first shock from calm and pro-cyclical afterwards. This contradicts the card's claim that the multiplier comes from 'measured tail loss, not tuning'. The 1-in-100 label is unsupported by the data available.",
+      "evidence": "1260/20 = 63 independent windows, and 1% of 63 = 0.63 observations. Rough calm-window numbers for an ERC weight of about 21% equity, 53% duration and 26% real: S_calm = max(0.21x8, 0.53x4, 0.26x8) + 0.5 x (the rest) = about 4%. The card's own 'typical S ~6.5%' is unsourced. A March 2020 20-day loss at full exposure is about 12%, roughly 3x that S.",
+      "severity": "major",
+      "falsifier": "The backtest exceedance log the card proposes: if realised 20-day cluster losses breach L_c at about 1% of days including the first crash from calm, this fails. With a lookback of 1260 days I expect exceedances of 5-10% at each regime change.",
+      "gate": null
+    },
+    {
+      "idea_id": "I004",
+      "target": "S_t = max_c(w_c*L_c) + 0.5*sum_others(w_c*L_c)",
+      "mechanism": "The 0.5 'sag factor' is an assumed joint-tail parameter that is not derived from data, so the claim that it is 'not tuning' fails. In 2008, March 2020 and 2022 every cluster fell together. Equity, IG credit inside the Duration cluster, TIPS, commodities and REITs all lost in the same 20 days. The correct joint tail is close to the full sum of the three cluster tails. S_t then understates the joint loss by up to a factor 1/(a + 0.5(b + c))-type terms, about one third for equal cluster terms.",
+      "evidence": "For equal terms a = b = c: S_t/S_full = (a + a)/(3a) = 0.67, a one-third understatement of the joint loss. Mar 2020: LQD about -15%, TIP about -8%, DBC about -25%, EEM/VNQ about -30% or worse in the same weeks. The card lists the sag factor as an assumption without a citation.",
+      "severity": "major",
+      "falsifier": "Estimate the empirical joint 20-day loss quantile of the three cluster returns for the same window; if it is near max + 0.5 x others, the factor stands.",
+      "gate": null
+    },
+    {
+      "idea_id": "I004",
+      "target": "If below 0.0005, move 0.0005 from cash (>= 5%) to most-underweight ETF, daily.",
+      "mechanism": "The dust trade that guarantees a trade on each day draws from cash held at or above 5%. Yet the exposure clip lambda <= 0.95 means cash is exactly 5% whenever the clip binds, and the clip binds whenever the cushion exceeds 0.95 x S. This holds for most of the sample (DD below ~11% when S = 6.5%). The dust move is then blocked by the 5% floor and no trade is forced. The 3-days-per-week guarantee is not by construction. The card does not say what happens when cash sits at the floor. The rule would also drain cash step by step whenever cash is above the floor, without any signal reason.",
+      "evidence": "lambda = clip((0.17 - DD)/S, 0, 0.95): with DD = 0 and S = 0.065 the ratio is 2.6, which is clipped to 0.95, so cash = 5% and the >= 5% condition blocks the move. Only gaps of at least 0.05% from vol drift then generate trades, which is not guaranteed on every day.",
+      "severity": "major",
+      "falsifier": "Change the tie-break to an ETF-to-ETF swap when cash is at the floor, or show that the daily g always exceeds 0.0005 so the dust rule never activates.",
+      "gate": "trades_three_days_per_week"
+    },
+    {
+      "idea_id": "I004",
+      "target": "Within cluster: inverse 63-day vol, halved if close < 200-day SMA, renormalized.",
+      "mechanism": "Halving and then renormalising within a cluster only tilts weights among that cluster's members. If every member is below its SMA, all are halved and the renormalisation restores the original weights. The rule then does nothing. Only ERC across clusters and the DD cushion reduce total risk. The card claims this step 'adds time-series momentum (Faber 2007; Moskowitz et al. 2012)', but the benefit in those papers comes from moving to cash or shorting. In the 2-asset Real cluster the rule only picks between gold and commodities.",
+      "evidence": "Weights w_i/2 renormalised: sum(w_i/2) = 1/2, so w_i/2 divided by 1/2 gives w_i. The cited studies apply the trend rule at the asset level with a cash or short leg. Extra 200-day SMA flips near the boundary add turnover but carry no downside protection.",
+      "severity": "minor",
+      "falsifier": "Show a backtest where the SMA tilt raises Sharpe or lowers drawdown versus pure inverse-vol within clusters.",
+      "gate": null
+    },
+    {
+      "idea_id": "I004",
+      "target": "Exposure lambda_t = clip((0.17 - DD_t)/S_t, 0, 0.95)",
+      "mechanism": "Because DD is measured from the all-time NAV peak and cash earns nothing, after a large drawdown exposure is low until NAV recovers most of the way back. At DD = 15% and S = 6.5%, lambda = 0.31, and with the restoring ramp at half the cutting speed the strategy is slow to re-risk. Recovering the remaining 17.6% at an average lambda of about 0.6 and a core return of about 4.5% takes about 6 years at roughly 3% per year. One 2008-type event therefore stalls compounding for years, which contradicts the 4.5-5.5% net growth claim over a 20-year sample. The card lists the lock only as a failure mode and gives no size.",
+      "evidence": "1/0.85 = 1.176, so recovery from DD = 15% needs +17.6%. Expected return = lambda x 4.5%, for lambda = 0.31 rising to 0.95 with an average near 0.6-0.7, which is about 3%/yr and 5-6 years. Two such episodes in 2004-2025 (2008 and 2022) would consume a large share of the sample.",
+      "severity": "major",
+      "falsifier": "A backtest showing the time from a drawdown trough to the new peak is under 3 years for 2008 and 2022 with CAGR at or above 4.5%.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002",
+      "target": "a 5-sigma 20-day loss is 6%*sqrt(20/252)*5=8.5%",
+      "mechanism": "This bounds a single 20-day loss, not the maximum drawdown, which accumulates over months. The 6% vol target reduces exposure only when estimated vol exceeds 6%. In slow bear markets such as 2022, or a crash from calm with 20-day vols not yet elevated, it is silent. The mixture is a mild throttle, with exposure at p = 1 of only 55-70% of calm and at typical p much closer to 100%. The card concedes 55-70% exposure 'may leave 2022-type losses near 20%'. There is no cumulative-loss or NAV feedback rule and no argument for the 20% bound. This is a risk rule without an argument for its bound.",
+      "evidence": "sigma_p ratio = sqrt(0.82)/sqrt(0.37) = 0.91/0.61 = 1.49, so exposure at p = 1 is about 67% of calm only when equal-weight equal-vol calm rho = 0.3 is assumed. I005's estimate for an inverse-vol book in 2022 is -16%, and I002's ERC book has similar duration exposure. At p of about 0.3 the throttle leaves near 90% exposure.",
+      "severity": "major",
+      "falsifier": "Backtest max drawdown for 2008, 2020 and 2022 below 18% with the throttle on and not achievable with a plain 6% volatility target alone.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002",
+      "target": "Longin and Solnik (2001) document bear-market correlation increases",
+      "mechanism": "Longin and Solnik studied correlations between international equity markets. It does not show that Treasury, TIPS or gold correlations with equities rise to 0.8 in bear markets. In equity-led crashes (2008, March 2020 early) the Treasury and gold correlations with equities fall or turn negative. Setting all 45 pairwise correlations to 0.8 in the stress prior makes ERC weights inverse-vol and cuts total exposure with p. That penalises the hedges in exactly the state when they pay off, so it undoes part of the diversification. Only in 2022 was a uniform-positive-correlation state realistic.",
+      "evidence": "IEF gained roughly +12-15% and GLD roughly +5% in 2008 while equities fell about 35-40%. The stress matrix D(0.8*11' + 0.2I)D imposes rho = 0.8 on UST/equity pairs with no empirical basis. The card's own assumption list says rho = 0.8 'is a fair crisis correlation for risky classes plus positive stock-bond correlation', which conflates two regimes.",
+      "severity": "major",
+      "falsifier": "Show a backtest in which the uniform-0.8 prior beats a structured stress prior with negative stock-bond correlation in 2008 and 2020, or estimate realised stress correlations for UST/equity pairs.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002",
+      "target": "A=lambda_max(60d correlation)/10",
+      "mechanism": "With N = 10 assets and T = 60 days, N/T = 0.17. Pure noise gives lambda_max of about (1 + sqrt(N/T))^2 = 1.98, a floor for A near 0.2, and the sampling noise is comparable to the spread between q50 and q95. The card justifies its 120-day covariance by N/T = 0.08 but then uses a 60-day window twice as noisy for the signal that drives the mixing weight p. The cited absorption ratio (Kritzman et al. 2011) is built from the variance share of the top N/5 eigenvectors over long windows; this uses only the top eigenvector on a short one. The noisy p moves Sigma each session and generates turnover without information.",
+      "evidence": "Marchenko-Pastur upper edge (1 + sqrt(10/60))^2 = 1.98 for a unit-variance correlation matrix; 10/120 = 0.083 is the card's own justification for its 120-day choice. I have not fitted the actual noise band of A on this universe, so its size relative to q95 - q50 is my expectation.",
+      "severity": "minor",
+      "falsifier": "Bootstrap A for the 10 ETFs: if its sampling standard deviation is well below q95 - q50, the noise objection weakens.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002",
+      "target": "Weekly <=3*6.5%=19.5%.",
+      "mechanism": "The margin under the 20% cap is 0.5%. If the gate counts drift, weekly weight changes from price moves alone can exceed that: with 10 ETFs and relative moves of 2-3% per week, sum|dw|/2 is of order 1%. The 19.5% is by construction only for traded amounts.",
+      "evidence": "Per asset |dw| is about w x |r_i - r_p|, roughly 0.1 x 2.5% = 0.25%, and summing 10 assets and halving gives about 1.25%, above the 0.5% margin. In stress weeks the drift is larger. I005 budgets 2.5% for this and I007 and I004 budget none.",
+      "severity": "minor",
+      "falsifier": "Confirm the rubric counts traded weight only, or lower the session cap to about 6%.",
+      "gate": "turnover_cap"
+    },
+    {
+      "idea_id": "I002",
+      "target": "Universe as card 0.",
+      "mechanism": "The spec refers to a different card that is not part of this card, so the ETF list, tickers and cash convention cannot be coded from the card alone. Two implementers would need to guess, and this breaks the specificity criterion. Other parameters are also open, for example the Tue-or-Thu choice for a Wednesday holiday.",
+      "evidence": "The spec says 'a holiday session moves to Tue or Thu' without a rule for choosing.",
+      "severity": "minor",
+      "falsifier": "State the ten ETFs and the tie-break for the holiday session in the spec.",
+      "gate": null
+    },
+    {
+      "idea_id": "I005",
+      "target": "Target = s x inverse-volatility weights (63-day, 20% cap), rest cash.",
+      "mechanism": "Inverse-vol weights equalise the stand-alone risk of the 10 ETFs. Five of them (US large cap, US small cap, developed ex-US, EM, REITs) are equity-like with pairwise correlations of about 0.75-0.85, so this block carries most of the portfolio risk. The total-exposure scale s changes only the level, never the composition. In a sell-off the book still holds the same risky mix at lower size. This is the weak anchor for diversification: risk is not spread across asset classes by rule and the book is dominated by equity beta.",
+      "evidence": "With equal stand-alone risk per asset, variance is proportional to the sum of rho_ij. With assumed correlations (equity block 0.75, IG and commodities about 0.5-0.6 to equity, UST/TIPS/gold about 0 to 0.1), the equity block's share of risk is about (20 + 5.5)/39 = 65%. This is a rough estimate from assumed correlations, and I did not compute it from data. The 20% cap does not constrain it.",
+      "severity": "major",
+      "falsifier": "Compute risk contributions by class from the actual 63-day covariance; if equity-like ETFs are under 45% of risk on most dates, this fails.",
+      "gate": null
+    },
+    {
+      "idea_id": "I005",
+      "target": "s = clip(min(ratio63, ratio21), 0.25, 1)",
+      "mechanism": "Dividing N_eff by its own trailing median makes each ratio fall below 1 about half the time by construction, and the minimum of two noisy ratios is below 1 more often. The throttle is therefore active on more than half the days, with a structural cash drag. A 21-day N_eff on 10 assets (N/T = 0.48) is dominated by estimation noise, and the median cancels only mean bias, not variance. Correlation compression also occurs in strong risk-on rallies, which throttles exposure into recoveries and cuts growth. The cited absorption-ratio evidence (Kritzman et al. 2011) is for long windows, not 21 or 63 days. The card admits the 21-day signal is noisy and wastes trading budget.",
+      "evidence": "If ratio63 and ratio21 are each below 1 with probability 0.5 and correlation 0.5-0.7 between them, P(min < 1) is about 0.6-0.65. Mean s is then roughly 0.8-0.9, a cash drag of 10-20% of the risky return. Nov 2020 and Apr-Jun 2009 rallies compressed the spectrum, which is a plausible false throttle.",
+      "severity": "major",
+      "falsifier": "The card's own control test: if the throttle beats a constant exposure matched to mean s on max drawdown across 2008, 2020 and 2022, the noise objection is answered.",
+      "gate": null
+    },
+    {
+      "idea_id": "I005",
+      "target": "Unverified estimate: unthrottled book about 6% volatility and -16% in 2022; throttled -10% to -14%.",
+      "mechanism": "The unthrottled loss alone is 80% of the 20% bound. The throttle reacts to correlation structure, not to portfolio loss, so if correlations do not compress before a slow drawdown, s stays near 1 and nothing cuts risk. There is no NAV-based feedback and no explicit de-risking rule. The claimed -12% to -16% worst case has a margin of only 4-8 points on a rule that admits it is untested, and it is exposed to the trailing 756-day median being lifted by a long high-correlation regime. This is the weak anchor of drawdown left mainly to diversification.",
+      "evidence": "Card figures: -16% unthrottled 2022, -10% to -14% throttled, worst crash -12% to -16% 'untested'. No calculation links the 0.25 floor on s or the 3.5%/day budget to a drawdown bound; a book at 80% invested with a 4% margin loses the bound with one more bad month.",
+      "severity": "major",
+      "falsifier": "Backtest with pre-2006 proxies showing max drawdown under 18% in 2008 and 2022 with s and the budget as specified.",
+      "gate": null
+    },
+    {
+      "idea_id": "I005",
+      "target": "Meucci (2009) defines the entropy effective number of bets",
+      "mechanism": "Meucci's effective number of bets is computed from the risk contributions of uncorrelated factors of a given portfolio, so it depends on the portfolio weights. The card's p_i = lambda_i/10 uses the eigenvalues of the correlation matrix alone, an effective rank of the market (Roy and Vetterli 2007), independent of the book. The signal thus measures market correlation structure and says nothing about how concentrated the inverse-vol book is. The two can move in opposite directions.",
+      "evidence": "N_eff = exp(-sum p_i ln p_i) with p_i = lambda_i/10 has no weight vector in it, while Meucci (2009) applies entropy to the risk-contribution distribution of the portfolio.",
+      "severity": "minor",
+      "falsifier": "Compute Meucci's ENB for the actual book and show it tracks the correlation-matrix N_eff.",
+      "gate": null
+    },
+    {
+      "idea_id": "I005",
+      "target": "Drift adds under 2.5% per week to measured turnover.",
+      "mechanism": "The 2.5% margin between the 17.5% traded cap and 20% is an assumption, not a bound. In a crisis week weight drift is largest. If an equity block of 35% falls 15% relative to the rest, the equity weight moves from 35% to about 31.4%, a shift of 3.6 points, above the margin, so the cap is not held by construction in the weeks that matter.",
+      "evidence": "0.35 x 0.85 = 0.2975 and 0.65 x 1 = 0.65, giving weight 0.2975/0.9475 = 0.314, a change of 3.6 points. A drop of 15% in a week is in line with the March 2020 equity fall.",
+      "severity": "minor",
+      "falsifier": "Confirm the gate counts traded weight only, or lower the daily budget to 3% so that the margin is 5%.",
+      "gate": "turnover_cap"
+    },
+    {
+      "idea_id": "I005",
+      "target": "cost drag under 0.3% per year at 3 bp",
+      "mechanism": "With buys plus sells charged at 3 bp per unit, 0.3% per year allows about 500% one-way turnover per year, about 55% of the 17.5% weekly cap on average. A daily-noisy s and a 63-day inverse-vol target with a 3.5% budget will often bind at the cap, and the card admits the budget is wasted on noise. At the cap the cost is about 0.55% per year at 3 bp and about 0.9% at 5 bp. In stress, spreads on LQD, EEM and DBC exceed 3 bp.",
+      "evidence": "0.003 / (2 x 0.0003) = 5.0 units of one-way turnover per year. The cap gives 0.175 x 52 = 9.1 per year, and 2 x 9.1 x 0.0003 = 0.55%. No utilisation estimate is offered.",
+      "severity": "minor",
+      "falsifier": "A backtest with realised weekly utilisation below 50% of the cap and 5 bp costs still yielding at least 4% net growth.",
+      "gate": null
+    }
+  ],
+  "ranking": ["I004", "I007", "I002", "I005"],
+  "novelty_ranking": ["I002", "I004", "I005"],
+  "ratings": [
+    {"idea_id": "I004", "upside": 4, "probability": 3},
+    {"idea_id": "I007", "upside": 3, "probability": 3},
+    {"idea_id": "I002", "upside": 3, "probability": 2},
+    {"idea_id": "I005", "upside": 2, "probability": 2}
+  ]
+}

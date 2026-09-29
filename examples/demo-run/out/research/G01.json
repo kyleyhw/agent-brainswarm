@@ -1,0 +1,54 @@
+{
+ "cards": [
+  {
+   "title": "Absorption-Ratio Throttle on an Inverse-Volatility Book",
+   "pitch": "Hold an inverse-volatility book of the 10 ETFs and shrink exposure smoothly toward 25% as the absorption ratio (top-eigenvector variance share) rises above its one-year norm, with a fixed daily step cap that satisfies both trading constraints by construction.",
+   "mechanism": "Diversification benefit is treated as a state variable: when one common factor carries more cross-asset variance, the benefit of holding 10 classes has gone. No asset return is forecast.",
+   "rationale": "Kritzman, Li, Page and Rigobon (2011) found absorption-ratio spikes preceded equity drawdowns; that evidence is within-equity, so multi-asset transfer is my extrapolation. Inverse-vol is the tractable risk-parity baseline (Asness, Frazzini, Pedersen 2012). Net growth estimate: 5-6% nominal, costs under 0.2% per year (my estimate). The drawdown claim is an estimate, not a bound: the 3.9% cap means 100% to 25% invested takes at least 20 trading days. I believe, unchecked, that AR rose in Sep-Oct 2008 and Mar 2020 and drifted up in 2022 as stock-bond correlation turned positive; 2022 is the binding case, since bond-heavy books lost roughly 12-16% then.",
+   "assumptions": [
+    "The 10-asset AR reacts within days to correlated selloffs.",
+    "Gold and DBC remain partial diversifiers in inflation shocks.",
+    "Next-close fills are within a few bp of signal closes."
+   ],
+   "failure_modes": [
+    "AR lags fast gaps (Feb-Mar 2020); AR20 uses 20 observations for 10 assets and is noisy.",
+    "Slow 2022 grind: dAR rises late, exposure is cut after most losses.",
+    "Whipsaw: re-risking after a rebound forfeits recovery return."
+   ],
+   "cheapest_test": "Backtest from about 2007: max drawdown, weekly turnover, and dAR lead/lag versus 2008, 2020, 2022 peak-to-trough dates. Sandbox was unavailable, so no code was run and no numbers here are computed.",
+   "effort": "Low: about 60 lines of NumPy plus daily closes.",
+   "sources": [
+    "Kritzman, Li, Page, Rigobon (2011), J. Portfolio Management 37(4)",
+    "Asness, Frazzini, Pedersen (2012), Financial Analysts Journal 68(1)"
+   ],
+   "spec": "Universe: SPY, IWM, EFA, EEM, IEF, TIP, LQD, GLD, DBC, VNQ. At close t: r=ln(P_t/P_{t-1}); A=lambda_max(60d correlation)/10; A20 the same on 20d; dAR=(A20-mean(A, prior 250d))/std(A, prior 250d). sigma_i=60d std*sqrt(252); w_i=(1/sigma_i)/sum(1/sigma_j); sp=sqrt(w'Sw), S=60d covariance annualised; base=min(1,0.07/sp)*w, remainder cash. u=clip((dAR-0.5)/2,0,1); s=1-0.75*u^2(3-2u); target=s*base. Fill at close t+1: d=(target-w)/5; tau=0.5*sum|d|; if tau>0.039, d*=0.039/tau; w+=d. Weekly turnover <=5*3.9%=19.5%; target differs from w almost surely, so it trades every day. Starts in cash. Constants: 0.5-2.5 sd brackets ordinary to extreme states; 25% floor keeps the book diversified; 7% is near unlevered inverse-vol book vol; 1/5 is a one-week horizon; 3.9%=19.5%/5.",
+   "raw_index": 0,
+   "transfer": "strong"
+  },
+  {
+   "title": "Stress-Mixture Covariance Sizing with Rank-1 Stress Prior",
+   "pitch": "Put the stress state inside the covariance used for equal-risk-contribution sizing, so a high absorption ratio makes the sizing formula assume an 'everything falls together' world and hold less risk.",
+   "mechanism": "Sigma blends a shrunk 120-day sample covariance with a rank-1 stress scenario (rho=0.8, current vols) by p, the percentile rank of the absorption ratio. ERC weights and the 6% volatility scale both come from Sigma, so mix and total exposure respond through one formula with no binary switch.",
+   "rationale": "Chow, Jacquier, Kritzman, Lowry (1999) blend a turbulent-period covariance into portfolio choice; Longin and Solnik (2001) document bear-market correlation increases. My arithmetic: with equal vols, sigma_p scales as sqrt(rho+(1-rho)/10), 0.61 at rho=0.3 and 0.91 at 0.8, so exposure at p=1 falls to about 55-70% of calm level. That is milder de-risking than a hard throttle, so the drawdown case leans on the 6% target: a 5-sigma 20-day loss is 6%*sqrt(20/252)*5=8.5%, valid only if vol is well estimated, the weak point. Net growth about 5% nominal (my estimate).",
+   "assumptions": [
+    "rho=0.8 is a fair crisis correlation for risky classes plus positive stock-bond correlation.",
+    "Stress-time realised vol is not many multiples of the 20-day vol."
+   ],
+   "failure_modes": [
+    "ETF history starts about 2006, so q95 barely exists in 2008 and that test is marginal.",
+    "A crash from calm gives losses far above 5 sigma of prior vol.",
+    "55-70% exposure may leave 2022-type losses near 20%.",
+    "p may saturate at 1 for long stretches."
+   ],
+   "cheapest_test": "Backtest from 2008: max drawdown and turnover versus pure-sample ERC and fixed rho=0.8 ERC. Sandbox was unavailable, so no code was run.",
+   "effort": "Medium: ERC solver, shrinkage, scheduler; about 150 lines.",
+   "sources": [
+    "Chow, Jacquier, Kritzman, Lowry (1999), Financial Analysts Journal 55(3)",
+    "Longin, Solnik (2001), Journal of Finance 56(2)"
+   ],
+   "spec": "Universe as card 0. At close t: A=lambda_max(60d correlation)/10; q50, q95 = expanding percentiles of prior A (need >=504 days, else p=0); p=clip((A-q50)/(q95-q50),0,1). S_s=120d covariance shrunk to constant-correlation target (Ledoit-Wolf intensity); D=diag(20d vols); S_stress=D(0.8*11'+0.2I)D; Sigma=(1-p)S_s+p*S_stress. ERC: long-only, sum w=1, cyclical coordinate descent, tol 1e-8. target=min(1,0.06/sqrt(w'Sigma w))*w, remainder cash. Sessions Mon, Wed, Fri, filled at that day's next close; a holiday session moves to Tue or Thu; weeks with <=3 trading days trade daily. Sells first; scale step so one-way turnover <=6.5%. Weekly <=3*6.5%=19.5%. Constants: 0.8 approximates crisis correlation; 120d balances noise (N/T~0.08) against lag; 6% is below typical unlevered ERC vol; 6.5%=19.5%/3.",
+   "raw_index": 1,
+   "transfer": "partial"
+  }
+ ]
+}

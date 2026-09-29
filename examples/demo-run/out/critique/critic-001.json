@@ -1,0 +1,174 @@
+{
+  "critiques": [
+    {
+      "idea_id": "I004",
+      "target": "Within cluster: inverse 63-day vol, halved if close < 200-day SMA, renormalized.",
+      "mechanism": "Renormalizing within the cluster cancels the halving whenever every asset in the cluster is below its 200-day SMA, which is exactly the bear-market state. Weights then revert to plain inverse-vol. The filter only shifts weight between assets of the same cluster and never moves anything to cash, because cash is set by lambda. The card's claimed time-series-momentum benefit (Faber, Moskowitz) is therefore absent in a broad equity sell-off.",
+      "evidence": "Arithmetic. Five equity ETFs all below their SMA each get 0.5*v_i, and the sum is renormalized to 1, so the weights equal the unfiltered inverse-vol weights. Faber (2007) and Moskowitz et al. (2012) obtain protection from moving to cash when the trend is negative, not from re-weighting inside a bucket.",
+      "severity": "major",
+      "falsifier": "Renormalize the halved weights against the full pre-filter sum and send the remainder to cash. Alternatively, a backtest showing the filter changes drawdown materially in 2008 or 2022 would refute this.",
+      "gate": null
+    },
+    {
+      "idea_id": "I004",
+      "target": "DD from all-time NAV peak",
+      "mechanism": "lambda = (0.17 - DD)/S rises only through the strategy's own reduced-exposure returns, while the cushion is measured against a never-resetting peak. After a moderate drawdown the strategy runs at low exposure and its NAV recovers only slowly, so lambda stays low for years. At DD of 17% lambda is zero, an absorbing state with only the cash yield. The card lists 'lock exposure low for years' as a failure but still quotes an unconditional 4.5-5.5% net growth, which is internally inconsistent.",
+      "evidence": "Take S = 6.5% (the card's number) and a 15% DD. Then lambda = 0.02/0.065 = 0.31. At about 5% gross core return, exposure 0.31 earns roughly 1.5%/yr. Regaining the 17.6% needed to reach the old peak (1/0.85 - 1) takes about 10 years. Lambda stays below 0.5 throughout, so the 2%/day restore ramp is irrelevant because the target, not the ramp, is binding.",
+      "severity": "major",
+      "falsifier": "A backtest 2004-2025 showing the fraction of days with lambda < 0.5 is under about 15% and CAGR of at least 4.5% net, or a peak-reset or decay rule added to the spec.",
+      "gate": null
+    },
+    {
+      "idea_id": "I004",
+      "target": "S_t = max_c(w_c*L_c) + 0.5*sum_others(w_c*L_c)",
+      "mechanism": "The 0.5 'half-sag' factor assumes clusters do not all lose together. In the 2022 stock-bond sell-off, and in March 2020 for IG credit alongside equities and commodities, several clusters fall at once and the realized joint loss approaches the plain sum of w_c*L_c, which exceeds S. The 17% bound then erodes by design rather than by bad luck, and the 3-point margin is spent before any regime shift.",
+      "evidence": "Illustrative ERC weights (equity 0.2, duration 0.5, real 0.3) with L_c of 12%, 5% and 9%. Products are 2.4, 2.5 and 2.7 points, so S = 2.7 + 0.5*4.9 = 5.2, while the plain sum is 7.6, which is 46% larger. At lambda 0.95 the extra loss is about 2.3 points.",
+      "severity": "minor",
+      "falsifier": "The card's own test: measured joint 20-day cluster losses in the 1-in-100 tail on 2004-2025 data at or below S_t, so that 0.5 is empirically adequate.",
+      "gate": null
+    },
+    {
+      "idea_id": "I004",
+      "target": "L_c = |1st percentile of overlapping 20-day cluster returns, last 1260 days|",
+      "mechanism": "1260 days of overlapping 20-day returns hold only about 63 independent windows, so the 1st percentile is about the worst 12 overlapping windows, i.e. one episode. It is a noisy tail estimate that is procyclical: after 4-5 calm years the window contains no crisis, L_c is small, and lambda sits at 0.95 exactly when the next shock arrives. The 'N-1 security' framing implies a designed 1-in-100 guarantee this estimator cannot deliver.",
+      "evidence": "Effective sample size 1260/20 = 63 windows, so the 1% quantile has under one independent exceedance. A 2015-2019 window excludes 2008 and 2020; a 2017-2021 duration window excludes any 2022-size rate shock.",
+      "severity": "major",
+      "falsifier": "The proposed backtest showing exceedances of L_c near 1% without clustering in time, or a bootstrap band on L_c that is narrow relative to the 3-point margin.",
+      "gate": null
+    },
+    {
+      "idea_id": "I004",
+      "target": "move 0.0005 from cash (>= 5%) to most-underweight ETF",
+      "mechanism": "The trade-frequency fill is funded from cash that has a hard 5% floor. When lambda is clipped at 0.95, cash is exactly 5%, so the fill either breaches the floor or does not happen. The clause also leaves ambiguous which cap (2% or 4%) applies when one gap mixes exposure change with within-cluster rebalancing, so two implementers would code different strategies.",
+      "evidence": "Spec: cash (>= 5%) and lambda clip 0.95 means cash = 5% in calm markets. Daily price drift usually creates a gap above 5 bp so the fill is rarely needed, but the rule is inconsistent at the clip boundary.",
+      "severity": "minor",
+      "falsifier": "Specify that the fill is funded from the most-overweight ETF or from cash above the floor, and define the cap by the sign of the total exposure change.",
+      "gate": "trades_three_days_per_week"
+    },
+    {
+      "idea_id": "I003",
+      "target": "Unlevered risk parity spreads risk across equity, duration and real assets",
+      "mechanism": "The base is inverse-vol over 10 assets, not over asset classes, and nothing caps a class. Standalone risk is equalised per ETF, but the five equity-like ETFs (LC, SC, dev ex-US, EM, REIT) are highly correlated and supply the majority of portfolio variance, while the three bond ETFs hold over half the weight but little variance. There is no by-rule limit on equity risk share at any date, which the strong diversification anchor requires. In stress, correlations rise and the equity share rises further.",
+      "evidence": "Rough vols: LC 15, SC 20, DM 17, EM 22, REIT 20, UST 6.5, TIPS 5, IG 5.5, gold 15, commodities 16 (%). Inverse-vol weights: equity-like about 31%, bonds 57%, real 13%. With intra-group correlation about 0.8, equity-like vol is about 4.7 points and bond vol about 2.8, so equity variance is about 22 versus 8 for bonds and 2.6 for real, roughly two thirds of variance. I004 and I007 impose 1/3 cluster risk by ERC.",
+      "severity": "major",
+      "falsifier": "Compute risk contributions on real covariance and show equity below about 45% of variance on most dates, or add a class-level ERC or cap.",
+      "gate": null
+    },
+    {
+      "idea_id": "I003",
+      "target": "DD_t = 1 - NAV_t/max(NAV, last 252 days)",
+      "mechanism": "A trailing 252-day peak turns the drawdown into a rolling one-year loss. A slow multi-year grind never shows more than about one year of decline, so exposure settles in a middle band and cumulative loss is unbounded. The card mentions only a reset during >1-year drawdowns, but the effect is continuous. The cited Grossman-Zhou result uses the all-time running maximum, so its guarantee does not carry over.",
+      "evidence": "Equilibrium calculation. If the underlying declines at g per year, DD252 = d = E(d)*g with E = 0.90 - 8(d - 0.04). For g = 10%, d = 0.10*(1.22 - 8d) gives d = 6.8% and E = 0.65, so the portfolio loses 6.8% every year and passes 20% in about 3 years with no further de-risking. For g = 15%, d = 8.3% and the bound is passed in about 2.4 years.",
+      "severity": "major",
+      "falsifier": "A backtest with an all-time-peak variant showing max DD under 20% through grinding regimes, or an argument that a diversified base cannot lose 10%/yr for 3 years.",
+      "gate": null
+    },
+    {
+      "idea_id": "I003",
+      "target": "5 x 4% = 20% per week",
+      "mechanism": "The design uses the whole 20% cap by construction, with zero headroom. If turnover is computed on realized weight changes, price drift on top of trades pushes any week in which the ramp is active above 20%. I006 leaves 2% for drift for this reason.",
+      "evidence": "Rubric: 'sum of absolute weight changes divided by 2 over each calendar week'. With weights near 0.1 and daily moves of 0.5-1%, drift is about 0.15-0.3% of NAV per day, so 0.75-1.5% per week on top of 20%.",
+      "severity": "minor",
+      "falsifier": "If the referee counts only executed trades, the card passes exactly. A 19% cap would remove the risk.",
+      "gate": "turnover_cap"
+    },
+    {
+      "idea_id": "I003",
+      "target": "Grossman and Zhou (1993) show drawdown-constrained optimal exposure is proportional to the cushion",
+      "mechanism": "The control law is a linear droop with a deadband, a 0.90 ceiling and a 0.25 floor, keyed to a rolling peak. That is not proportional to a cushion above a fraction of the running maximum, and exposure never reaches zero as drawdown approaches 20%. Gain 8, deadband 4% and floor 0.25 are constants with no derivation from the 20% bound.",
+      "evidence": "In Grossman-Zhou the constraint is W_t >= a*max W_s and risky investment is a multiple of W_t - a*M_t, going to zero at the floor. The card's E reaches 0.25 at DD = 12.1% and stays there.",
+      "severity": "minor",
+      "falsifier": "Show the droop parameters follow from a stated worst-case base loss, for example 0.25 times the base loss over 20 days at most 8 points.",
+      "gate": null
+    },
+    {
+      "idea_id": "I003",
+      "target": "instead move 0.0005 from cash to argmax_i(w*_i - w_i)",
+      "mechanism": "The fill is funded from cash that the same card says is at least 10% always. At E = 0.90 the target cash is exactly 10%, so moving 5 bp out of cash violates the reserve. If the reserve wins, no trade occurs that day and the 3-day gate is at risk; if the fill wins, the stated invariant is false.",
+      "evidence": "Spec: 'cash >= 10% always (spinning reserve)' and 'if T < 0.0005, instead move 0.0005 from cash'. Both apply when E = 0.90 and w is near w*. Drift usually gives a gap above 5 bp so failure is rare but not excluded.",
+      "severity": "minor",
+      "falsifier": "Fund the fill from the most overweight ETF, or state the fill is exempt from the 10% floor.",
+      "gate": "trades_three_days_per_week"
+    },
+    {
+      "idea_id": "I006",
+      "target": "Should fire in 2022, 2008, 2020.",
+      "mechanism": "E responds only to rho_D - rho_U, not to correlation level or losses. In 2022 stocks and bonds were positively correlated on both up and down days, so the gap is near zero and E stays near 1 in a bond-heavy inverse-vol book. In 2020 the crash lasted about 23 trading days; a 126-day window holds about 63 down days, so 10-15 crash days shift rho_D only slightly, and the 6% per-day cap limits any cut to 18% of NAV per week. Drawdown is left to diversification alone.",
+      "evidence": "Rough 2008 hand estimate with pre-crisis inverse-vol weights (equity-like 38%, bonds 50%, real 12%) at E = 1: equities about -21.6 points, bonds +0.9, real -1.6, total about -22%, near or above the 20% bound. This is approximate. The card's own one-week crash estimate is -11% to -15% labelled 'estimate, not proven', and it offers no evidence the gap rises in 2022.",
+      "severity": "major",
+      "falsifier": "Compute rho_D - rho_U on 2022 and February 2020 data and show E under 0.6 within two weeks of the peak, or a backtest with 2008 and 2022 max drawdown under 20%.",
+      "gate": null
+    },
+    {
+      "idea_id": "I006",
+      "target": "a split on the sign of the equal-weight mean is symmetric, so the bias should cancel to first order in the gap",
+      "mechanism": "Symmetry holds only for symmetric homoskedastic returns. Real returns have asymmetric volatility, so down days over-represent high-volatility periods and the pooled down-day correlation is inflated by heteroskedasticity, which is the Forbes-Rigobon bias itself. The gap then has a positive structural mean even at constant true correlation, so E sits below 1 and its movements reflect volatility clustering rather than contagion.",
+      "evidence": "Forbes and Rigobon (2002) show conditioning on a high-volatility subset raises sample correlation with no change in true correlation. The card admits the claim is 'not verified numerically'.",
+      "severity": "major",
+      "falsifier": "A Monte Carlo with leverage-GARCH margins and constant correlation showing mean(rho_D - rho_U) within about 0.02 of zero.",
+      "gate": null
+    },
+    {
+      "idea_id": "I006",
+      "target": "each at most 6% of NAV one-way",
+      "mechanism": "With trades on three days only, the maximum weekly exposure change is 18% of NAV, while E itself jitters by 0.1-0.15 per the card's own standard error. The cap is spent on noise, and a real cut from E = 1 to 0.25 needs over four weeks.",
+      "evidence": "Card: SE of the gap 0.1-0.2 and 1 - rho_U about 0.7, so SE(E) about 0.14-0.29. A 0.14 change on a fully invested book is 14% of NAV, 78% of weekly capacity. A cut of 75% of NAV takes 4.2 weeks at 18%.",
+      "severity": "major",
+      "falsifier": "A Monte Carlo showing SD(E) under 0.05 under the null, or a turnover histogram showing average use of the cap below 30%.",
+      "gate": null
+    },
+    {
+      "idea_id": "I006",
+      "target": "Three parameters (126 days, 0.25 floor, 6% cap), each principled",
+      "mechanism": "The count omits the 63-day volatility window, the 20% per-asset cap, the normalisation by 1 - rho_U, and the trade-day schedule. 'Correlation precision' does not pick 126 over 63 or 252, and the floor and cap are set to satisfy constraints, not derived from a drawdown target.",
+      "evidence": "The standard error of a correlation from n observations is about (1 - rho^2)/sqrt(n), about 0.1 at rho = 0.5 and n = 63, so 126 is not singled out.",
+      "severity": "minor",
+      "falsifier": "A sensitivity table showing max DD and CAGR insensitive to window 63-252 and floor 0.25-0.4.",
+      "gate": null
+    },
+    {
+      "idea_id": "I007",
+      "target": "Partial adjustment gives de-risking the whole lane: 8% of NAV exposure per day.",
+      "mechanism": "Selling 8% of NAV per day into cash is 8% one-way turnover if cash counts as a position, and 40% over a five-day week. The card claims 'one-way <= 4%/day, <= 20%/week' only because g is computed over the 10 ETFs with cash left out of sum|g|. Under I003 and I004's accounting (cash included) the same trade is 8%. The gate pass therefore depends on the definition, and the drawdown-speed advantage (halving in about 6 days) exists only in that ambiguous region.",
+      "evidence": "Rubric: 'sum of absolute weight changes divided by 2' with weights defined over the 10 ETFs and the remainder as cash; literal reading is ETF-only, giving 4%. Spec: x = g*min(1, 0.08/sum|g|) so 8% of NAV of ETF sells per day and cash rises by 8%.",
+      "severity": "major",
+      "falsifier": "If the referee counts only the 10 ETF weights, the gate holds. Restating the lane as 4% of NAV including cash removes the ambiguity but halves the claimed de-risking speed.",
+      "gate": "turnover_cap"
+    },
+    {
+      "idea_id": "I007",
+      "target": "Invested fraction f = min(1, (NAV-0.82*HWM)/(NAV*L))",
+      "mechanism": "HWM is an all-time maximum, so f is a ratchet. After a drawdown of a few points f falls, exposure falls, and NAV recovers only at reduced exposure; at NAV of 0.82 HWM exposure is zero and NAV cannot recover. The card lists 'CPPI cash-lock near the floor' but still quotes 4.5-5.5% CAGR and models no days-at-f<0.5. In calm regimes the 6% floor on L also delays de-risking to DD of about 12.8%, not the 7-8% quoted for 2008 vol.",
+      "evidence": "With the card's L = 12.5%, at a 15% DD f = (0.85 - 0.82)/(0.85*0.125) = 0.28. A core return near 5% at 0.28 exposure is about 1.4%/yr, so regaining +17.6% takes about 12 years. With L = 6%, f = 1 until NAV/HWM = 0.82/(1 - 0.06) = 0.872, a 12.8% drawdown.",
+      "severity": "major",
+      "falsifier": "A backtest showing days at f < 0.5 below about 10% of the sample and CAGR at least 4.5%, or an HWM reset rule.",
+      "gate": null
+    },
+    {
+      "idea_id": "I007",
+      "target": "Real (TIPS, gold, commodities)",
+      "mechanism": "With inverse-vol inside the bucket, TIPS (about 5% vol) receives roughly 60% of the Real bucket versus about 20% each for gold and commodities. TIPS are dominated by real-rate duration, so the Real bucket is largely a duration position correlated with the Nominal bucket. 'Each bucket carries 1/3 of core risk' therefore does not give 1/3 of risk to distinct factors. In 2022 Nominal and Real fell together. Growth also includes REITs, another rate-sensitive asset.",
+      "evidence": "1/sigma with TIPS 5, gold 15, commodities 16 gives 20, 6.7, 6.25, so TIPS is 61%. In 2022 TIPS lost about 12%, UST 7-10y about 15%, IG credit about 17%. I004 avoids this by putting TIPS in the Duration cluster.",
+      "severity": "minor",
+      "falsifier": "A factor decomposition showing duration below 40% of core risk on average.",
+      "gate": null
+    },
+    {
+      "idea_id": "I007",
+      "target": "1/L is a Kelly-style multiple",
+      "mechanism": "The Kelly or Grossman-Zhou growth-optimal multiple depends on expected excess return and risk aversion (mu/(gamma sigma^2)), not on a 99% loss quantile. L is 2.33*sigma*sqrt(20) with a 6% floor, a VaR quantity with no mu, so the rule is VaR-multiple CPPI. The 'growth-optimal' label supplies no return mechanism; growth reduces to risk-parity carry plus a small rebalancing bonus.",
+      "evidence": "Grossman and Zhou (1993): optimal risky holding is proportional to the cushion with a coefficient depending on mu, sigma and gamma. At sigma = 5%/yr, 1/L = 1/(2.33*0.05*0.28) = 30 versus mu/sigma^2 = 0.05/0.0025 = 20, coinciding only by chance.",
+      "severity": "minor",
+      "falsifier": "A derivation of 1/L as the GZ coefficient for stated mu and gamma.",
+      "gate": null
+    }
+  ],
+  "ranking": ["I004", "I003", "I007"],
+  "novelty_ranking": ["I004", "I006", "I007"],
+  "ratings": [
+    {"idea_id": "I004", "upside": 4, "probability": 3},
+    {"idea_id": "I003", "upside": 3, "probability": 3},
+    {"idea_id": "I006", "upside": 3, "probability": 1},
+    {"idea_id": "I007", "upside": 4, "probability": 3}
+  ]
+}

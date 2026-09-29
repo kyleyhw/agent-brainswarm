@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import tempfile
 from pathlib import Path
 
@@ -29,6 +30,8 @@ def main() -> int:
     parser.add_argument("--into", help="where to write the replayed run (default: a temp folder)")
     args = parser.parse_args()
     into = Path(args.into) if args.into else Path(tempfile.mkdtemp(prefix="brainswarm-replay-"))
+    # Keep the replay's idea-library update out of the user's real library.
+    os.environ.setdefault("BRAINSWARM_HOME", str(into / "brainswarm-home"))
     run = replay(RECORDED, into)
     print(run.path("digest.txt").read_text())
     recorded = json.loads((RECORDED / "data" / "final.json").read_text())["rank"]

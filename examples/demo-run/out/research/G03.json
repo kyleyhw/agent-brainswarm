@@ -1,0 +1,56 @@
+{
+ "cards": [
+  {
+   "title": "Effective-bets throttle with a daily turnover budget",
+   "pitch": "Scale total exposure of an inverse-volatility 10-ETF book by the effective number of independent bets in the correlation matrix, trading under a hard 3.5%-of-NAV daily budget.",
+   "mechanism": "Correlation only sets total exposure s; it forecasts no returns. Each close: correlation matrix of daily log returns over 63 and 21 days, eigenvalues lambda_i (sum 10), p_i = lambda_i/10, N_eff = exp(-sum p_i ln p_i), from 1 (one factor) to 10. Divide each window's N_eff by its trailing 756-day median (expanding after 126 days; cancels small-sample bias); s = clip(min(ratio63, ratio21), 0.25, 1). Target = s x inverse-volatility weights (63-day, 20% cap), rest cash. Constraint mechanism: one-way traded value at most 3.5% of NAV per day, so at most 17.5% per week under either turnover convention, and a trade on all 5 days.",
+   "rationale": "Drawdowns beyond 20% come from correlated sell-offs (2008, March 2020, 2022 stock-bond correlation turning positive), which compress the eigenvalue spectrum. Kritzman et al. (2011): a high absorption ratio preceded fragility; Meucci (2009) defines the entropy effective number of bets; Longin and Solnik (2001): correlation rises in bear markets (cited from memory). Unverified estimate: unthrottled book about 6% volatility and -16% in 2022; throttled -10% to -14%. Net growth 4-5% per year from equity, credit, term, inflation and commodity premia; cost drag under 0.3% per year at 3 bp.",
+   "assumptions": [
+    "Correlation compression starts before or during losses.",
+    "3-year median is a stable reference.",
+    "Drift adds under 2.5% per week to measured turnover."
+   ],
+   "failure_modes": [
+    "Fast crash: exposure falls at most 3.5% per day, so worst case is about -12% to -16% (untested).",
+    "Long high-correlation regime lifts the median and disarms the signal.",
+    "21-day N_eff is noisy and wastes budget."
+   ],
+   "cheapest_test": "Backtest 2006-2025 against constant exposure matched to mean s; the signal counts only if it beats that control on max drawdown (2008 needs pre-2006 proxies). Sandbox unavailable; no code run.",
+   "effort": "About 150 lines of NumPy.",
+   "sources": [
+    "Kritzman, Li, Page, Rigobon (2011), J. Portfolio Management",
+    "Meucci (2009), Managing Diversification, Risk",
+    "Longin and Solnik (2001), J. Finance"
+   ],
+   "spec": "r = ln(P_t/P_{t-1}); s = 1 during first 189 days. Signal at close t, trade at close t+1. w_i proportional to 1/sigma_i (63-day std), cap 0.20, excess pro rata to uncapped, iterate. Target_i = s w_i; gap g_i = target_i - current_i (post-drift). If sum(current) > s: sell only, scaled by min(1, 0.035/sum sell gaps). Else scale all gaps by min(1, 0.035/max(sum buy gaps, sum sell gaps)). Ties by listed ETF order.",
+   "raw_index": 0,
+   "transfer": "strong"
+  },
+  {
+   "title": "Down-day correlation gap ladder on three trade days",
+   "pitch": "Cut exposure by the share of diversification headroom lost on down days versus up days, trading only first, middle and last day of each week with a 6% cap each.",
+   "mechanism": "m_t = equal-weight mean of the 10 daily returns. Over 126 days split into down (m<0) and up (m>=0) days; rho_D, rho_U = mean pairwise correlation on each subset. E = clip(1 - (rho_D - rho_U)/(1 - rho_U), 0.25, 1): 1 when the two structures match, toward 0.25 as rho_D nears 1. Target = E x inverse-volatility weights (63-day, 20% cap), rest cash. Trade days: day 1, day ceil((n+1)/2), day n of n trading days (Mon/Wed/Fri in a full week), each at most 6% of NAV one-way: at least 3 trade days, at most 18% weekly turnover. De-risking sells first.",
+   "rationale": "Correlations rise in down markets (Longin and Solnik 2001; Ang and Chen 2002). Conditioning on the sample mean biases correlation (Forbes and Rigobon 2002), but a split on the sign of the equal-weight mean is symmetric, so the bias should cancel to first order in the gap (not verified numerically). Should fire in 2022, 2008, 2020. Three parameters (126 days, 0.25 floor, 6% cap), each principled: correlation precision, staying invested, 20% budget over three days.",
+   "assumptions": [
+    "Down-day correlation excess persists for weeks.",
+    "55-70 observations per subset suffice.",
+    "Drift adds under 2% per week to turnover."
+   ],
+   "failure_modes": [
+    "Standard error of the gap is likely 0.1-0.2, so E jitters and burns the cap.",
+    "Lags a one-week crash; worst case about -11% to -15% (estimate, not proven).",
+    "Holiday weeks with fewer than 3 days cannot reach 3 trades."
+   ],
+   "cheapest_test": "Monte Carlo of stationary constant-correlation returns to measure the standard deviation of E under the null (not run; sandbox unavailable), then backtest against constant exposure matched to mean E.",
+   "effort": "About 120 lines of NumPy; half a day.",
+   "sources": [
+    "Longin and Solnik (2001), J. Finance",
+    "Ang and Chen (2002), J. Financial Economics",
+    "Forbes and Rigobon (2002), J. Finance"
+   ],
+   "spec": "Signal from data through the close before trade day d; execute at close of d. rho as mean of 45 pairwise Pearson correlations of daily log returns. E as above. Gap g = target - current. If sum(current) > E: sell overweights only, scaled by min(1, 0.06/sum sell gaps). Else scale all gaps by min(1, 0.06/max(sum buy gaps, sum sell gaps)). Ties by listed ETF order.",
+   "raw_index": 1,
+   "transfer": "partial"
+  }
+ ]
+}

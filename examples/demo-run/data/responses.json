@@ -1,0 +1,324 @@
+{
+  "critic-002-09": {
+    "resolution": "fixed",
+    "response": "Added a Grossman-Zhou drawdown cushion c=clip((0.20-DD)/0.15,0.25,1) with lag-aware arithmetic: at 18 points/week de-risking, a breach needs an unmanaged ERC loss near 22% in 20 days, or about 41% on a slow grind. A stated, testable bound, hand-computed only.",
+    "idea": "I002-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-002-10": {
+    "resolution": "fixed",
+    "response": "Uniform 0.8 removed. The stress term is p*D bb' D with b the positive part of current PC1 loadings, so Treasuries and gold that load zero or negatively in equity crashes receive no stress correlation; bonds receive it only when they load on PC1, as in 2022.",
+    "idea": "I002-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-004-08": {
+    "resolution": "fixed",
+    "response": "The throttle sqrt(w'Sw/w'Sigma w) now multiplies exposure whether or not the 6% target binds; Sigma-S is PSD so it is <=1. Conceded it is mild (~0.8-0.9 at p=1, my estimate); the 20% bound rests on the cushion.",
+    "idea": "I002-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-004-09": {
+    "resolution": "fixed",
+    "response": "The stress term is added to the sample correlation, not substituted, so R's structure survives. Only b_i>0 assets pay the extra risk term p*b_i*beta, so ERC does not collapse to inverse-vol: unloaded hedges gain weight, duration loses weight only when it co-moves with PC1.",
+    "idea": "I002-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-002-11": {
+    "resolution": "fixed",
+    "response": "A now uses the top N/5=2 eigenvalues (Kritzman convention) of the 120d shrunk correlation, halving N/T to 0.083.",
+    "idea": "I002-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-002-12": {
+    "resolution": "fixed",
+    "response": "Per-session cap is 6% counting the cash leg, so traded turnover is <=18% with a 2% drift margin.",
+    "idea": "I002-v2",
+    "grafts": [],
+    "holds": [
+      false
+    ]
+  },
+  "critic-002-13": {
+    "resolution": "fixed",
+    "response": "Tickers and cash convention are stated in the spec.",
+    "idea": "I002-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-004-10": {
+    "resolution": "fixed",
+    "response": "Sessions are days 1, ceil(n/2), n of an n-day week (n>=4), else daily: deterministic and collision-free; a zero-trade tie-break guarantees a trade each session.",
+    "idea": "I002-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-001-06": {
+    "resolution": "fixed",
+    "response": "Base is now 3 equal-standalone-risk buckets (equity-like, duration/credit, real), grafted from I007, so no class has a larger risk budget by rule. Cross-correlation still lifts equity's realised variance share above 1/3, and I concede that.",
+    "idea": "I003-v2",
+    "grafts": [
+      "I007"
+    ],
+    "holds": [
+      true
+    ]
+  },
+  "critic-001-07": {
+    "resolution": "fixed",
+    "response": "The peak window is now 756 days, so the equilibrium loss under a 10%/yr grind is about 3.6%/yr, not 6.8%. An all-time-peak backstop (E <= 0.10 at DD_ATH >= 15%) caps the cumulative loss. I concede that this is not the Grossman-Zhou guarantee.",
+    "idea": "I003-v2",
+    "grafts": [
+      "I007"
+    ],
+    "holds": [
+      true
+    ]
+  },
+  "critic-001-08": {
+    "resolution": "fixed",
+    "response": "The daily cap is 3.5%, giving 17.5%/week and 2.5% headroom for drift of about 0.75-1.5%.",
+    "idea": "I003-v2",
+    "grafts": [
+      "I007"
+    ],
+    "holds": [
+      false
+    ]
+  },
+  "critic-001-09": {
+    "resolution": "conceded",
+    "response": "The law is CPPI-like, not Grossman-Zhou. The constants are set by the 20% bound: E reaches 0.25 at 13.1% DD, leaving 7 points, about 28% further loss on the base book, before the bound is reached. The 15% backstop covers the remainder.",
+    "idea": "I003-v2",
+    "grafts": [
+      "I007"
+    ],
+    "holds": [
+      true
+    ]
+  },
+  "critic-001-10": {
+    "resolution": "fixed",
+    "response": "The nudge is now a swap between risky ETFs that leaves cash untouched and always reduces the gap, so the 10% reserve holds.",
+    "idea": "I003-v2",
+    "grafts": [
+      "I007"
+    ],
+    "holds": [
+      true
+    ]
+  },
+  "critic-004-11": {
+    "resolution": "fixed",
+    "response": "The deadband is widened to 5%. Mean E is likely 0.75-0.85, so I concede growth of about 3-4%/yr, which I traded for drawdown control.",
+    "idea": "I003-v2",
+    "grafts": [
+      "I007"
+    ],
+    "holds": [
+      true
+    ]
+  },
+  "critic-004-12": {
+    "resolution": "fixed",
+    "response": "See critic-001-10. The swap trades toward target, so it is no longer a round trip against the control law.",
+    "idea": "I003-v2",
+    "grafts": [
+      "I007"
+    ],
+    "holds": [
+      true
+    ]
+  },
+  "critic-004-13": {
+    "resolution": "fixed",
+    "response": "See critic-001-08. The 3.5% cap leaves headroom for drift.",
+    "idea": "I003-v2",
+    "grafts": [
+      "I007"
+    ],
+    "holds": [
+      false
+    ]
+  },
+  "critic-001-01": {
+    "resolution": "fixed",
+    "response": "Agreed: renormalisation cancelled the filter. Trend now halves weights without renormalising, so freed weight goes to cash, and S uses the unfiltered mix so lambda cannot offset it.",
+    "idea": "I004-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-001-02": {
+    "resolution": "fixed",
+    "response": "DD now uses a trailing 504-day peak, bounding lockout to about 2 years. The inconsistent 4.5-5.5% growth claim is withdrawn and restated as 3.5-4.5%. Residual staircase risk in multi-year grinds is conceded.",
+    "idea": "I004-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-001-03": {
+    "resolution": "fixed",
+    "response": "The assumed 0.5 sag is now one branch of a max. S also takes HS, the historically simulated 1% joint 20d loss of the current mix, which captures simultaneous falls such as 2022.",
+    "idea": "I004-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-001-04": {
+    "resolution": "fixed",
+    "response": "Correct that 1260d holds about 63 independent windows. The 1-in-100 guarantee label is dropped. L_c and HS are floored at half the worst 20d loss since 2004 and at a vol-based parametric quantile, removing calm-window blindness. Risk from a genuinely unprecedented shock remains and is listed.",
+    "idea": "I004-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-001-05": {
+    "resolution": "fixed",
+    "response": "Dust moves are now ETF-to-ETF swaps, not cash draws. One cap rule is defined (0.02 if exposure rising, else 0.04) and applied by scaling the whole gap vector.",
+    "idea": "I004-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-002-04": {
+    "resolution": "fixed",
+    "response": "Same fix as critic-001-04: stress-memory floor plus vol-based floor. The card no longer claims a designed 1-in-100 guarantee; the backtest measures exceedance directly.",
+    "idea": "I004-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-002-05": {
+    "resolution": "fixed",
+    "response": "The joint tail is now measured by HS on the current mix; the 0.5 factor survives only as a lower branch inside a max, so understatement is bounded by data.",
+    "idea": "I004-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-002-06": {
+    "resolution": "fixed",
+    "response": "The dust trade no longer touches cash, so the 5% floor and lambda clip cannot block it. Three trading days per week then holds by construction: every day trades at least 0.0005 within the 0.04 cap.",
+    "idea": "I004-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-002-07": {
+    "resolution": "fixed",
+    "response": "Same as critic-001-01: no renormalisation, so trend now moves weight to cash as in Faber and Moskowitz.",
+    "idea": "I004-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-002-08": {
+    "resolution": "fixed",
+    "response": "The 504-day rolling peak removes the multi-year lock: after a 15% drawdown lambda no longer waits for the all-time high. Growth is restated at 3.5-4.5% net. The cost is a weaker all-time drawdown guarantee, conceded above.",
+    "idea": "I004-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-003-01": {
+    "resolution": "fixed",
+    "response": "Correct. The gate now applies after ERC normalisation and the vol cap only scales down (min(1, tau/s)); nothing rescales upward. All-below-trend exposure is at most 0.5, a real cut to cash.",
+    "idea": "I008-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-004-04": {
+    "resolution": "fixed",
+    "response": "Same fix: v = g*w, then a down-only vol cap. Uniform gating by g gives exposure g*min(1, tau/(g*sigma0)), which is never restored to 1.",
+    "idea": "I008-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-003-02": {
+    "resolution": "fixed",
+    "response": "Brake is graded (starts at 3% drawdown, 25% exposure by 11%), uses a trailing-252-day high so recovery is not locked out for years, and tau is 5% so the cap binds under stress covariance. Conceded: the 12-16% worst case is untested and margin under 20% is modest, so the kill test uses 18%.",
+    "idea": "I008-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-004-06": {
+    "resolution": "fixed",
+    "response": "Trigger moved from 12% to 3% drawdown, giving far more headroom; the 21-day realised-vol term speeds the cut. Hysteresis removed and HWM made rolling. Conceded: 2020 can still outrun the 17.5%/week execution limit set by the turnover rule.",
+    "idea": "I008-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-003-03": {
+    "resolution": "fixed",
+    "response": "Correct that budgets never moved. TIPS now sits with UST and IG in a duration class (1/3 of risk); gold and commodities form the real class. Pitch corrected: budgets are fixed, and when stock-bond correlation turns positive the covariance lowers duration weights, freeing weight to real assets, equities and cash. Conceded: the 500-day window lags 2022; SMA200 gating supplies the fast response.",
+    "idea": "I008-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-004-05": {
+    "resolution": "fixed",
+    "response": "Sleeve cap cut to 3.5% NAV/day, leaving 2.5 points for drift, plus a week-to-date stop at 19.5% counting drift, so the 20% cap holds by construction.",
+    "idea": "I008-v2",
+    "grafts": [],
+    "holds": [
+      false
+    ]
+  },
+  "critic-003-04": {
+    "resolution": "fixed",
+    "response": "g is now defined as T minus the sleeve's post-drift weights u. Conceded: the cap will bind during large de-risking; that is the deliberate speed limit.",
+    "idea": "I008-v2",
+    "grafts": [],
+    "holds": [
+      true
+    ]
+  },
+  "critic-004-07": {
+    "resolution": "fixed",
+    "response": "Stress covariance is now taken about the stress-set mean, removing the mu mu' artefact. Conceded: conditioning on low returns still biases correlation upward (Forbes-Rigobon), accepted as a conservative crisis proxy; in calm windows S_stress is close to S_500.",
+    "idea": "I008-v2",
+    "grafts": [],
+    "holds": [
+      false
+    ]
+  }
+}

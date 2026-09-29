@@ -1,0 +1,82 @@
+[
+  {
+    "critic_id": "critic-001",
+    "critic_model": "sonnet",
+    "order": [
+      "I004",
+      "I003",
+      "I007"
+    ],
+    "criterion": "overall"
+  },
+  {
+    "critic_id": "critic-001",
+    "critic_model": "sonnet",
+    "order": [
+      "I004",
+      "I006",
+      "I007"
+    ],
+    "criterion": "novelty"
+  },
+  {
+    "critic_id": "critic-002",
+    "critic_model": "sonnet",
+    "order": [
+      "I004",
+      "I007",
+      "I002"
+    ],
+    "criterion": "overall"
+  },
+  {
+    "critic_id": "critic-002",
+    "critic_model": "sonnet",
+    "order": [
+      "I002",
+      "I004",
+      "I005"
+    ],
+    "criterion": "novelty"
+  },
+  {
+    "critic_id": "critic-003",
+    "critic_model": "sonnet",
+    "order": [
+      "I005",
+      "I008",
+      "I001"
+    ],
+    "criterion": "overall"
+  },
+  {
+    "critic_id": "critic-003",
+    "critic_model": "sonnet",
+    "order": [
+      "I006",
+      "I008",
+      "I005"
+    ],
+    "criterion": "novelty"
+  },
+  {
+    "critic_id": "critic-004",
+    "critic_model": "sonnet",
+    "order": [
+      "I003",
+      "I008",
+      "I001"
+    ],
+    "criterion": "overall"
+  },
+  {
+    "critic_id": "critic-004",
+    "critic_model": "sonnet",
+    "order": [
+      "I002",
+      "I008",
+      "I001"
+    ],
+    "criterion": "novelty"
+  }
+]

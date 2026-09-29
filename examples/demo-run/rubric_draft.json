@@ -1,0 +1,24 @@
+{
+  "brief": "Rule-based, long-only strategy on a fixed 10-ETF universe; trades on >= 3 days every week; weekly turnover <= 20%; daily closing prices only; maximise long-run growth with max drawdown < 20%, diversified.",
+  "criteria": [
+    {"name": "legal_and_ethical", "kind": "gate", "definition": "No market manipulation, no non-public information, no prohibited practices.", "user_stated": false},
+    {"name": "long_only_fixed_universe", "kind": "gate", "definition": "Weights in the 10 listed ETFs are >= 0 and sum to <= 1; any remainder is uninvested cash. No leverage, shorting, derivatives or other instruments.", "user_stated": true},
+    {"name": "trades_three_days_per_week", "kind": "gate", "definition": "The rules produce trades on at least 3 trading days in every full week (holiday weeks: as many as trading days allow).", "user_stated": true},
+    {"name": "turnover_cap", "kind": "gate", "definition": "Weekly turnover, defined as the sum of absolute weight changes divided by 2 over each calendar week, is at most 20% by construction.", "user_stated": true},
+    {"name": "daily_close_data_only", "kind": "gate", "definition": "Signals use only daily closing prices and quantities derived from them (returns, volatility, correlations, moving averages); no intraday, fundamental or alternative data.", "user_stated": true},
+    {"name": "growth", "kind": "judged", "definition": "Plausible long-run compound growth after realistic trading costs.", "anchors": ["strong: a clearly stated economic or statistical mechanism for return, with a reasoned net-of-cost estimate", "weak: return relies on an effect likely consumed by costs, or no mechanism is given"]},
+    {"name": "drawdown_control", "kind": "judged", "definition": "How convincingly the rules keep maximum drawdown below 20%, including in correlated stress (2008, 2020, 2022).", "anchors": ["strong: an explicit de-risking rule plus a reasoned worst-case estimate addressed to correlated sell-offs", "middle: a risk rule without an argument for the 20% bound", "weak: drawdown left to diversification alone"]},
+    {"name": "diversification", "kind": "judged", "definition": "Risk spread across asset classes at each point in time, not only on average.", "anchors": ["strong: no single class dominates risk at any date, by rule", "weak: effectively an equity-beta bet most of the time"]},
+    {"name": "robustness", "kind": "judged", "definition": "Few parameters chosen on stated principles; expected to work across regimes rather than fit one history.", "anchors": ["strong: parameters justified ex ante, behaviour argued across regimes", "weak: many tuned thresholds with no principle"]},
+    {"name": "constraint_fit", "kind": "judged", "definition": "How naturally the rules satisfy the trade-frequency and turnover constraints while still acting on the signal.", "anchors": ["strong: a stated mechanism (e.g. staggered or tranched rebalancing) makes both constraints hold without crippling the signal", "weak: constraints bolted on as clipping that fights the signal"]},
+    {"name": "specificity", "kind": "judged", "definition": "Rules precise and feasible enough that two people would code the same strategy from the stated data.", "anchors": ["strong: every lookback, threshold, rebalance day, weight formula and tie-break is stated", "weak: key choices left open"]},
+    {"name": "novelty", "kind": "judged", "definition": "Adds something beyond textbook momentum or a static 60/40, or develops a known idea in a genuinely new way.", "anchors": ["strong: a new mechanism or combination with a stated reason it should work", "weak: a textbook strategy restated"]}
+  ],
+  "assumptions": [
+    "Maximum drawdown below 20% is judged, not gated: critics cannot verify it without a backtest.",
+    "Trading costs are estimates: about 2-5 bp per trade for large liquid ETFs, up to about 10 bp for emerging-market, commodity and REIT ETFs.",
+    "Signals are computed on the close of day t and traded at the close of day t+1.",
+    "Web research is off for this demo; agents rely on their own knowledge.",
+    "Judged criteria are compared pairwise, not scored on scales, so no weights are set."
+  ]
+}
