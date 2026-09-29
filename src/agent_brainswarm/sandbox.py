@@ -11,8 +11,10 @@ Results are sanity checks, never evidence that an idea works.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -50,13 +52,19 @@ def available() -> tuple[bool, str]:
 
 
 def command(
-    script: Path, scratch: Path, data: Path | None, image: str = DEFAULT_IMAGE
+    script: Path,
+    scratch: Path,
+    data: Path | None,
+    image: str = DEFAULT_IMAGE,
+    name: str = "brainswarm-sandbox",
 ) -> list[str]:
     """The exact docker command (exposed for tests and audit)."""
     cmd = [
         "docker",
         "run",
         "--rm",
+        "--name",
+        name,
         "--network",
         "none",
         "--memory",
@@ -72,6 +80,12 @@ def command(
         "no-new-privileges",
         "--cap-drop",
         "ALL",
+        # Run as the host user so the scratch mount is writable (the image's own user is
+        # uid 1000, which cannot write a folder the host user owns); HOME must be writable.
+        "--user",
+        f"{os.getuid()}:{os.getgid()}",
+        "--env",
+        "HOME=/tmp",
         "-v",
         f"{scratch.resolve()}:/work:rw",
         "-v",
@@ -81,7 +95,9 @@ def command(
     ]
     if data is not None:
         cmd += ["-v", f"{data.resolve()}:/data:ro"]
-    return [*cmd, image, "python", "/work/script.py"]
+    # --entrypoint skips the image's notebook start script (which fails on a read-only root
+    # when the uid is 0); -u: unbuffered, so output before a memory-limit kill (137) is kept.
+    return [*cmd, "--entrypoint", "python", image, "-u", "/work/script.py"]
 
 
 def run(
@@ -92,9 +108,10 @@ def run(
     if not ok:
         raise SandboxUnavailable(reason)
     scratch.mkdir(parents=True, exist_ok=True)
+    name = f"brainswarm-sandbox-{uuid.uuid4().hex[:12]}"
     try:
         proc = subprocess.run(
-            command(script, scratch, data, image),
+            command(script, scratch, data, image, name),
             capture_output=True,
             text=True,
             timeout=TIMEOUT_S,
@@ -102,5 +119,13 @@ def run(
             env={"PATH": "/usr/bin:/bin:/usr/local/bin"},
         )
     except subprocess.TimeoutExpired as err:
-        return Result(-1, str(err.stdout or ""), str(err.stderr or ""), True)
+        # The timeout kills only the docker client; the container would keep running.
+        subprocess.run(["docker", "kill", name], capture_output=True, check=False)
+        return Result(-1, _text(err.stdout), _text(err.stderr), True)
     return Result(proc.returncode, proc.stdout, proc.stderr, False)
+
+
+def _text(value: str | bytes | None) -> str:
+    if isinstance(value, bytes):
+        return value.decode(errors="replace")
+    return value or ""

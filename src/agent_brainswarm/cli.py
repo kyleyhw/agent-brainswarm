@@ -240,6 +240,13 @@ def cmd_sandbox(args: argparse.Namespace) -> int:
     print(result.stdout)
     if result.stderr:
         print(result.stderr, file=sys.stderr)
+    if result.timed_out:
+        print(f"sandbox: stopped at the {sandbox.TIMEOUT_S} s time limit", file=sys.stderr)
+    elif result.returncode == 137:
+        print(
+            f"sandbox: killed (exit 137), most likely the {sandbox.MEMORY} memory limit",
+            file=sys.stderr,
+        )
     return 124 if result.timed_out else result.returncode
 
 

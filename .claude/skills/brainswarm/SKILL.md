@@ -41,6 +41,9 @@ could leak into every idea or every verdict.
 1. Find the CLI. Try `brainswarm --help`; if that fails, try `uv run brainswarm --help`
    from the agent-brainswarm checkout, then `python -m agent_brainswarm.cli --help`.
    Never conclude it is missing from one failed probe. Use whichever works as `BS` below.
+   The role agents' guard hook calls `brainswarm` on PATH and blocks every write if it is
+   absent, so if only `uv run brainswarm` works, run `uv run python install.py` in the
+   agent-brainswarm checkout first (fresh cloud sessions of this repo need this).
 2. Check the role agents exist: if the Agent tool lists `brainswarm-critic` (etc.) as
    subagent types, use them. If not, use `general-purpose` subagents and prefix each prompt
    with: `Act as the brainswarm <role>; first read <repo>/.claude/agents/brainswarm-<role>.md

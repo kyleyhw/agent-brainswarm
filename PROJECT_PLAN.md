@@ -12,8 +12,9 @@ This document outlines the planned phases and tasks for developing agent-brainsw
 6.  [completed] Per-role tool restriction (`DESIGN.md` §16.1).
     - [completed] Documentation: agent allowlists are enforced; agents may declare hooks in frontmatter
     - [completed] `brainswarm guard` hook implemented and tested through its stdin / exit-code interface
-    - [pending] Confirm in a fresh session that the hook fires for installed role agents (not picked up mid-session in a cloud session)
-7.  [in-progress] Trigger behaviour: description excludes "brainstorm" (tested); live check needs a fresh session.
+    - [completed] Live: the hook fires for role agents (probe dispatch: 5 of 5 calls allowed or blocked as designed)
+    - [completed] Fail closed: a missing CLI or a guard crash now blocks instead of allowing (regression tests)
+7.  [completed] Trigger behaviour, live in fresh cloud sessions: skill and role agents load; "brainstorm" does not trigger; "brainswarm" triggered only after the description was rewritten to lead with the trigger (evidence indirect, from token accounting).
 8.  [completed] Transcript token accounting: message-id dedupe; output tokens estimated where final usage is missing.
 9.  [completed] Finals uncertainty with few clusters: coverage study (`docs/studies/uncertainty_coverage.py`); Laplace below 30 clusters.
 
@@ -31,15 +32,19 @@ This document outlines the planned phases and tasks for developing agent-brainsw
 ## Phase 5: Demo and installation
 17. [completed] Live mini demo run on a concrete trading brief; recorded in `examples/demo-run/`.
     - [completed] Manifests for two physically checkable briefs in `examples/demos/` (exoplanet-transit setup; home heating)
-    - [pending] Live runs of the two new manifests
+    - [pending] Live runs of the two new manifests (shelved until usage allows)
+    - [completed] Controlled rerun of the ETF demo from the workshop and from the finals with the fixes; crossover judge experiment
 18. [completed] Offline replay demo (`examples/demo_run.py`); reproduces the ranking exactly.
 19. [completed] `install.py` (editable uv tool; symlink skill and agents).
 
 ## Phase 6: Evaluation
-20. [pending] Benchmark: brainswarm versus a single strong agent asked for 20 ideas, on 3–5 briefs, judged by humans or by a measurable outcome.
+20. [in-progress] Benchmark: brainswarm versus a single strong agent asked for 20 ideas, on 3–5 briefs, judged by humans or by a measurable outcome ([`docs/BENCHMARK.md`](docs/BENCHMARK.md)).
+    - [completed] Protocol, blinded pack builder, ETF baseline and pack
+    - [pending] Human ratings for the ETF pack
+    - [pending] Exoplanet and home-heating briefs (need their brainswarm runs)
 21. [pending] Ablations: no critique, no workshop, no angle round.
 22. [pending] Coverage study for the critique-stage bootstrap (~60 dispatches).
-23. [pending] Recalibrate the size table from logged runs.
+23. [in-progress] Recalibrate the size table from logged runs (`docs/studies/token_calibration.py`).
 
 ## Phase 7: Repeat runs and extensions
 24. [completed] Idea library, lineage, new/variant/repeat tagging, returning champions, known-false ledger, feedback (fixture-tested).

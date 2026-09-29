@@ -1,6 +1,7 @@
 """Unit tests for models, config, rubric, assign, critique, schedule, select, sandbox, usage."""
 
 import json
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -361,3 +362,49 @@ def test_longer_ranking_is_accepted_and_shorter_rejected() -> None:
     assert _ranking_problems(["I2", "I1", "I4", "I3"], batch, "ranking") == []
     assert _ranking_problems(["I2", "I1"], batch, "ranking")
     assert _ranking_problems(["I2", "I2", "I1"], batch, "ranking")
+
+
+LIVE_PROBE = """
+import socket
+def attempt(name, fn):
+    try:
+        fn()
+        print(name, "allowed")
+    except Exception:
+        print(name, "blocked")
+attempt("network", lambda: socket.create_connection(("1.1.1.1", 443), timeout=3))
+attempt("etc", lambda: open("/etc/x", "w").write("x"))
+attempt("work", lambda: open("/work/out.txt", "w").write("x"))
+attempt("numpy", lambda: __import__("numpy"))
+bytearray(2 * 1024**3)  # over the 1g limit: the kernel kills the process
+"""
+
+
+def _image_present() -> bool:
+    ok, _ = sandbox.available()
+    if not ok:
+        return False
+    probe = subprocess.run(
+        ["docker", "image", "inspect", sandbox.DEFAULT_IMAGE], capture_output=True, check=False
+    )
+    return probe.returncode == 0
+
+
+@pytest.mark.skipif(not _image_present(), reason="needs a Docker daemon and the sandbox image")
+def test_sandbox_live_isolation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Regressions from the first live run: output lost on a memory kill, scratch not writable,
+    # and a timed-out container left running.
+    script = tmp_path / "probe.py"
+    script.write_text(LIVE_PROBE)
+    result = sandbox.run(script, tmp_path / "scratch")
+    lines = set(result.stdout.split("\n"))
+    assert {"network blocked", "etc blocked", "work allowed", "numpy allowed"} <= lines
+    assert result.returncode == 137 and (tmp_path / "scratch" / "out.txt").exists()
+
+    monkeypatch.setattr(sandbox, "TIMEOUT_S", 5)
+    script.write_text("import time\nprint('start')\ntime.sleep(600)\n")
+    before = subprocess.run(["docker", "ps", "-q"], capture_output=True, text=True, check=False)
+    result = sandbox.run(script, tmp_path / "scratch")
+    after = subprocess.run(["docker", "ps", "-q"], capture_output=True, text=True, check=False)
+    assert result.timed_out and "start" in result.stdout
+    assert len(after.stdout.split()) <= len(before.stdout.split())

@@ -32,6 +32,18 @@ uv run python install.py      # brainswarm CLI as a uv tool; skill + 9 role agen
 Then, in any Claude Code session, say "brainswarm …". The skill never
 triggers on "brainstorm".
 
+**Claude Code on the web.** Cloud containers start fresh, so install at
+container start by adding this to the environment's setup script:
+
+```bash
+git clone --depth 1 https://github.com/kyleyhw/agent-brainswarm ~/agent-brainswarm \
+  && (cd ~/agent-brainswarm && uv run python install.py)
+```
+
+Sessions opened on this repository itself already load the skill and role
+agents from `.claude/`; the skill installs the CLI on first use, because the
+role agents' guard hook needs `brainswarm` on PATH and blocks writes without it.
+
 ## Documentation
 
 | Document | Content |
