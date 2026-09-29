@@ -1,0 +1,82 @@
+[
+  {
+    "critic_id": "critic-001",
+    "critic_model": "opus",
+    "order": [
+      "I004",
+      "I003",
+      "I005"
+    ],
+    "criterion": "overall"
+  },
+  {
+    "critic_id": "critic-001",
+    "critic_model": "opus",
+    "order": [
+      "I005",
+      "I006",
+      "I004"
+    ],
+    "criterion": "novelty"
+  },
+  {
+    "critic_id": "critic-002",
+    "critic_model": "fable",
+    "order": [
+      "I004",
+      "I003",
+      "I001"
+    ],
+    "criterion": "overall"
+  },
+  {
+    "critic_id": "critic-002",
+    "critic_model": "fable",
+    "order": [
+      "I002",
+      "I003",
+      "I001"
+    ],
+    "criterion": "novelty"
+  },
+  {
+    "critic_id": "critic-003",
+    "critic_model": "fable",
+    "order": [
+      "I001",
+      "I007",
+      "I008"
+    ],
+    "criterion": "overall"
+  },
+  {
+    "critic_id": "critic-003",
+    "critic_model": "fable",
+    "order": [
+      "I002",
+      "I001",
+      "I007"
+    ],
+    "criterion": "novelty"
+  },
+  {
+    "critic_id": "critic-004",
+    "critic_model": "sonnet",
+    "order": [
+      "I005",
+      "I007",
+      "I008"
+    ],
+    "criterion": "overall"
+  },
+  {
+    "critic_id": "critic-004",
+    "critic_model": "sonnet",
+    "order": [
+      "I005",
+      "I006",
+      "I007"
+    ],
+    "criterion": "novelty"
+  }
+]

@@ -64,7 +64,8 @@ from agent_brainswarm.state import Run
 # (verbosity bias, DESIGN.md §15), and so a 6-card critic batch stays
 # around 3k words of input.
 CARD_WORD_CAP = 400
-# Per-field split of CARD_WORD_CAP shown to workshop agents (3 of 4 overshot in the demo).
+# Per-field split of CARD_WORD_CAP shown to generators and workshop agents (without it, 3 of 4
+# workshop cards overshot in the demo, and 4 of 4 research outputs in the 2026-09-29 self-run).
 # Sums to 390, leaving 10 words of slack; the mechanism gets the most because it carries the idea.
 WORKSHOP_BUDGET = {
     "title": 10,
@@ -456,8 +457,11 @@ def plan_research(run: Run) -> list[Dispatch]:
             f"Develop your sketches into {cfg.ideas_per_generator} idea cards. {web}; sandboxed "
             "code (`brainswarm sandbox run`) is allowed for sanity checks, which are never "
             "evidence that an idea works. Set `raw_index` to the sketch number a card develops, "
-            "or null for an idea you found while researching. Each card must stay under "
-            f"{CARD_WORD_CAP} words. Be concrete and specific."
+            "or null for an idea you found while researching. Be concrete and specific.\n\n"
+            f"## Word budget\n\nEach card is capped at {CARD_WORD_CAP} words (all fields except "
+            "`sources`). Suggested budget per card: "
+            + ", ".join(f"{k} {v}" for k, v in WORKSHOP_BUDGET.items())
+            + " words."
         )
         out.append(_dispatch(run, "research", g, "generator", a.model, body, CARD_SCHEMA))
     return out

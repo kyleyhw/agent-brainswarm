@@ -1,0 +1,118 @@
+{
+  "brief": "Ways to make a multi-agent idea-generation system (independent generators, justified critique, development of selected ideas, LLM-judged pairwise finals) produce top ideas that measured outcomes or independent raters prefer over a single strong agent's self-selected top 3 for the same brief. Hard rules: each change must be implementable in this codebase and testable with the existing benchmark.",
+  "criteria": [
+    {
+      "name": "legal_and_ethical",
+      "kind": "gate",
+      "definition": "No deception of users or raters and no violation of model providers' terms of use.",
+      "anchors": [],
+      "command": null,
+      "user_stated": false
+    },
+    {
+      "name": "implementable_in_codebase",
+      "kind": "gate",
+      "definition": "The change can be built within the existing system (a Python state machine that plans and checks each phase, role-agent prompts, a Bradley-Terry / Plackett-Luce scoring module, a sandbox for scratch code, and an idea library across runs), including by adding or changing phases, roles, prompts, schedules, scoring or the models assigned to roles. It fails only if it requires replacing the system.",
+      "anchors": [],
+      "command": null,
+      "user_stated": true
+    },
+    {
+      "name": "testable_with_benchmark",
+      "kind": "gate",
+      "definition": "Its effect can be tested with the existing benchmark: for a brief, the system's top 3 ideas and a single strong agent's self-selected top 3 (from 20 ideas) are rendered in one card format, blinded, and rated and ranked by independent raters (a counterbalanced panel of LLM reviewers, or humans) or compared on measured outcomes where the brief allows them. It fails only if no such comparison could show its effect.",
+      "anchors": [],
+      "command": null,
+      "user_stated": true
+    },
+    {
+      "name": "beats_baseline",
+      "kind": "judged",
+      "definition": "How large and how plausible the gain in the system's top ideas over the single agent's self-selected top 3 would be, and which stage it improves (generation, critique, development, or selection of the top ideas).",
+      "anchors": [
+        "high: a large gain through a named stage, with a reason one strong agent working alone cannot match it",
+        "mid: a real but modest gain, or a large one resting on an untested assumption",
+        "low: makes the process more elaborate without a reason the top ideas would improve"
+      ],
+      "command": null,
+      "user_stated": false
+    },
+    {
+      "name": "measurable_effect",
+      "kind": "judged",
+      "definition": "How cleanly the change's effect could be isolated and detected, independent of how large it is: can it be switched on and off, and can its effect be measured by outcomes rather than only by opinion?",
+      "anchors": [
+        "high: an on/off comparison that isolates the change, with an outcome that can be measured",
+        "mid: isolable, but detectable only through rater opinion",
+        "low: entangled with other changes or only visible in aggregate impressions"
+      ],
+      "command": null,
+      "user_stated": false
+    },
+    {
+      "name": "robust_to_judge_bias",
+      "kind": "judged",
+      "definition": "Whether the gain would survive raters without the known biases of language-model judges (length, polish, position, a model family's own style), rather than coming from exploiting them.",
+      "anchors": [
+        "high: the gain shows up in measured outcomes or in bias-controlled rating",
+        "mid: plausible under unbiased raters but not shown",
+        "low: works mainly by making ideas longer, more polished or more familiar-sounding to the judges"
+      ],
+      "command": null,
+      "user_stated": false
+    },
+    {
+      "name": "value",
+      "kind": "judged",
+      "definition": "Improvement in the ideas users receive for briefs in general, not only on the benchmark.",
+      "anchors": [
+        "high: better ideas on most kinds of brief",
+        "mid: helps on some kinds of brief",
+        "low: helps only on the benchmark"
+      ],
+      "command": null,
+      "user_stated": false
+    },
+    {
+      "name": "feasibility",
+      "kind": "judged",
+      "definition": "Effort and risk to build, and the extra token cost to run and to evaluate. Larger structural changes are acceptable when their cost is proportionate.",
+      "anchors": [
+        "high: days of work, little extra token cost",
+        "mid: one to three weeks, or roughly doubling the run cost",
+        "low: months of work, or a many-fold increase in run cost"
+      ],
+      "command": null,
+      "user_stated": false
+    },
+    {
+      "name": "specificity",
+      "kind": "judged",
+      "definition": "Precise enough that two engineers would build the same change.",
+      "anchors": [
+        "high: names the phase, prompt or algorithm and its parameters",
+        "mid: names the mechanism but leaves key parameters open",
+        "low: a direction such as 'use better prompts'"
+      ],
+      "command": null,
+      "user_stated": false
+    },
+    {
+      "name": "novelty",
+      "kind": "judged",
+      "definition": "Adds something beyond generic advice, or applies a known method in a way well matched to this system. Known methods that fit are not penalised.",
+      "anchors": [
+        "high: a mechanism a practitioner would not have tried first",
+        "mid: a known method adapted with care to this system",
+        "low: generic advice such as 'sample more' or 'use a bigger model' with no adaptation"
+      ],
+      "command": null,
+      "user_stated": false
+    }
+  ],
+  "assumptions": [
+    "'This codebase' is the agent-brainswarm system described in the implementable_in_codebase gate.",
+    "'The existing benchmark' is the blinded single-agent comparison described in the testable_with_benchmark gate.",
+    "This run itself uses a reduced quick size (4 generators x 2 ideas, 2 critic reviews per idea, no development round) with web research off, at the user's request, to keep its cost near 1M new tokens. That limits this run only: ideas about any phase, including development and deeper critique, are in scope."
+  ]
+}

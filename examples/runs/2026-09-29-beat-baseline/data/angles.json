@@ -1,0 +1,118 @@
+{
+  "angles": [
+    {
+      "id": "A001",
+      "proposer": "G01",
+      "text": "Treat final selection as a forecasting problem with a labelled track record: the idea library across runs already holds past finalists and (where run) their blinded benchmark verdicts, so the internal judge can be scored and recalibrated against held-out external outcomes (e.g. fit a Bradley-Terry correction or reweight critic features to predict rater/outcome wins), attacking the stage where a lone agent is weakest, namely choosing its own top 3 without any feedback on its own selection error.",
+      "kind": "angle",
+      "distance": null
+    },
+    {
+      "id": "A002",
+      "proposer": "G01",
+      "text": "Replace argument with manufactured evidence: before the pairwise finals, each surviving idea's single load-bearing claim is converted into a cheap, falsifiable check run in the sandbox (Fermi estimate with stated inputs, toy simulation, minimal prototype, or a counterexample search), and the finals judge sees the check results rather than the prose, so ranking moves from persuasiveness to survived tests, something a single agent self-selecting from 20 ideas never does.",
+      "kind": "angle",
+      "distance": null
+    },
+    {
+      "id": "A003",
+      "proposer": "G02",
+      "text": "Shift the selection stage from 'which ideas are best' to 'which set of 3 is best': treat the final top 3 as a portfolio and pick it by marginal contribution (a set-level objective over Bradley-Terry / Plackett-Luce strengths plus a measured distance between ideas, e.g. embedding or mechanism-tag distance), so the three cards differ in kind and cover different risk profiles. A single agent picking its own top 3 tends to choose three variants of its favourite idea; a swarm with independent generators has the diversity to fill a portfolio.",
+      "kind": "angle",
+      "distance": null
+    },
+    {
+      "id": "A004",
+      "proposer": "G02",
+      "text": "Make the multi-agent system's edge come from information the single agent cannot cheaply obtain: use the sandbox and the cross-run idea library as evidence sources. Critics must attach an executable check (a quick simulation, a back-of-envelope calculation, a prior-art or duplicate lookup against the library of past ideas and outcomes) to each objection, and an idea's survival is scored on checks that passed, not on argument quality. This targets critique and development, and it gives an outcome-based measure, the rate of falsified claims in the top 3, that does not depend on rater taste.",
+      "kind": "angle",
+      "distance": null
+    },
+    {
+      "id": "A005",
+      "proposer": "G03",
+      "text": "Embed the competitor inside the pipeline as a control arm. Add a phase that runs the single-strong-agent baseline itself (20 ideas, self-selected top 3) for the same brief before generation, then use those three ideas in two ways: (a) as explicit negative anchors in generator prompts, so independent generators are steered away from the modal region of idea-space the baseline will occupy rather than merely told to 'be diverse'; (b) as fixed reference opponents in the Bradley-Terry / Plackett-Luce finals, so an idea enters the system's top 3 only if its fitted strength exceeds the baseline anchors' with a stated margin, i.e. selection is 'beat the check' rather than 'best of ours'. A single agent cannot serve as its own control; the anchor also gives a within-run, on/off measurable effect (win rate vs anchors) before any external rating.",
+      "kind": "angle",
+      "distance": null
+    },
+    {
+      "id": "A006",
+      "proposer": "G03",
+      "text": "Treat the cross-run idea library as a training set for a learned selection prior, not an archive. After each benchmark run, record for every finalist its structural features (mechanism named vs theme, presence of a runnable check, number of surviving critiques, novelty distance to library neighbours, length) together with its blinded rater outcome vs the single-agent top 3. Fit a small logistic or ridge model mapping features to win probability and inject it as a Bayesian prior on Plackett-Luce strengths (or as a prior-weighted seeding of the pairwise schedule), and feed the top positive-weight features back into the critic rubric. The gain is a memory across briefs that one agent working on a single brief has no access to; it is isolable by zeroing the prior, and it self-corrects as the library grows.",
+      "kind": "angle",
+      "distance": null
+    },
+    {
+      "id": "A007",
+      "proposer": "G04",
+      "text": "Define the target as the complement of the baseline's own distribution: use the single strong agent (same model, same brief) as a reference likelihood model and have the system spend its generation, critique and selection budget only on ideas the baseline would be unlikely to produce or to self-select but that still survive critique, since ideas inside the baseline's mode can at best tie it.",
+      "kind": "angle",
+      "distance": null
+    },
+    {
+      "id": "A008",
+      "proposer": "G04",
+      "text": "Attribute the gain by stage using crossover arms before optimizing anything: run the system's selector on the baseline's 20-idea pool and the baseline's self-selection on the system's pool (and swap development on or off), so each pipeline stage's lift over the baseline is measured separately, and then put the redesign effort into the stage whose crossover shows the baseline wins or ties.",
+      "kind": "angle",
+      "distance": null
+    }
+  ],
+  "domains": [
+    {
+      "id": "D001",
+      "proposer": "G01",
+      "text": "Germinal-centre affinity maturation in immunology: B-cell clones undergo somatic hypermutation, compete for limited antigen and T-follicular-helper signals, and expand in proportion to binding affinity over repeated cycles, with explicit rounds of dark-zone mutation and light-zone selection and a mechanism that retains memory cells from earlier cycles.",
+      "kind": "domain",
+      "distance": "far"
+    },
+    {
+      "id": "D002",
+      "proposer": "G01",
+      "text": "Multi-environment crop variety trials in plant breeding: candidate lines are grown across deliberately varied sites and seasons, genotype-by-environment interaction is modelled explicitly, and varieties are released for stability across environments (e.g. Finlay-Wilkinson regression, AMMI) rather than for peak yield at one trial plot.",
+      "kind": "domain",
+      "distance": "far"
+    },
+    {
+      "id": "D003",
+      "proposer": "G02",
+      "text": "Evolutionary biology and quality-diversity search (MAP-Elites, novelty search, niche speciation): an archive keeps the best individual in each behavioural niche instead of a single global optimum, and fitness sharing penalises crowding. Transfer: the idea library becomes a niche archive, and the finals draw one champion per niche.",
+      "kind": "domain",
+      "distance": "far"
+    },
+    {
+      "id": "D004",
+      "proposer": "G02",
+      "text": "Clinical trial design and adaptive randomisation (multi-armed bandits, group-sequential stopping for futility, blinded independent adjudication of endpoints): allocate more patients to winning arms and stop losing arms early. Transfer: allocate pairwise comparisons and development tokens adaptively by successive halving on Plackett-Luce posteriors, and use a separate adjudicator role that never saw the development stage.",
+      "kind": "domain",
+      "distance": "far"
+    },
+    {
+      "id": "D005",
+      "proposer": "G03",
+      "text": "Agricultural variety trials with check cultivars. Plant breeders never rank candidate lines in isolation: a known check variety is sown in every block, candidate yield is expressed as a percentage of the check, and the check's spatial variation is used to correct for field heterogeneity (soil gradients, edge effects), the analogue of judge position and family bias. Multi-environment trials then advance only lines that beat the check across sites, and recurrent selection recombines survivors before the next cycle. Mechanisms to transfer: a reference entry in every pairwise block, blocking designs against positional bias, advancement thresholds stated relative to the check, and recombination of surviving ideas as the development step.",
+      "kind": "domain",
+      "distance": "far"
+    },
+    {
+      "id": "D006",
+      "proposer": "G03",
+      "text": "Germinal-centre affinity maturation in the immune system. B cells undergo cycles of somatic hypermutation in the dark zone, then compete in the light zone for a fixed antigen and for a scarce budget of T-follicular-helper signals; only the clones that bind better than their competitors receive help and re-enter for another mutation round, the rest die. Output is split into short-lived plasma cells (this run's answer) and memory B cells (carried forward to future encounters). Mechanisms to transfer: mutation of survivors rather than fresh sampling, a fixed target (the brief plus a frozen rubric) against which relative binding is measured, a strictly limited 'help' budget so critique and development tokens go only to ideas at the survival boundary, cyclic re-entry instead of a single pass, and a memory compartment that is the idea library.",
+      "kind": "domain",
+      "distance": "far"
+    },
+    {
+      "id": "D007",
+      "proposer": "G04",
+      "text": "Immunology: germinal-center affinity maturation, where B-cell clones mutate and must compete for scarce T-follicular-helper signals, so selection pressure comes from rationed help that only the best binders obtain, repeated over cycles, rather than from a single scoring pass.",
+      "kind": "domain",
+      "distance": "far"
+    },
+    {
+      "id": "D008",
+      "proposer": "G04",
+      "text": "Sensory science and food panel testing: triangle and duo-trio discrimination tests that first establish whether trained tasters can reliably tell two samples apart at all, before any preference is asked, and that use palate cleansing and randomized serving order to separate real differences from presentation effects.",
+      "kind": "domain",
+      "distance": "far"
+    }
+  ]
+}

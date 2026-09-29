@@ -1,0 +1,115 @@
+{
+  "note": "subagents only; the referee session is not included; output is an estimate where final usage was not logged",
+  "phases": {
+    "audit": {
+      "input": 8,
+      "cache_write": 16874,
+      "cache_read": 41673,
+      "output_logged": 53,
+      "output_estimated": 2601,
+      "messages": 4,
+      "messages_without_final_usage": 4,
+      "agents": 1
+    },
+    "idea_clusters": {
+      "input": 6,
+      "cache_write": 13949,
+      "cache_read": 22512,
+      "output_logged": 29,
+      "output_estimated": 283,
+      "messages": 3,
+      "messages_without_final_usage": 3,
+      "agents": 1
+    },
+    "research": {
+      "input": 464,
+      "cache_write": 171314,
+      "cache_read": 891606,
+      "output_logged": 36446,
+      "output_estimated": 51647,
+      "messages": 52,
+      "messages_without_final_usage": 42,
+      "agents": 8
+    },
+    "finals": {
+      "input": 228,
+      "cache_write": 129371,
+      "cache_read": 303201,
+      "output_logged": 8797,
+      "output_estimated": 13024,
+      "messages": 24,
+      "messages_without_final_usage": 18,
+      "agents": 6
+    },
+    "boundary": {
+      "input": 228,
+      "cache_write": 100300,
+      "cache_read": 283408,
+      "output_logged": 7322,
+      "output_estimated": 9633,
+      "messages": 24,
+      "messages_without_final_usage": 17,
+      "agents": 6
+    },
+    "angle_clusters": {
+      "input": 6,
+      "cache_write": 13682,
+      "cache_read": 24875,
+      "output_logged": 28,
+      "output_estimated": 131,
+      "messages": 3,
+      "messages_without_final_usage": 3,
+      "agents": 1
+    },
+    "ideate": {
+      "input": 122,
+      "cache_write": 53705,
+      "cache_read": 162355,
+      "output_logged": 2988,
+      "output_estimated": 5247,
+      "messages": 16,
+      "messages_without_final_usage": 13,
+      "agents": 4
+    },
+    "checker": {
+      "input": 24,
+      "cache_write": 77818,
+      "cache_read": 177144,
+      "output_logged": 150,
+      "output_estimated": 3559,
+      "messages": 12,
+      "messages_without_final_usage": 12,
+      "agents": 3
+    },
+    "angles": {
+      "input": 120,
+      "cache_write": 60567,
+      "cache_read": 137657,
+      "output_logged": 4570,
+      "output_estimated": 6846,
+      "messages": 15,
+      "messages_without_final_usage": 12,
+      "agents": 4
+    },
+    "critique": {
+      "input": 212,
+      "cache_write": 128002,
+      "cache_read": 241094,
+      "output_logged": 34914,
+      "output_estimated": 44084,
+      "messages": 16,
+      "messages_without_final_usage": 10,
+      "agents": 4
+    },
+    "other": {
+      "input": 6,
+      "cache_write": 11151,
+      "cache_read": 20488,
+      "output_logged": 44,
+      "output_estimated": 52,
+      "messages": 3,
+      "messages_without_final_usage": 3,
+      "agents": 1
+    }
+  }
+}

@@ -1,6 +1,7 @@
 """End-to-end pipeline runs with fake agents (fixture mode): zero tokens."""
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -242,16 +243,17 @@ def test_rebuilt_report_does_not_repeat_limitations(tmp_path: Path) -> None:
     run = new_run(tmp_path)
     drive(run)
     pipeline._log(run, "critique", ["generic filter: 3 failed the substitution test"])
+    pipeline._log(run, "checker", ["generic filter: 0 failed the substitution test"])
     for _ in range(3):
         pipeline._log(run, "report", report.build(run))
     digest = run.path("digest.txt").read_text()
     assert digest.count("Limitations:") == 1
     assert digest.count("3 failed the substitution test") == 1
+    assert not re.search(r"\b0 failed", digest)  # a zero count is not a limitation
 
 
 def test_checker_compares_against_a_different_cluster(tmp_path: Path) -> None:
     # Regression: comparing with a close relative flagged specific critiques of shared flaws.
-    import re
 
     run = new_run(tmp_path)
     drive(run)

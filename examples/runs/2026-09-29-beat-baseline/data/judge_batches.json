@@ -1,0 +1,218 @@
+[
+  {
+    "dispatch_id": "finals-001",
+    "pairs": [
+      [
+        "I006",
+        "I004"
+      ],
+      [
+        "I008",
+        "I004"
+      ],
+      [
+        "I006",
+        "I005"
+      ],
+      [
+        "I003",
+        "I004"
+      ]
+    ],
+    "model": "opus"
+  },
+  {
+    "dispatch_id": "finals-002",
+    "pairs": [
+      [
+        "I004",
+        "I003"
+      ],
+      [
+        "I005",
+        "I006"
+      ],
+      [
+        "I004",
+        "I006"
+      ],
+      [
+        "I004",
+        "I008"
+      ]
+    ],
+    "model": "opus"
+  },
+  {
+    "dispatch_id": "finals-003",
+    "pairs": [
+      [
+        "I001",
+        "I007"
+      ],
+      [
+        "I005",
+        "I001"
+      ],
+      [
+        "I007",
+        "I002"
+      ],
+      [
+        "I002",
+        "I006"
+      ]
+    ],
+    "model": "fable"
+  },
+  {
+    "dispatch_id": "finals-004",
+    "pairs": [
+      [
+        "I007",
+        "I001"
+      ],
+      [
+        "I001",
+        "I005"
+      ],
+      [
+        "I006",
+        "I002"
+      ],
+      [
+        "I002",
+        "I007"
+      ]
+    ],
+    "model": "fable"
+  },
+  {
+    "dispatch_id": "finals-005",
+    "pairs": [
+      [
+        "I007",
+        "I005"
+      ],
+      [
+        "I003",
+        "I001"
+      ],
+      [
+        "I008",
+        "I003"
+      ],
+      [
+        "I002",
+        "I008"
+      ]
+    ],
+    "model": "sonnet"
+  },
+  {
+    "dispatch_id": "finals-006",
+    "pairs": [
+      [
+        "I008",
+        "I002"
+      ],
+      [
+        "I003",
+        "I008"
+      ],
+      [
+        "I005",
+        "I007"
+      ],
+      [
+        "I001",
+        "I003"
+      ]
+    ],
+    "model": "sonnet"
+  },
+  {
+    "dispatch_id": "boundary-001",
+    "pairs": [
+      [
+        "I003",
+        "I006"
+      ],
+      [
+        "I006",
+        "I007"
+      ]
+    ],
+    "model": "opus"
+  },
+  {
+    "dispatch_id": "boundary-002",
+    "pairs": [
+      [
+        "I006",
+        "I003"
+      ],
+      [
+        "I007",
+        "I006"
+      ]
+    ],
+    "model": "opus"
+  },
+  {
+    "dispatch_id": "boundary-003",
+    "pairs": [
+      [
+        "I007",
+        "I008"
+      ],
+      [
+        "I004",
+        "I007"
+      ]
+    ],
+    "model": "fable"
+  },
+  {
+    "dispatch_id": "boundary-004",
+    "pairs": [
+      [
+        "I007",
+        "I004"
+      ],
+      [
+        "I008",
+        "I007"
+      ]
+    ],
+    "model": "fable"
+  },
+  {
+    "dispatch_id": "boundary-005",
+    "pairs": [
+      [
+        "I003",
+        "I007"
+      ],
+      [
+        "I006",
+        "I008"
+      ]
+    ],
+    "model": "sonnet"
+  },
+  {
+    "dispatch_id": "boundary-006",
+    "pairs": [
+      [
+        "I008",
+        "I006"
+      ],
+      [
+        "I007",
+        "I003"
+      ]
+    ],
+    "model": "sonnet"
+  }
+]

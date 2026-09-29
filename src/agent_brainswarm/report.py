@@ -344,7 +344,7 @@ def build(run: Run) -> list[str]:
         for e in log
         if e["phase"] != "report"
         for x in e["lines"]
-        if "failed" in x or x.startswith("dropped")
+        if ("failed" in x and not re.search(r"\b0 failed\b", x)) or x.startswith("dropped")
     ]
     limitations += list(dict.fromkeys(failed_lines))
     if final.get("method") == "laplace":

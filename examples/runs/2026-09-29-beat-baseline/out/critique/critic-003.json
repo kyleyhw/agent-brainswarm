@@ -1,0 +1,156 @@
+{
+  "critiques": [
+    {
+      "idea_id": "I001",
+      "target": "Accept a variant iff it wins both orderings against its parent and one against the rank-3 incumbent.",
+      "mechanism": "The acceptance test is a weak filter with a high null acceptance rate, and it is applied to k=3 variants per parent, so under the null (edit neither helps nor harms) roughly half of boundary ideas are replaced each cycle by a mutant that is no better. Combined with Huang et al. 2023 (edits without a reliable external signal are often neutral or harmful), the expected quality change per cycle is close to zero while the in-loop judge's idiosyncrasies get selected for.",
+      "evidence": "With a variant equal to its parent and a fair judge, P(win both orderings vs parent) = 0.25; P(win at least one of two vs an incumbent it is slightly weaker than, p=0.4) = 1-0.36 = 0.64; per-variant null acceptance ~0.16-0.19. With three variants, P(at least one accepted | null) = 1-0.81^3 ~ 0.47; across 3 cycles ~0.85. Power when the variant is truly better (p=0.7 vs parent, 0.6 vs incumbent) is 0.49*0.84 ~ 0.41, so the likelihood ratio of the test is only ~2. Position bias b lowers both-order wins to 0.25-b^2, which does not rescue it.",
+      "severity": "major",
+      "falsifier": "A held-out-judge child-beats-parent rate materially above 50% in the cheapest test, or a stricter rule (e.g. win 3 of 4 vs parent with a fresh judge family, Bonferroni over the k variants) that keeps null acceptance below ~10%.",
+      "gate": null
+    },
+    {
+      "idea_id": "I001",
+      "target": "Top-k identification bandits (LUCB; Kalyanakrishnan et al. 2012) need far fewer samples when effort concentrates near the cutoff; MATURE concentrates refinement the same way.",
+      "mechanism": "LUCB allocates measurements to identify a fixed top-k set; the objective here is the delivered quality of the top 3, and refinement changes the arms. Improving a secure rank-1 or rank-2 idea by delta raises delivered quality by delta directly; improving a rank-4 idea by delta helps only if it overtakes rank 3, and then by less than delta. Under equal edit success probability, refining the secure top ideas dominates refining boundary ideas, so the analogy points the budget in the wrong direction. The card's own biological source says the same.",
+      "evidence": "Let true qualities q1>q2>q3>q4. Gain from delta on idea 1: delta. Gain from delta on idea 4: max(0, q4+delta-q3) < delta, and zero if delta < q3-q4. Gitlin, Shulman, Nussenzweig (2014, Nature 509) is cited by the card itself: germinal centres give the most T-cell help to the highest-affinity clones, not the marginal ones.",
+      "severity": "major",
+      "falsifier": "An ablation in which refining the point-estimate top 3 (with the same contest rule) yields a lower benchmark win rate than refining the rank-3/4 boundary set at equal tokens.",
+      "gate": null
+    },
+    {
+      "idea_id": "I001",
+      "target": "Round 0: 3 comparisons per idea, both orders. Existing BT module, 200 bootstrap resamples, 10th-90th percentile rank interval.",
+      "mechanism": "Three comparisons per idea gives a comparison graph with 1.5n edges. Bootstrapping such a sparse graph frequently yields disconnected components and ideas with all-wins or all-losses, for which the unregularised Bradley-Terry MLE does not exist (strength diverges). The resulting rank intervals are artefacts of the fit rather than uncertainty estimates, and, as the card concedes, they will straddle rank 3/4 for almost every idea, so the boundary set collapses to 'the six ideas nearest the point-estimate cutoff'.",
+      "evidence": "For n=20 ideas, 30 pairs; a bootstrap resample keeps ~63% unique edges (~19 edges on 20 nodes), which is at the connectivity threshold for a random graph. An idea with true win probability 0.8 wins all 6 of its votes with probability 0.8^6 ~ 26%, giving an infinite MLE strength in a plain BT fit. The card states: 'Sparse round-0 data widens every interval, so H does all the selecting'.",
+      "severity": "minor",
+      "falsifier": "The existing BT module fits MAP with a Gaussian prior (or adds pseudo-comparisons) and the bootstrap intervals show a bimodal P(top3) distribution rather than everything near 0.5.",
+      "gate": null
+    },
+    {
+      "idea_id": "I001",
+      "target": "MATURE versus uniform development of the point-estimate top 6",
+      "mechanism": "The two arms differ in at least two ways at once: (a) which ideas receive effort (boundary set vs top 6) and (b) how the outputs are handled (single-edit mutants gated by an accept/reject contest vs unconditional development). Given the sparse round-0 intervals, the boundary set will nearly coincide with the point-estimate top 6, so any measured difference is attributable to the contest gating, not the LUCB-style targeting that is the card's pitch.",
+      "evidence": "Card's own operational spec: 'keep 6 with P(top3) nearest 0.5' selects six ideas; with wide intervals this is the six around the cutoff, overlapping heavily with the point-estimate top 6. Two changed factors and one comparison cannot isolate either.",
+      "severity": "minor",
+      "falsifier": "A 2x2 test (targeting on/off x contest gating on/off) or a demonstration that the boundary set and the point-estimate top 6 overlap by fewer than 3 ideas on typical runs.",
+      "gate": null
+    },
+    {
+      "idea_id": "I008",
+      "target": "fix theta of past finalists to external BT strengths",
+      "mechanism": "The existing benchmark externally rates only the system's delivered top 3 (plus the baseline's 3, which have no internal votes). The externally-anchored theta therefore exist for three ideas per brief that were selected because internal judges rated them highest, so their theta spread is heavily range-restricted. Judge discrimination a_j is the slope of vote logit on (theta_i - theta_k); with tiny theta differences, the Fisher information per vote about a_j is small, so a_j estimates from ~300 votes have standard errors larger than plausible between-judge differences. Range restriction also attenuates every judge's apparent reliability toward zero, which is the card's own 'all judges equally weak' failure mode, produced by the data design rather than by the judges.",
+      "evidence": "Var(a_j) ~ 1 / (n_j * Delta^2 * p(1-p)). With Delta ~ 0.3 among top-3 finalists (vs ~2 across a full pool) and p ~ 0.5: Var ~ 44/n_j. For sd(a_j) = 0.25, n_j ~ 700 votes per judge; with 300 votes total across several judges, sd(a_j) > 0.6. Range restriction attenuating validity coefficients is standard (Thorndike case II correction).",
+      "severity": "major",
+      "falsifier": "External ratings for all finalists (not just the top 3) on each benchmarked brief, giving Delta comparable to the pool spread; or posterior sd of a_j below 0.2 on the existing data.",
+      "gate": null
+    },
+    {
+      "idea_id": "I008",
+      "target": "judges sampled proportional to max(a_j,0)^2 (Fisher information per vote)",
+      "mechanism": "Squaring noisy a_j estimates and using them as sampling weights amplifies estimation noise: the judge that happened to be lucky on past finalists gets a disproportionate share of votes. It also concentrates the budget on one or two (model, prompt) pairs, discarding the error decorrelation that is the reason a panel beats a single judge (Verga et al. 2024, the card's own citation). Prompt variants of the same model are highly correlated judges, so 'reliable' variants of one model will dominate and the effective panel size shrinks toward one.",
+      "evidence": "With a_j = (1.3, 1.0, 0.8, 0.5), weights are 1.69:1:0.64:0.25, i.e. 47% of 90% of the budget to one judge; with sd(a_j) ~ 0.6 (see previous critique), the ordering of a_j is itself unreliable. PoLL (arXiv:2404.18796) gains come from aggregating disparate model families, not from picking the single best.",
+      "severity": "major",
+      "falsifier": "Held-out agreement with external rankings improves under reliability sampling versus uniform at equal vote count, with a_j posteriors tight enough (sd < 0.2) that the weight ordering is stable across refits.",
+      "gate": null
+    },
+    {
+      "idea_id": "I008",
+      "target": "compare held-out-brief pairwise agreement with external rankings and Kendall tau of theta vs external strengths",
+      "mechanism": "The external reference covers three system finalists per brief, so the offline test has three externally-ordered pairs per brief and a Kendall tau that can take only four values. Distinguishing uniform from judge-aware BT requires a large effect or many dozens of briefs, so the proposed cheapest test is underpowered on the data the card says it needs.",
+      "evidence": "Two-proportion test for pairwise agreement 0.60 vs 0.70 at 80% power, alpha 0.05: n ~ (1.96+0.84)^2 * (0.6*0.4 + 0.7*0.3) / 0.01 ~ 353 pairs per arm, i.e. ~118 briefs at 3 pairs each. The card assumes ~300 votes, i.e. ~10 briefs.",
+      "severity": "major",
+      "falsifier": "External labels for all finalists per brief (raising pairs per brief from 3 to ~45), or an observed effect far larger than 10 points of agreement.",
+      "gate": null
+    },
+    {
+      "idea_id": "I008",
+      "target": "Every pair shown in both orders.",
+      "mechanism": "When every pair is judged in both orders, a per-judge additive position bias b_j cancels exactly in the aggregate for that pair, so estimating and subtracting b_j adds parameters without changing the estimated theta. The position-bias component of the model is redundant with the schedule the card itself mandates; only a_j and c_j can matter, which shrinks the claimed bias-correction story to self-preference alone.",
+      "evidence": "For a pair judged in both orders, the summed log-odds is [a(theta_i-theta_k)+b] + [a(theta_i-theta_k)-b] = 2a(theta_i-theta_k); b drops out. Zheng et al. 2023 recommend exactly this swap-and-aggregate as the fix for position bias.",
+      "severity": "minor",
+      "falsifier": "A schedule where some pairs are judged in one order only (then b_j matters), or a demonstration that b_j interacts non-additively with theta differences.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002",
+      "target": "a 40%-to-50% difference needs about 390 per arm at 80% power, hand-calculated",
+      "mechanism": "The arithmetic is right but the assumed 10-point lift is implausible given how the memory is partitioned. Records are split by operator (8) and targeted criterion (~6), then thinned by the cosine>=0.6 filter, so the warm-up leaves a handful of observations per cell; the Beta posteriors are wide and Thompson sampling behaves close to uniform through the 30 test briefs. Adaptive operator selection in evolutionary computation yields modest gains even with thousands of in-run evaluations.",
+      "evidence": "Warm-up: 20 briefs x ~18 contests = 360 records over ~48 (operator, criterion) cells ~ 7.5 per cell before similarity thinning. Beta(1+3.5, 1+4) has sd ~ 0.16, larger than plausible operator win-rate differences (~0.05-0.10). If the best operator is 0.50 vs a 0.42 mean and is identified half the time, expected lift ~0.04, needing ~2400 contests per arm rather than 390. Fialho et al. 2010 report operator-selection gains over uniform on the order of a few percent of evaluations, not a 25% relative improvement in per-application success.",
+      "severity": "major",
+      "falsifier": "Empirical operator win rates in the warm-up library differing by more than 15 points within a criterion, or a pooled (criterion-agnostic) model that concentrates the data enough to identify winners in 20 briefs.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002",
+      "target": "Primary measured outcome: child-beats-parent rate",
+      "mechanism": "The child-beats-parent verdict is produced by the in-loop LLM judge, so it is a rater opinion, not a measured outcome. Optimising operator choice against it selects the edit types that most reliably please that judge (e.g. 'quantify the claim', 'add falsifiable test' add judge-attractive surface features), which is Goodhart on the internal judge rather than a gain visible to independent raters. The card concedes 'Memory learns in-loop judge quirks, not quality' but still labels the proxy as measured.",
+      "evidence": "Rubric definition of measurable_effect: outcomes 'rather than only by opinion'. Panickssery et al. 2024 and Zheng et al. 2023 show LLM judge preferences carry systematic style biases that a bandit will exploit as reward.",
+      "severity": "major",
+      "falsifier": "Child-beats-parent measured by a held-out judge family (or humans) also rising in the memory arm, and the benchmark secondary showing a gain.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002",
+      "target": "records with cosine sim>=0.6",
+      "mechanism": "Cosine similarity thresholds are not portable across embedding models: on some models unrelated briefs already score 0.5-0.7, on others related briefs score 0.4. A fixed 0.6 either admits nearly every record (memory becomes global, similarity conditioning is inert) or almost none (falls back to 'all records when fewer than 10 match', again global). Either way the novel part of the card, brief-conditioned transfer, is switched off by the parameter rather than tested.",
+      "evidence": "The card gives no embedding model and no calibration; the fallback rule guarantees that in low-match regimes the behaviour equals an unconditioned bandit.",
+      "severity": "minor",
+      "falsifier": "A calibration step that sets the threshold at a quantile of pairwise brief similarities in the library (e.g. top 20%), or an ablation showing similarity-weighted and unweighted memory differ in operator choice.",
+      "gate": null
+    },
+    {
+      "idea_id": "I002",
+      "target": "graft a rival's strongest component",
+      "mechanism": "This operator (and 'add falsifiable test', 'quantify the claim') necessarily adds material, while the contest loop it depends on (I001) requires 'same-length single-edit variants' with a 10% length cap. Either the operator taxonomy violates the parent card's length control, re-opening length bias in the contest, or the operators are hobbled and their measured win rates reflect the cap rather than the edit type.",
+      "evidence": "I001 operational constraint: 'k=3 same-length single-edit variants' and 'a 10% length cap'. Grafting a component from another idea into a card without removing something is not a same-length edit.",
+      "severity": "minor",
+      "falsifier": "Operators defined as substitutions (remove-then-add within the cap) with the cap enforced by the mutator prompt and verified by word count before the contest.",
+      "gate": null
+    },
+    {
+      "idea_id": "I007",
+      "target": "Label: fraction of counterbalanced external comparisons it wins against the baseline's three cards.",
+      "mechanism": "The label is relative to a brief-specific opponent set, so its mean is driven by how strong that brief's baseline happened to be, not by the finalist's quality within its run. Features are z-scored per run but the label is not, so with ~10 labels per brief and ~15 briefs the between-brief variance in labels is a dominant nuisance that the L2-regularised head will fit with whatever features happen to correlate with brief difficulty. Each label is also a proportion from only six comparisons and is therefore very noisy.",
+      "evidence": "Binomial label from 6 comparisons at p=0.5 has sd sqrt(0.25/6) ~ 0.20. The card itself lists 'Brief heterogeneity swamps ~10 labels per brief' as a failure mode but offers no per-brief centring or random effect in the spec.",
+      "severity": "major",
+      "falsifier": "Adding a per-brief intercept (or centring label logits within brief) and showing leave-one-brief-out AUC exceeds internal BT by more than its standard error.",
+      "gate": null
+    },
+    {
+      "idea_id": "I007",
+      "target": "At selection, zero nuisance terms so they absorb bias without being rewarded.",
+      "mechanism": "Zeroing the word-count and hedge terms removes only the label panel's direct preference for those features. The internal BT strength, which keeps its (large, prior-anchored) coefficient, was produced by internal LLM judges with the same verbosity and self-preference biases, so length is still rewarded through BT. The LC-AlpacaEval move the card borrows works because length is regressed out of the metric itself; here the analogous step, residualising BT on the nuisance covariates before it enters the score, is absent.",
+      "evidence": "Dubois et al. 2024 (arXiv:2404.04475) regress the preference on length and zero that term in the metric being reported. Zheng et al. 2023 show the internal judges that produce BT have the verbosity bias, so BT is itself a length-contaminated feature.",
+      "severity": "minor",
+      "falsifier": "Showing the partial correlation between selected-idea word count and BT strength is near zero in existing runs, or residualising BT on length before fitting.",
+      "gate": null
+    },
+    {
+      "idea_id": "I007",
+      "target": "Replace the final top-3 cut with a regularised logistic model",
+      "mechanism": "The head can only reorder existing finalists, so its ceiling is the gap between the externally-best 3 finalists and the current top 3, typically one swap. Detecting such a reordering gain with ~150 noisily-labelled finalists across ~12 features is marginal: the standard error of a leave-one-brief-out AUC at that sample size is about the size of the improvement one could hope for, so the offline test will mostly report noise even if the head is correct.",
+      "evidence": "15 briefs x ~10 finalists = 150 labelled items; SE of AUC with ~75 positives/negatives is roughly 0.04-0.05 (Hanley-McNeil), so a 0.05 AUC gain is ~1 SE. Si et al. 2024 (arXiv:2409.04109) found LLM ranker-expert agreement is weak, which bounds how much systematic (learnable) error there is versus irreducible noise.",
+      "severity": "minor",
+      "falsifier": "A LOBO AUC gain over internal BT of more than 2 SE on the existing library, or a top-3 win-rate gain on later briefs that survives a different-family panel.",
+      "gate": null
+    },
+    {
+      "idea_id": "I007",
+      "target": "panel-rate all finalists once (~10 x 3 baseline cards x 2 orders)",
+      "mechanism": "The training labels and the benchmark's evaluation panel would come from the same rating procedure unless a second family is reserved. The card's own assumption requires the training panel to differ from the eval panel, which means either doubling panel families (extra cost not in the effort estimate) or shrinking the counterbalanced eval panel by removing the training family, which weakens the very benchmark used to claim the gain.",
+      "evidence": "Card assumption: 'Training labels come from humans or a model family different from the eval panel'; benchmark definition: 'a counterbalanced panel of LLM reviewers'. Removing a family from a counterbalanced panel reduces its bias-cancelling coverage.",
+      "severity": "minor",
+      "falsifier": "Human labels for the ~150 finalists (cost stated), or an evaluation showing gains transfer across held-out judge families with the panel intact.",
+      "gate": null
+    }
+  ],
+  "ranking": ["I001", "I007", "I008", "I002"],
+  "novelty_ranking": ["I002", "I001", "I007"],
+  "ratings": [
+    {"idea_id": "I001", "upside": 4, "probability": 3},
+    {"idea_id": "I008", "upside": 3, "probability": 2},
+    {"idea_id": "I002", "upside": 3, "probability": 2},
+    {"idea_id": "I007", "upside": 3, "probability": 3}
+  ]
+}

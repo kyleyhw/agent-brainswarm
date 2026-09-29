@@ -1,0 +1,14 @@
+brainswarm 20260929-182309-3ff0: 8 cards, 8 finalists (quick/balanced)
+Top families:
+1. Boundary-targeted help budget with survivor-mutation cycles [I001]: rank 1 (95% 1-6), P(top 5) 96%, mean win 76%
+2. Loss-conditioned revision under a fixed card budget with a two-order verifier gate [I004]: rank 2 (95% 1-6), P(top 5) 94%, mean win 67%
+3. Claim ledger with executable checks; survival scored on checks passed [I005]: rank 3 (95% 1-7), P(top 5) 85%, mean win 64%
+4. Top-3 chosen as a portfolio by posterior expected maximum with mechanism clusters [I003]: rank 4 (95% 1-7), P(top 5) 78%, mean win 54%
+5. Judge-reliability Bradley-Terry fitted to external verdicts [I008]: rank 5 (95% 1-7), P(top 5) 70%, mean win 51%
+6. Check-repair development loop with a cross-run library of check templates [I006]: rank 6 (95% 2-7), P(top 5) 62%, mean win 46%
+Wildcards:
+- Residual selection head learned from the library's blinded verdicts [I007]
+- Cross-run memory of mutation-operator success, chosen by similarity-weighted Thompson sampling [I002]
+Tokens (subagents): ~0.92M new, ~2.31M cache reads
+Limitations: generic filter: 0 failed the substitution test; finals had only 12 judge dispatches; uncertainty uses the Laplace approximation, not the bootstrap; the top-k set changes with the prior scale; treat the cutoff as soft
+Report: /root/.agent-brainswarm/runs/20260929-182309-3ff0/report.html

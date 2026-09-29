@@ -1,0 +1,30 @@
+{"verdicts": [
+{"pair_id": "finals-003-01",
+ "strengths": {
+  "I001": "Concentrates critique and mutation on the ideas whose rank interval straddles the top-3 cutoff, with a fully specified acceptance rule (beat parent in both orders and beat the rank-3 incumbent), so refinement effort goes exactly where selection is uncertain and a lone agent has no equivalent external signal.",
+  "I007": "Uses the benchmark's own blinded external verdicts as training labels for the final cut, zeroes nuisance covariates (length, hedges, family match) at selection time, and can be tested offline on existing runs with leave-one-brief-out AUC before any new generation is spent."},
+ "winner": "I007",
+ "criterion": "robust_to_judge_bias",
+ "reason": "I001's mutants are accepted by in-loop LLM judge preference and so may drift toward whatever that judge rewards (its own admitted overfitting risk), whereas I007 is built to absorb length, polish and family-match effects into terms that are explicitly not rewarded and validates against external blinded outcomes."},
+{"pair_id": "finals-003-02",
+ "strengths": {
+  "I005": "Replaces persuasive critic prose with executed PASS/FAIL artifacts and hides prose from the selector, closing the channel by which eloquence rather than truth advances ideas, with a clean critique.mode=prose|ledger switch.",
+  "I001": "Works on any brief regardless of how quantitative it is, targets development effort at the ideas actually competing for the top-3 slots, and has a concrete equal-token comparison against uniform development of the point-estimate top 6."},
+ "winner": "I001",
+ "criterion": "value",
+ "reason": "I005 concedes that qualitative briefs yield mostly not_checkable claims so s is near zero and discriminates nothing (and its 3-claim floor then ranks good but unquantifiable ideas last), while I001's boundary refinement applies to every kind of brief."},
+{"pair_id": "finals-003-03",
+ "strengths": {
+  "I007": "Stands alone, needs no new phases in the run, and its cheapest test is an offline relabelling of existing finalists with a held-out-brief AUC, so the effect is isolated with essentially one-off panel cost.",
+  "I002": "Negligible run-time token cost, a measured primary outcome (child-beats-parent rate) with an explicit power calculation, and a plausible route for good edit moves to transfer across briefs even when ideas do not."},
+ "winner": "I007",
+ "criterion": "feasibility",
+ "reason": "I002 presupposes a mutation-contest loop that does not yet exist and needs roughly 50 full runs (20 warm-up plus 30 held-out) before its effect could be seen, whereas I007 can be built and evaluated on already-completed runs in about four days."},
+{"pair_id": "finals-003-04",
+ "strengths": {
+  "I002": "Cheap to run and cleanly isolable (memory on versus uniform operators), with a measured outcome and a stated sample size, so a null result would be informative rather than ambiguous.",
+  "I006": "Improves the ideas themselves at the development stage by forcing false or unchecked claims to be fixed or struck under execution feedback, with an accumulating cross-run library of checks that a single agent has no way to borrow from."},
+ "winner": "I006",
+ "criterion": "beats_baseline",
+ "reason": "I002 itself admits its effect may be too small to detect within a few dozen runs and only tunes which edit operator is tried, while I006 directly changes the content of the top-3 cards by making their claims survive execution, a gain a lone agent without prior runs and an external checker cannot reproduce."}
+]}

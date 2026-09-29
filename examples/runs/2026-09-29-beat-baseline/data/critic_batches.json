@@ -1,0 +1,42 @@
+[
+  {
+    "dispatch_id": "critic-001",
+    "ideas": [
+      "I005",
+      "I004",
+      "I006",
+      "I003"
+    ],
+    "model": "opus"
+  },
+  {
+    "dispatch_id": "critic-002",
+    "ideas": [
+      "I002",
+      "I001",
+      "I004",
+      "I003"
+    ],
+    "model": "fable"
+  },
+  {
+    "dispatch_id": "critic-003",
+    "ideas": [
+      "I001",
+      "I008",
+      "I002",
+      "I007"
+    ],
+    "model": "fable"
+  },
+  {
+    "dispatch_id": "critic-004",
+    "ideas": [
+      "I007",
+      "I005",
+      "I008",
+      "I006"
+    ],
+    "model": "sonnet"
+  }
+]

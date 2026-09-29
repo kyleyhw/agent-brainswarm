@@ -1,0 +1,326 @@
+[
+  {
+    "judge_id": "finals-001",
+    "judge_model": "opus",
+    "first": "I006",
+    "second": "I004",
+    "preferred": "second",
+    "criterion": "feasibility",
+    "reason": "I006 assumes the whole I005 claim-ledger infrastructure already exists, roughly doubles development tokens and carries 7 open major critiques. I004 is a self-contained one-week sub-phase at about +25% cost."
+  },
+  {
+    "judge_id": "finals-001",
+    "judge_model": "opus",
+    "first": "I008",
+    "second": "I004",
+    "preferred": "first",
+    "criterion": "measurable_effect",
+    "reason": "I008 can be switched on and off by offline refits on saved runs and scored by held-out agreement with external rankings (Kendall tau) at equal vote count. I004 needs new runs and shows its effect mainly through panel opinion."
+  },
+  {
+    "judge_id": "finals-001",
+    "judge_model": "opus",
+    "first": "I006",
+    "second": "I005",
+    "preferred": "second",
+    "criterion": "feasibility",
+    "reason": "I006 is built on top of I005's ledger, so it cannot be tested without it. It also costs about twice the development tokens and has more open major critiques, while I005 is the cheaper prerequisite at +30-50% critique tokens."
+  },
+  {
+    "judge_id": "finals-001",
+    "judge_model": "opus",
+    "first": "I003",
+    "second": "I004",
+    "preferred": "second",
+    "criterion": "beats_baseline",
+    "reason": "I003 only reshuffles already-scored finalists and by construction can lose on mean-of-3, with a cluster-correlation tau chosen ad hoc. I004 raises the quality of the finalists themselves through independent loss feedback under a bias-controlled acceptance gate."
+  },
+  {
+    "judge_id": "finals-002",
+    "judge_model": "opus",
+    "first": "I004",
+    "second": "I003",
+    "preferred": "first",
+    "criterion": "beats_baseline",
+    "reason": "I004 improves the substance of the delivered ideas through independent loss-conditioned revision. I003 only reorders an existing finalist set, so its gain disappears if finalists are already diverse, and it can lower mean-of-3 by construction."
+  },
+  {
+    "judge_id": "finals-002",
+    "judge_model": "opus",
+    "first": "I005",
+    "second": "I006",
+    "preferred": "first",
+    "criterion": "feasibility",
+    "reason": "I006 depends on I005's ledger already existing, roughly doubles development tokens and has 7 open major critiques. I005 is the self-contained foundation, buildable in about a week at +30-50% critique tokens."
+  },
+  {
+    "judge_id": "finals-002",
+    "judge_model": "opus",
+    "first": "I004",
+    "second": "I006",
+    "preferred": "first",
+    "criterion": "feasibility",
+    "reason": "I004 can be built in about a week at about +25% run cost without prerequisites. I006 needs a claim-ledger infrastructure that does not yet exist, costs about 2x development tokens and carries many unresolved major critiques, including developers weakening claims to trivial ones."
+  },
+  {
+    "judge_id": "finals-002",
+    "judge_model": "opus",
+    "first": "I004",
+    "second": "I008",
+    "preferred": "second",
+    "criterion": "robust_to_judge_bias",
+    "reason": "I008 explicitly models and subtracts position and same-family bias, anchored to external verdicts. I004's acceptance gate still rests on one LLM judge's preference, so its gains may reflect that judge's style."
+  },
+  {
+    "judge_id": "finals-003",
+    "judge_model": "fable",
+    "first": "I001",
+    "second": "I007",
+    "preferred": "second",
+    "criterion": "robust_to_judge_bias",
+    "reason": "I001's mutants are accepted by in-loop LLM judge preference and so may drift toward whatever that judge rewards (its own admitted overfitting risk), whereas I007 is built to absorb length, polish and family-match effects into terms that are explicitly not rewarded and validates against external blinded outcomes."
+  },
+  {
+    "judge_id": "finals-003",
+    "judge_model": "fable",
+    "first": "I005",
+    "second": "I001",
+    "preferred": "second",
+    "criterion": "value",
+    "reason": "I005 concedes that qualitative briefs yield mostly not_checkable claims so s is near zero and discriminates nothing (and its 3-claim floor then ranks good but unquantifiable ideas last), while I001's boundary refinement applies to every kind of brief."
+  },
+  {
+    "judge_id": "finals-003",
+    "judge_model": "fable",
+    "first": "I007",
+    "second": "I002",
+    "preferred": "first",
+    "criterion": "feasibility",
+    "reason": "I002 presupposes a mutation-contest loop that does not yet exist and needs roughly 50 full runs (20 warm-up plus 30 held-out) before its effect could be seen, whereas I007 can be built and evaluated on already-completed runs in about four days."
+  },
+  {
+    "judge_id": "finals-003",
+    "judge_model": "fable",
+    "first": "I002",
+    "second": "I006",
+    "preferred": "second",
+    "criterion": "beats_baseline",
+    "reason": "I002 itself admits its effect may be too small to detect within a few dozen runs and only tunes which edit operator is tried, while I006 directly changes the content of the top-3 cards by making their claims survive execution, a gain a lone agent without prior runs and an external checker cannot reproduce."
+  },
+  {
+    "judge_id": "finals-004",
+    "judge_model": "fable",
+    "first": "I007",
+    "second": "I001",
+    "preferred": "second",
+    "criterion": "beats_baseline",
+    "reason": "I007 can only reorder an existing finalist pool and does nothing until ~15 benchmarked briefs are labelled (with a Goodhart risk if the labels come from the eval panel), whereas I001 improves the top-3 candidates themselves at the development stage within a single run, with an on/off equal-token test and a held-out-family child-beats-parent check."
+  },
+  {
+    "judge_id": "finals-004",
+    "judge_model": "fable",
+    "first": "I001",
+    "second": "I005",
+    "preferred": "first",
+    "criterion": "value",
+    "reason": "I005's own failure analysis concedes that qualitative briefs (including briefs like this one) yield mostly not_checkable claims and s ~ 0 discriminates nothing, and its ~40%-checkable assumption is untested with 6 major critiques open, whereas I001's mechanism works on every kind of brief."
+  },
+  {
+    "judge_id": "finals-004",
+    "judge_model": "fable",
+    "first": "I006",
+    "second": "I002",
+    "preferred": "first",
+    "criterion": "beats_baseline",
+    "reason": "I002 by its own account may be undetectable within a few dozen runs and yields nothing until 20 training briefs have been run, while I006 produces a development-stage improvement on the first run through pass-or-strike repair against executed checks, even though both inherit a dependency on a card-0 loop."
+  },
+  {
+    "judge_id": "finals-004",
+    "judge_model": "fable",
+    "first": "I002",
+    "second": "I007",
+    "preferred": "second",
+    "criterion": "measurable_effect",
+    "reason": "I007's effect can be isolated today with a one-time panel labelling of existing finalists and a leave-one-brief-out comparison against internal BT, whereas I002 needs I001's contest loop built first and about 50 fresh brief runs before its admittedly small effect could be detected."
+  },
+  {
+    "judge_id": "finals-005",
+    "judge_model": "sonnet",
+    "first": "I007",
+    "second": "I005",
+    "preferred": "second",
+    "criterion": "beats_baseline",
+    "reason": "I005 changes what survives critique using tool-grounded evidence a single agent cannot supply, while I007 only re-ranks finalists and needs 15+ labelled briefs and non-panel labels that may not exist."
+  },
+  {
+    "judge_id": "finals-005",
+    "judge_model": "sonnet",
+    "first": "I003",
+    "second": "I001",
+    "preferred": "second",
+    "criterion": "beats_baseline",
+    "reason": "I001 can raise the quality of the delivered ideas through an independent-signal refinement loop, while I003 only re-selects among existing finalists and risks a null result or a loss on mean rating."
+  },
+  {
+    "judge_id": "finals-005",
+    "judge_model": "sonnet",
+    "first": "I008",
+    "second": "I003",
+    "preferred": "second",
+    "criterion": "value",
+    "reason": "I003 needs no hundreds of past external-labelled votes or stable judge reliability, and it improves what users get on any brief by delivering a portfolio, whereas I008's gain depends on untested judge stability and can reduce to uniform weighting."
+  },
+  {
+    "judge_id": "finals-005",
+    "judge_model": "sonnet",
+    "first": "I002",
+    "second": "I008",
+    "preferred": "second",
+    "criterion": "robust_to_judge_bias",
+    "reason": "I008 is built to remove known judge biases and calibrate to external raters, whereas I002 depends on an unbuilt contest loop, needs a warm-up of 20 briefs, and risks learning in-loop judge quirks with effects too small to detect."
+  },
+  {
+    "judge_id": "finals-006",
+    "judge_model": "sonnet",
+    "first": "I008",
+    "second": "I002",
+    "preferred": "first",
+    "criterion": "beats_baseline",
+    "reason": "I008 directly improves the final selection using external verdicts and bias correction, and it is testable offline. I002 depends on an unbuilt contest loop, needs hundreds of contests to detect small effects, and its win/loss labels come from the in-loop judge, so it may learn that judge's quirks rather than quality."
+  },
+  {
+    "judge_id": "finals-006",
+    "judge_model": "sonnet",
+    "first": "I003",
+    "second": "I008",
+    "preferred": "first",
+    "criterion": "measurable_effect",
+    "reason": "I003 is a single switch that can be replayed on saved pairwise records and panel ratings and scored on best-of-3, mean-of-3 and cluster count. I008 needs about 300 past votes and stable judge reliability before it can be fitted, and its gain over uniform weighting is likely small."
+  },
+  {
+    "judge_id": "finals-006",
+    "judge_model": "sonnet",
+    "first": "I005",
+    "second": "I007",
+    "preferred": "first",
+    "criterion": "beats_baseline",
+    "reason": "I005 adds grounded verification at the critique and selection stages, which a single self-selecting agent cannot do, and it withholds the prose that biases judges. I007 needs at least 15 labelled briefs, risks learning the panel's biases, and is unlikely to move the top 3 much from about 10 labels per brief."
+  },
+  {
+    "judge_id": "finals-006",
+    "judge_model": "sonnet",
+    "first": "I001",
+    "second": "I003",
+    "preferred": "first",
+    "criterion": "beats_baseline",
+    "reason": "I001 can raise the quality of the ideas through targeted refinement guided by an independent judge, a larger potential gain than I003, which only reshuffles a fixed finalist pool and can lose on mean rating or have no effect if the finalists are already diverse."
+  },
+  {
+    "judge_id": "boundary-001",
+    "judge_model": "opus",
+    "first": "I003",
+    "second": "I006",
+    "preferred": "first",
+    "criterion": "feasibility",
+    "reason": "I003 needs 2-3 days, about 60 lines and almost no extra tokens, and its test is an offline replay. I006 needs one to two weeks, roughly doubles development tokens, has 7 open major critiques, and depends on an unverified assumption that executable check ledgers exist at development time."
+  },
+  {
+    "judge_id": "boundary-001",
+    "judge_model": "opus",
+    "first": "I006",
+    "second": "I007",
+    "preferred": "first",
+    "criterion": "value",
+    "reason": "I007 is trained on benchmark verdicts, so from about 15 noisy briefs it mostly learns what the benchmark panel prefers, which puts it at risk of helping only on the benchmark. I006 makes the delivered ideas more correct on any brief whose claims can be checked."
+  },
+  {
+    "judge_id": "boundary-002",
+    "judge_model": "opus",
+    "first": "I006",
+    "second": "I003",
+    "preferred": "first",
+    "criterion": "beats_baseline",
+    "reason": "I003 only reorders finalists that already exist, so its ceiling is set by their quality. It admits it loses by construction if the benchmark scores the mean of the top 3, and it may give a null result if the finalists are already diverse. I006 raises the substance of the delivered ideas by removing claims that fail a check, which is a gain raters without LLM-judge biases should also prefer."
+  },
+  {
+    "judge_id": "boundary-002",
+    "judge_model": "opus",
+    "first": "I007",
+    "second": "I006",
+    "preferred": "second",
+    "criterion": "value",
+    "reason": "I007 learns to predict what beats the baseline under the benchmark panel. It needs at least 15 labelled briefs before it switches on, and it risks Goodhart overfitting to the raters. I006 makes the delivered ideas more likely to be correct on any brief with checkable claims, so its benefit extends beyond the benchmark."
+  },
+  {
+    "judge_id": "boundary-003",
+    "judge_model": "fable",
+    "first": "I007",
+    "second": "I008",
+    "preferred": "first",
+    "criterion": "robust_to_judge_bias",
+    "reason": "I008 can only reweight judges and correct position and self-preference, so a bias shared by every LLM judge (verbosity, polish) passes through untouched, whereas I007 models those nuisance features directly and zeroes them at selection, so its gain is by construction not earned by longer or more polished cards."
+  },
+  {
+    "judge_id": "boundary-003",
+    "judge_model": "fable",
+    "first": "I004",
+    "second": "I007",
+    "preferred": "first",
+    "criterion": "value",
+    "reason": "I004 makes the finalist cards themselves better, which carries to any brief a user submits, whereas I007 only reorders the existing finalists against labels defined by the benchmark comparison, so its ceiling is the quality of the pool and its gain risks being specific to the benchmark's rater panel (the Goodhart failure it names itself)."
+  },
+  {
+    "judge_id": "boundary-004",
+    "judge_model": "fable",
+    "first": "I007",
+    "second": "I004",
+    "preferred": "second",
+    "criterion": "beats_baseline",
+    "reason": "I004 names a stage (development) and a concrete reason a single agent cannot match it (loss reasons from independent judges, gated by an independent verifier), whereas I007's gain rests on the untested assumption that selection error is systematic and learnable from roughly 15 briefs of benchmark labels, with a Goodhart risk that the head learns the labelling panel's preferences rather than idea quality."
+  },
+  {
+    "judge_id": "boundary-004",
+    "judge_model": "fable",
+    "first": "I008",
+    "second": "I007",
+    "preferred": "first",
+    "criterion": "robust_to_judge_bias",
+    "reason": "I008 estimates and removes position and self-preference bias per judge and downweights judges that disagree with independent raters, so its correction is tied to judge behaviour that plausibly transfers across briefs, whereas I007 fits directly to the benchmark's external verdicts and can only neutralise the biases it has pre-enumerated as covariates while risking encoding the labelling panel's own preferences."
+  },
+  {
+    "judge_id": "boundary-005",
+    "judge_model": "sonnet",
+    "first": "I003",
+    "second": "I007",
+    "preferred": "first",
+    "criterion": "measurable_effect",
+    "reason": "I003 is a clean on/off scoring switch with a named primary metric (best-of-3) testable on existing data at almost no cost, whereas I007 needs at least 15 labelled briefs, is fragile to Goodhart effects when labels come from the panel, and will be swamped by brief heterogeneity at about 10 labels per brief."
+  },
+  {
+    "judge_id": "boundary-005",
+    "judge_model": "sonnet",
+    "first": "I006",
+    "second": "I008",
+    "preferred": "first",
+    "criterion": "beats_baseline",
+    "reason": "I006 improves the content of the ideas through development, with an outcome measured by a held-out checker and a cross-run compounding effect a single agent cannot match, while I008 only reweights the selection votes, which likely gives a small gain when the judges are similar and depends on about 300 externally rated past votes."
+  },
+  {
+    "judge_id": "boundary-006",
+    "judge_model": "sonnet",
+    "first": "I008",
+    "second": "I006",
+    "preferred": "first",
+    "criterion": "robust_to_judge_bias",
+    "reason": "I008 directly models and removes position and self-preference bias and is validated against external rankings at no extra token cost, whereas I006 costs about 2x, depends on an unconfirmed check ledger, risks trivially weakened claims, and its final cards show no check text, so the gain may not reach the raters."
+  },
+  {
+    "judge_id": "boundary-006",
+    "judge_model": "sonnet",
+    "first": "I007",
+    "second": "I003",
+    "preferred": "second",
+    "criterion": "beats_baseline",
+    "reason": "I003 improves the selection stage with a concrete mechanism (best-of-3 under correlated same-lever ideas) that is cheap and testable on saved data, whereas I007 needs 15 or more labelled briefs, faces Goodhart risk from panel-derived labels, and is likely to be swamped by brief heterogeneity."
+  }
+]

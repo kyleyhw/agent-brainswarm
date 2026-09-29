@@ -11,6 +11,7 @@ number and quotation below comes from the files in `demo-run/`.
 | `demos/etf-strategy.yaml` | Manifest of the recorded run |
 | `demos/home-heating.yaml` | Manifest: cutting home heating energy by 30 % for under $3,000 (not yet run) |
 | `demos/exoplanet-transit.yaml` | Manifest: a low-cost exoplanet-transit setup for a 20 cm amateur telescope (not yet run) |
+| `runs/2026-09-29-beat-baseline/` | A second recorded run (0.92M new tokens): brainswarm on how brainswarm could beat a single strong agent; see its `digest.txt` and `report.md` |
 | `demo-reruns/`, `rerun_comparison.py` | Controlled reruns of this run, analysed in [`docs/studies/position_bias.md`](../docs/studies/position_bias.md) |
 
 ## Tour of the recorded run (2026-09-29)

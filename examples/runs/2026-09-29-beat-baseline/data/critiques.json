@@ -1,0 +1,1090 @@
+[
+  {
+    "critique": {
+      "id": "critic-001-01",
+      "idea_id": "I005",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "The selector sees only the ledger, never critic prose.",
+      "mechanism": "Objections that cannot be turned into a 30 s numpy script or a library lookup get weight 0 and are hidden from the selector. That includes the most decisive objections: a gate violation such as a provider-ToS breach or a change that requires replacing the system, a non-sequitur between mechanism and claimed gain, or an infeasible cost. So an idea with a fatal but qualitative flaw can reach development and the top 3 on P alone. Withholding prose closes the persuasion channel, but it also closes the correctness channel for everything a script cannot check.",
+      "evidence": "The rubric's three gates (legal_and_ethical, implementable_in_codebase, testable_with_benchmark) are all pass/fail judgements about wording and architecture, and none can be decided by a numpy script. In this batch, I006's dependence on I005's ledger (\"Card 0's ledger ... exists\") is a structural flaw that no PASS/FAIL script would catch.",
+      "severity": "major",
+      "falsifier": "Keep a gate-veto channel that bypasses the ledger, where qualitative gate critiques can eliminate an idea. Or show on past runs that no critique-eliminated finalist would have survived under ledger-only selection.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-02",
+      "idea_id": "I005",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "Score s = P - 2F (P passed, F falsified) ranks ideas into development.",
+      "mechanism": "s grows with the number of checkable claims that pass, so it rewards ideas whose content is arithmetic or lookup-checkable, not ideas that are better. A modest quantitative idea with 6 trivially true numeric claims gets s = 6. An ambitious qualitative idea with 2 checkable claims is ranked last by the 3-claim floor, whatever its merit. Selection is therefore biased toward quantifiable but conservative ideas, and that is not what raters are asked to prefer.",
+      "evidence": "Calculation: the extractor emits 4-8 claims. With 40% checkable (the card's own assumption), the expected number of checkable claims is 1.6-3.2, so a large share of cards fall under the min-checkable = 3 floor and are ordered only by the BT tie-break. On a typical card, s reflects claim count and checkability more than falsification.",
+      "severity": "major",
+      "falsifier": "Normalise, e.g. s = (P - 2F)/checkable, or use F alone as a veto, and show that the fraction of cards under the floor is below ~20% across benchmark briefs.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-03",
+      "idea_id": "I005",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "About 40% of claims are checkable by a 30 s numpy script or a lookup.",
+      "mechanism": "The claims that matter for idea quality are forward-looking causal claims (\"X will raise rater preference\", \"cost +30%\"). A sandbox has no ground truth for these. It can only check internal arithmetic or run a toy simulation whose assumptions the critic chooses. PASS/FAIL then measures consistency with the critic's model, not truth, so the assumed 40% of checkable claims mostly checks trivia.",
+      "evidence": "Counter-example from this batch: I004's central claims (\"Stated judge reasons identify real weaknesses\", \"The verifier's preference correlates with final raters' preference\") cannot be decided by a 30 s numpy script or a cosine lookup. Only I003's claims are simulable, and there the outcome depends on the assumed correlation tau.",
+      "severity": "major",
+      "falsifier": "Hand-label the claims in a saved run's cards and show that at least 40% are decidable by an executable check whose PASS/FAIL agrees with later measured outcomes or panel judgements.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-04",
+      "idea_id": "I005",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "Atomic-claim decomposition makes verification more reliable (Min 2023).",
+      "mechanism": "FActScore (Min et al. 2023) verifies atomic factual claims about existing entities (biographies) against a knowledge source (Wikipedia). Ideas make predictive claims with no reference corpus. The citation supports decomposing text with a retrieval ground truth, not verifying proposals. In the same way, CRITIC (Gou 2023) gains in settings with external truth (QA search, code execution, toxicity APIs).",
+      "evidence": "arXiv:2305.14251 evaluates long-form biography generation against Wikipedia. arXiv:2305.11738 evaluates free-form QA, mathematical program synthesis and toxicity reduction, all of which have a tool that returns ground truth.",
+      "severity": "minor",
+      "falsifier": "A citation or pilot showing that atomic-claim verification of forward-looking proposal claims predicts downstream quality.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-05",
+      "idea_id": "I005",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "a novelty claim FAILs on a falsified hit",
+      "mechanism": "A past idea at cosine >= 0.85 that was falsified shows that a similar idea failed. It does not show that the new claim's novelty is false. If anything, a match to a past idea argues against novelty whether or not that idea was falsified. The rule mixes up 'similar to a failed idea' and 'not novel', and its behaviour depends on whether the library stores recorded outcomes at all. The brief describes only 'an idea library across runs', with no mention of outcomes.",
+      "evidence": "Brief: 'an idea library across runs'. Recorded outcomes and falsifications are not listed as existing fields, so the lookup artifact may need a library schema extension that the one-week effort does not account for.",
+      "severity": "minor",
+      "falsifier": "Show that the library already stores outcomes and falsification flags, and redefine the novelty check as FAIL on any hit above the threshold.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-06",
+      "idea_id": "I005",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "One brief, critique run twice at equal tokens: prose-only (off) vs ledger (on).",
+      "mechanism": "One brief gives one paired observation of a noisy stochastic pipeline. Run-to-run variance in the top 3, from generator sampling and judge noise, will swamp an effect of plausible size. The primary outcome (falsified-claim rate under a re-run of the extractor and checker) is also close to the quantity the ledger arm optimised, so the metric partly favours the treatment by construction, even with a held-out family.",
+      "evidence": "The single-brief design has n = 1. The metric counts FAILs from the same class of checks that the 'on' arm used to filter ideas.",
+      "severity": "minor",
+      "falsifier": "Run 15-20 briefs with seed-replicated off/on arms and use blinded panel rank against the baseline as the primary outcome.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-07",
+      "idea_id": "I004",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "Collect up to 5 written reasons from each finalist's lost comparisons.",
+      "mechanism": "Loss reasons are concentrated in the weakest finalists. The current top-ranked finalists, which are most likely to form the delivered top 3, have the fewest losses and so get the least feedback. The top 1 may have zero losses and never be revised. The gain therefore goes mostly to ideas outside the top 3, and it shows up on the benchmark only if revision reorders them into it. That route is noisier and smaller than the card implies.",
+      "evidence": "Under Bradley-Terry with a clear leader, the leader's expected loss count in a round-robin of n finalists is small. For example, with 8 finalists and a leader at p = 0.75 per pair, it expects about 1.75 losses in 7 comparisons, versus about 5 for the bottom item.",
+      "severity": "major",
+      "falsifier": "Report the distribution of loss counts for the eventual top 3 on saved runs. If the top 3 usually have 3 or more losses with reasons, this critique fails. Alternatively, add adversarial critique reasons for items with few losses.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-08",
+      "idea_id": "I004",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "Here the feedback is an independent adversary's reasons",
+      "mechanism": "The reasons come from LLM pairwise judges, and acceptance is decided by another LLM judge. The loop therefore optimises cards toward what LLM judges say they dislike. Length is controlled (+/-5%), but polish, hedging, citation density and family style are not. The final benchmark panel is also LLM-based by default, so measured gains may reflect a shared judge taste rather than better ideas, which is a robust_to_judge_bias risk.",
+      "evidence": "Zheng et al. 2023 (cited) document position, verbosity and self-enhancement biases. Only the first two are addressed by length matching and both-order acceptance. The card itself lists 'Verifier and final panel share a family' as a failure mode.",
+      "severity": "major",
+      "falsifier": "Show that accepted revisions also win with human raters, or with a panel from a family used in neither the judges nor the verifier, at a similar rate to the LLM verifier.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-09",
+      "idea_id": "I004",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "the gate makes the loop monotone in a verifier's preference",
+      "mechanism": "The loop is monotone only in the verifier's noisy sampled verdict, not in its expected preference. If the verifier's order-specific outcomes are independent and p = 0.5 for a revision that is truly equal, it passes both orders with probability 0.25. Accepted revisions are selected on a noisy signal, so their measured gain has a winner's-curse upward bias, and some accepted revisions are neutral or worse.",
+      "evidence": "P(accept | no true difference) = 0.5 x 0.5 = 0.25 under independence. It is lower under strong position bias, but then genuine improvements are also rejected.",
+      "severity": "minor",
+      "falsifier": "Estimate the verifier's null acceptance rate on revisions that are paraphrases only. If it is near 0 while real fixes pass, the gate works as claimed.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-10",
+      "idea_id": "I004",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "within +/-5% of the original token count",
+      "mechanism": "Fixing a cited weakness usually needs added content: a missing mechanism step, a mitigation, a parameter. A +/-5% budget forces equal deletions elsewhere, so a revision swaps one weakness for another or becomes a surface rewording. This pushes acceptance toward zero or toward stylistic edits, which undercuts the claimed substantive gain.",
+      "evidence": "For a card of ~350 tokens, 5% is about 17 tokens, roughly one sentence of net change.",
+      "severity": "minor",
+      "falsifier": "A pilot where the accepted-revision rate is at least 20% and the third-family panel judges the accepted changes substantive rather than stylistic.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-11",
+      "idea_id": "I006",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "Card 0's ledger or an equivalent set of executable checks exists at development time.",
+      "mechanism": "The loop acts only on ledger rows with FAIL or INCONCLUSIVE outcomes, so it depends entirely on I005's claim-extraction and ledger infrastructure, or an equivalent. The one-to-two-week effort and the 'develop.mode' on/off comparison hide that dependency. The effect cannot be isolated without first building and validating I005, and it inherits all of I005's checkability problems.",
+      "evidence": "The operational spec starts with 'rows = ledger.where(outcome in {FAIL, INCONCLUSIVE})'. Without a ledger the loop has no input.",
+      "severity": "major",
+      "falsifier": "Specify a standalone check-generation step inside development that works without I005, and include it in the effort estimate.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-12",
+      "idea_id": "I006",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "After iteration 3 every non-PASS claim is struck.",
+      "mechanism": "INCONCLUSIVE covers sandbox errors and timeouts (per I005). Claims whose checks merely crashed or were too hard to encode get struck, and hard-to-check claims are often the substantive ones. Final cards then keep only what a quick script could confirm, so they become thinner and less ambitious. The card lists this as a failure mode ('weaken claims to triviality') but the rule itself drives it.",
+      "evidence": "The card's diagnostic 'claims per final card' concedes the risk. Under I005's own assumption, about 60% of claims are not checkable, and those that become non-PASS rows are removed.",
+      "severity": "major",
+      "falsifier": "Strike only FAIL claims and leave INCONCLUSIVE ones marked but kept. Or show that the claim count per final card and rater specificity do not fall under the repair loop.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-13",
+      "idea_id": "I006",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "Outcomes: falsified-claim rate of the top 3 under a held-out checker of another model family",
+      "mechanism": "The loop strikes every claim that does not pass, so the falsified-claim rate of the final cards falls mechanically, even if the ideas get worse. The primary outcome is partly guaranteed by the intervention and cannot show an improvement in idea quality over the baseline.",
+      "evidence": "Strike-on-fail, followed by measuring the fail rate, is circular. An arm that deletes all claims would score a falsified-claim rate of 0.",
+      "severity": "major",
+      "falsifier": "Make the blinded panel's preference against the single-agent top 3 the primary outcome, with falsified-claim rate reported only alongside claim count.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-14",
+      "idea_id": "I006",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "Voyager (Wang 2023) shows an accumulating library of verified executable skills",
+      "mechanism": "Voyager's skills are verified by success in the environment: the Minecraft task either completes or it does not. Here a check template is 'verified' only because it executed, not because it faithfully tests the claim. Reuse across briefs therefore spreads unvalidated checks. The contested-rate filter (> 0.3) needs enough contest history per template to estimate, which will not exist early on.",
+      "evidence": "arXiv:2305.16291 adds skills to the library only after the environment feedback and self-verification module confirm the task succeeded. I006 has no analogous ground-truth success signal.",
+      "severity": "minor",
+      "falsifier": "Show on held-out briefs that reused templates agree with independently authored checks at a high rate (e.g. >= 90% concordance).",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-15",
+      "idea_id": "I003",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "Offline replay on saved pairwise records and panel ratings",
+      "mechanism": "Saved panel ratings exist only for the top 3 that were actually delivered, not for the finalists the portfolio rule would pick instead. Best-of-3 and mean-of-3 for the new selection therefore cannot be computed offline without new ratings. The 'one labelling call per brief' cost is understated, and the cheapest test as written cannot measure the effect. A test using BT scores as the outcome would be circular, because the rule is built from those same scores.",
+      "evidence": "The benchmark description rates 'the system's top 3 ideas and a single strong agent's self-selected top 3'. Nothing indicates that finalists outside the top 3 were panel-rated.",
+      "severity": "major",
+      "falsifier": "Show that saved runs contain panel ratings for all finalists. Otherwise budget a re-rating of the counterfactual selections.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-16",
+      "idea_id": "I003",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "tau = 0.5 x pooled score SD",
+      "mechanism": "The within-cluster correlation that drives the diversification is imposed as a fixed prior, not estimated. Its size therefore decides how much the rule diversifies. The card says the correlation is 'checkable on existing data' but does not fit tau to it. If the true tau is near 0, the rule reduces to top-k with a noisy tie-break, and if it is overestimated, the rule trades expected quality for diversity for no benefit.",
+      "evidence": "With tau = 0.5 SD, the implied within-cluster correlation of the shared shift is 0.25/(1+0.25) = 0.2 relative to unit-variance items. That is an assumption, not a measurement.",
+      "severity": "minor",
+      "falsifier": "Estimate tau from saved panel ratings as the variance component of cluster in a mixed model and plug in the estimate.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-17",
+      "idea_id": "I003",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "Bootstrap the pairwise records B=2000 times",
+      "mechanism": "The expected maximum over bootstrap samples rewards items with high estimation variance. Finalists with fewer comparisons get wider bootstrap score distributions, so they add more to E[max] and are favoured by the greedy step. That is selection for noise (a winner's curse), not for quality. Bootstrap uncertainty is also estimation uncertainty about the judges' BT score, not uncertainty about how independent raters will rate the idea.",
+      "evidence": "For two items with equal mean mu, E[max(X, Y)] rises with Var(Y). For independent Gaussians it equals mu + sqrt((s1^2 + s2^2)/(2 pi)), so the less-compared item has the larger marginal gain.",
+      "severity": "minor",
+      "falsifier": "Equalise comparison counts across finalists before selection, or penalise by variance, and show that the rule's picks do not correlate with comparison count.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-001-18",
+      "idea_id": "I003",
+      "critic_id": "critic-001",
+      "critic_model": "opus",
+      "target": "take the highest mean score, then repeatedly add the item maximising mean_b[max over set of s_b]",
+      "mechanism": "The first pick is identical to the current top 1, so the rule changes only picks 2 and 3 among finalists that have already been screened. Best-of-3 improves only when a diversified second or third pick beats the top 1 in raters' eyes, which requires the BT ranking to be wrong at the top. The possible gain is bounded by the quality gap between ranks 3-4 and whatever lies beyond among a small finalist pool, and nothing in generation, critique or development changes. It is a small effect relative to the baseline comparison.",
+      "evidence": "The card concedes 'Finalists already diverse, so a null result' and that mean-of-3 loses by construction. The benchmark ranks the pooled six cards, so swapping a higher-mean idea for a diverse one can lower the system's aggregate rank.",
+      "severity": "minor",
+      "falsifier": "Show on saved runs that the portfolio pick differs from top-k in at least 30% of briefs and that the swapped-in idea's panel rating is not lower on average.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-01",
+      "idea_id": "I001",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "Top-k identification bandits (LUCB; Kalyanakrishnan et al. 2012) need far fewer samples when effort concentrates near the cutoff; MATURE concentrates refinement the same way.",
+      "mechanism": "LUCB concentrates *measurement* at the boundary to identify a fixed top-k cheaply; it never changes the arms. MATURE instead concentrates *improvement* at the boundary, which is the slot where improvement matters least: ideas straddling rank 3/4 are, by the card's own selection rule, statistically indistinguishable, so swapping a boundary mutant into slot 3 changes the delivered set by at most the rank3-rank4 gap plus the mutation gain. Ranks 1 and 2, which dominate a top-3 comparison against the single agent, receive no critique and no mutation. The card's own control arm (uniform development of the point-estimate top 6) develops ranks 1-3 directly and so is more likely to raise the delivered set than the treatment.",
+      "evidence": "Kalyanakrishnan et al. (2012) is a PAC subset-selection algorithm: arms are stationary, only sampling is adaptive. The card concedes the biological analogue points the other way: 'real germinal centres give most help to top clones (Gitlin et al. 2014), not boundary ones'. Expected gain from a boundary swap is bounded by E[max(child, incumbent) - incumbent], which for items with overlapping rank intervals is near the mutation gain alone, whereas the same mutation applied to rank 1 adds its full gain to the delivered set.",
+      "severity": "major",
+      "falsifier": "A run where MATURE beats the uniform-top-6 control arm on the blinded benchmark win rate; or a redesign that spends the help budget on ranks 1-3 plus the boundary.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-02",
+      "idea_id": "I001",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "Accept a variant iff it wins both orderings against its parent and one against the rank-3 incumbent.",
+      "mechanism": "Three variants per parent are each tested with three near-coin-flip judge calls, and any one passing replaces the parent. Under the null (variant equal to parent, judge at chance) a given variant passes with probability 0.5^3 = 0.125, so at least one of three passes with probability 1 - 0.875^3 = 0.33. About a third of boundary parents are therefore replaced per cycle by mutants no better than themselves, and over 3 cycles the boundary set drifts on judge noise. The single incumbent comparison is also run in one order only, so position bias directly decides acceptance despite the card's stated concern about it.",
+      "evidence": "Binomial calculation above. Zheng et al. (2023, MT-Bench) report position-consistency rates for strong judges well below 100% on near-equal pairs, so a single-order comparison is not a bias-controlled test. The card's own primary metric ('child-beats-parent rate under a held-out judge family') is only a secondary outcome, so this drift would not be caught in the primary test.",
+      "severity": "major",
+      "falsifier": "Held-out-family child-beats-parent rate for accepted variants significantly above 50%; or raising the gate to both orders against the incumbent and requiring the best-of-3 variant to also beat a second, independent judge call.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-03",
+      "idea_id": "I001",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "Round 0: 3 comparisons per idea, both orders. Existing BT module, 200 bootstrap resamples, 10th-90th percentile rank interval.",
+      "mechanism": "Three comparisons per item is far too sparse for a bootstrap of BT ranks to localise a rank-3 cutoff. Resampled comparison graphs on 3N/2 edges frequently disconnect or leave items with all-wins/all-losses, where the BT MLE diverges unless a prior is added (none is specified), and the resulting 10-90% rank intervals will span the cutoff for most items. The boundary set then collapses to 'the 6 nearest P(top3)=0.5', which with this little data is essentially random, so the mechanism's targeting, its whole point, is lost.",
+      "evidence": "The card admits this: 'Sparse round-0 data widens every interval, so H does all the selecting'. Standard BT theory: the MLE exists only if the comparison graph is strongly connected (Ford 1957; Hunter 2004); bootstrap resamples of a 3-per-item design routinely violate this. I003 in the same set specifies a ridge prior for exactly this reason; I001 does not.",
+      "severity": "minor",
+      "falsifier": "Reported bootstrap intervals on real round-0 data that place clearly fewer than half the finalists in the boundary set; or an operational spec with a ridge prior and 6+ comparisons per item.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-04",
+      "idea_id": "I001",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "Cheapest test. 10 briefs, equal tokens: MATURE versus uniform development of the point-estimate top 6. Primary: blinded, counterbalanced benchmark win rate against the single agent's top 3.",
+      "mechanism": "Because the change only touches the third slot of the delivered set, its effect on a top-3 vs top-3 panel comparison is a fraction of one idea's quality difference. With 10 briefs the paired comparison of two arms has roughly 10 effective observations; detecting a shift of a few percentage points in win rate at that sample size is impossible, so the test cannot distinguish 'works' from 'null'.",
+      "evidence": "For a paired binary outcome, 10 briefs gives an exact binomial test whose smallest detectable one-sided effect at alpha=0.05 is roughly 8/10 vs 5/10; a change confined to slot 3 will not produce that. Contrast with I002, which computes its own power on 540 contests per arm.",
+      "severity": "minor",
+      "falsifier": "A power calculation showing the expected per-brief effect is large enough for 10 briefs, or a test plan with 30+ briefs and per-idea ratings so the slot-3 idea can be rated in isolation.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 0.962,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-05",
+      "idea_id": "I002",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "Warm the library with 20 training briefs using uniform operators. Run 30 held-out briefs in both arms, memory on versus uniform, at equal cost.",
+      "mechanism": "The bandit has roughly 8 operators x (number of rubric criteria, about 8) = 64 cells. Twenty warm-up briefs at about 18 contests each (the card's own 540/30 rate) give about 360 records, so about 5-6 per cell before any similarity filtering. After the cosine>=0.6 filter, most cells have fewer than 10 matching records, the fallback to all records fires, and the brief-conditioning that is described as 'the new part' is inert. With Beta(1+~3, 1+~3) posteriors, Thompson draws are close to uniform, so the memory-on arm and the uniform arm select operators almost identically and the test returns null by construction, not because the idea is wrong.",
+      "evidence": "Arithmetic above from the card's own numbers. Fialho et al. (2010) evaluate operator selection over thousands of generations within one run; per-arm posteriors there are sharp. For two Beta posteriors to be reliably ordered when true rates differ by 10 points requires on the order of 100+ observations per arm (matching the card's own 390-per-arm figure), not 5.",
+      "severity": "major",
+      "falsifier": "A warm-up of several hundred briefs, or a collapsed taxonomy (e.g. 4 operators, no criterion conditioning) so that cells have 50+ records before the test; or a simulation showing Thompson draws deviate materially from uniform at the stated data volume.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-06",
+      "idea_id": "I002",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "Primary measured outcome: child-beats-parent rate (about 540 contests per arm; a 40%-to-50% difference needs about 390 per arm at 80% power, hand-calculated).",
+      "mechanism": "The 390 figure (correct for independent Bernoulli trials: (1.96+0.84)^2 x 0.49 / 0.01 = 385) ignores clustering. The 540 contests come from 30 briefs, about 18 per brief, and contests within one brief share the brief, the finalist pool and the judge's mood on that brief. With an intra-brief correlation of even 0.1 the design effect is 1 + 17 x 0.1 = 2.7, cutting effective n to about 200 per arm, below the 390 needed. The stated power is therefore overstated. Separately, child-beats-parent is judged by the same in-loop judge whose preferences the memory is trained on, so the primary outcome rises if the bandit learns judge quirks; the card names this failure mode but the primary metric does not guard against it.",
+      "evidence": "Standard cluster-randomised design effect DE = 1 + (m-1) x ICC (Donner & Klar 2000). The card's own 'How it fails' lists 'Memory learns in-loop judge quirks, not quality'.",
+      "severity": "major",
+      "falsifier": "A mixed-effects analysis on real contests showing intra-brief ICC near zero; and a primary outcome judged by a held-out family, as I001 already specifies for its secondary.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-07",
+      "idea_id": "I002",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "Assumptions. Operator efficacy generalises across similar briefs; Operator labels are applied faithfully; Card 0's contest loop exists",
+      "mechanism": "The idea is a second-order optimiser on top of I001's mutation loop. It can only improve the top 3 by the difference between the best operator and the average operator, times the fraction of mutations that are accepted, times the share of the delivered set that mutation touches (slot 3 only under I001). Each factor is a fraction, so the compounded effect on the benchmark is small even if every assumption holds, and it inherits every weakness of the loop it depends on. If I001 is not adopted, I002 has no substrate.",
+      "evidence": "The card gives no estimate of between-operator spread; in Fialho et al. (2010) gains from adaptive operator selection over uniform are measured in convergence speed on benchmark functions, typically tens of percent of evaluations, not in final solution quality, which is the analogue of 'top-3 quality' here.",
+      "severity": "minor",
+      "falsifier": "Measured per-operator child-beats-parent rates on existing runs that differ by 20+ points, which would make the ceiling worth chasing.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 0.957,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-08",
+      "idea_id": "I004",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "Accept only if the revision wins both.",
+      "mechanism": "Two comparisons of a revision against its own original at near-equal quality gives a 25% false-acceptance rate under the null (0.5^2), so a quarter of revisions that fix nothing real are accepted and replace the original. Since revisions are steered toward what pairwise judges say, and the verifier is also a pairwise LLM judge, accepted null revisions drift finalists toward judge-preferred phrasing rather than better ideas. The revision is also revised against *relative* loss reasons (why rival X beat it), so fixes often import rival content, homogenising the finalists and reducing the diversity that the system's multi-generator design was meant to provide.",
+      "evidence": "Binomial calculation above. Turpin et al. (2023, 'Language Models Don't Always Say What They Think') show stated rationales frequently do not reflect the factor that drove the decision, so 'reasons for its losses' are noisy targets. The card lists 'Stated judge reasons identify real weaknesses' as an untested assumption.",
+      "severity": "minor",
+      "falsifier": "Third-family blinded rating shows accepted revisions beat originals at a rate well above 62.5% (the level implied by 25% null acceptance mixed with real gains); or a gate that also requires the revision to beat the original under a second independent verifier call.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-09",
+      "idea_id": "I004",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "A judge from a family different from generator and developer compares revised vs original in both orders, blinded.",
+      "mechanism": "With three widely available frontier families, the generator, developer and verifier consume all three, leaving no family for the 'third-family panel' the cheapest test requires; if generator and developer share a family, the final panel is 'counterbalanced' across families and therefore includes the verifier's family, so part of the panel is the model whose preferences the gate optimised. The bias control is weaker than described unless the benchmark panel excludes the verifier's family, which shrinks the panel and changes the benchmark.",
+      "evidence": "The card itself lists 'Verifier and final panel share a family, reinforcing its style' under failure modes without a remedy; the benchmark description in the brief is 'a counterbalanced panel of LLM reviewers'.",
+      "severity": "minor",
+      "falsifier": "A panel configuration with four or more distinct families, or evidence that the gain persists when the verifier's family is dropped from the panel post hoc.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-10",
+      "idea_id": "I004",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "within +/-5% of the original token count (Python check; one retry, else the original stays)",
+      "mechanism": "Loss reasons from pairwise judges most often say the loser was less specific, less concrete or lacked a test; fixing that adds text. A +/-5% budget forces the developer to delete roughly as much as it adds, so substantive fixes are cut back or the retry fails and the original stays. The likely equilibrium is a low acceptance rate (which the card already fears) and revisions that reword rather than repair, so the measurable effect shrinks toward zero while the +25% run cost stays.",
+      "evidence": "The card's own assumption list includes 'A 5% budget leaves room for substantive fixes' and its failure list 'Acceptance rate near zero, so no effect'. Zheng et al. (2023) motivate length control but a 10% cap (as I001 uses) or a length-matched comparison in the verifier would target verbosity bias without forbidding substantive additions.",
+      "severity": "minor",
+      "falsifier": "Reported acceptance rate above ~30% at the 5% budget with third-family confirmation that accepted revisions are preferred.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-11",
+      "idea_id": "I003",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "Add a shared cluster shift s_b[i] += tau*z_b[c(i)], z ~ N(0,1), tau = 0.5 x pooled score SD, so same-lever ideas succeed or fail together.",
+      "mechanism": "The correlation that matters for 'a user mostly needs one good idea' is correlation in real-world outcome across ideas sharing a lever. The bootstrap of pairwise records measures only judge-sampling noise, and the injected shift is not estimated from data but set by a fixed tau. The expected-max criterion therefore reduces to top-3-by-mean plus an MMR-style cluster penalty whose strength is the arbitrary tau. The decision-theoretic framing adds no information beyond MMR; the whole effect is the hand-set weight, so the 'posterior' language overstates what is being computed.",
+      "evidence": "Girotra, Terwiesch & Ulrich (2010) define quality-of-best-idea over true idea quality, not judge noise. Carbonell & Goldstein (1998) MMR with lambda plays exactly the role tau plays here. The card says the correlation is 'checkable on existing data' yet fixes tau rather than estimating it.",
+      "severity": "major",
+      "falsifier": "Estimate tau from panel ratings of same-cluster vs different-cluster pairs on existing runs and show the replay gain is insensitive to the choice; or show the bootstrap-only version (tau=0) already changes selections and improves best-of-3.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-12",
+      "idea_id": "I003",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "Greedy: take the highest mean score, then repeatedly add the item maximising mean_b[max over set of s_b]",
+      "mechanism": "Expected maximum rewards variance. In a bootstrap of pairwise records, high-variance BT scores belong to items with fewer comparisons or with judges disagreeing on them, so the rule preferentially promotes the least-evidenced or most contested finalists into slots 2-3. That is selection on noise: once delivered, the independent panel's rating of those items regresses to their mean, so the realised best-of-3 will be lower than the rule's estimate and can fall below plain top-3-by-mean. The card's own 'How it fails' does not list this winner's-curse channel.",
+      "evidence": "Jensen's inequality: E[max] increases with the spread of each component; the optimiser then picks the spread, and out-of-sample the spread is not reward. Analogous optimiser's-curse results in Smith & Winkler (2006, Management Science) for value-of-information selections.",
+      "severity": "major",
+      "falsifier": "Offline replay on saved records showing that the items portfolio_select adds over top-3-by-mean have equal or higher panel ratings than the items they displace.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-13",
+      "idea_id": "I003",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "If the metric is mean rating of the top 3, diversification loses by construction; make best-of-3 primary",
+      "mechanism": "The benchmark as described has raters 'rate and rank' the system's top 3 against the single agent's top 3. Under a set-level win rate or a mean-of-3, diversification is at best neutral and by the card's own admission loses. The proposed remedy is to change the primary metric, which means the gain appears only under a metric the idea itself introduces. The method passes the testability gate (per-idea ratings allow best-of-3 to be computed), but the honest expectation on the existing default metric is zero or negative.",
+      "evidence": "The card's own text. Girotra et al. (2010) is explicit that best-idea quality and average quality can move in opposite directions under diversification.",
+      "severity": "minor",
+      "falsifier": "Replay showing the portfolio selection does not reduce mean-of-3 or set-level win rate while raising best-of-3, i.e. Pareto improvement rather than a metric swap.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-002-14",
+      "idea_id": "I003",
+      "critic_id": "critic-002",
+      "critic_model": "fable",
+      "target": "A single agent picking 3 of its own 20 tends to choose variants of its favourite theme and has no posterior.",
+      "mechanism": "The claimed edge over the baseline depends on the system's finalist pool being homogeneous enough for diversification to bite. A pool produced by independent generators and pruned by critique is already likely to be mechanism-diverse, so the system's top-3-by-mean already spans several clusters and I003 changes nothing (the card lists this null as a failure mode). Where the single agent's top 3 is homogeneous, that is a baseline weakness the current system already exploits without I003.",
+      "evidence": "The card concedes 'Finalists already diverse, so a null result'. The brief describes 'independent generators', whose purpose is exactly the diversity I003 would re-impose at selection.",
+      "severity": "minor",
+      "falsifier": "A count on existing runs showing top-3-by-mean frequently contains two or more finalists in the same mechanism cluster.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-01",
+      "idea_id": "I001",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "Accept a variant iff it wins both orderings against its parent and one against the rank-3 incumbent.",
+      "mechanism": "The acceptance test is a weak filter with a high null acceptance rate, and it is applied to k=3 variants per parent, so under the null (edit neither helps nor harms) roughly half of boundary ideas are replaced each cycle by a mutant that is no better. Combined with Huang et al. 2023 (edits without a reliable external signal are often neutral or harmful), the expected quality change per cycle is close to zero while the in-loop judge's idiosyncrasies get selected for.",
+      "evidence": "With a variant equal to its parent and a fair judge, P(win both orderings vs parent) = 0.25; P(win at least one of two vs an incumbent it is slightly weaker than, p=0.4) = 1-0.36 = 0.64; per-variant null acceptance ~0.16-0.19. With three variants, P(at least one accepted | null) = 1-0.81^3 ~ 0.47; across 3 cycles ~0.85. Power when the variant is truly better (p=0.7 vs parent, 0.6 vs incumbent) is 0.49*0.84 ~ 0.41, so the likelihood ratio of the test is only ~2. Position bias b lowers both-order wins to 0.25-b^2, which does not rescue it.",
+      "severity": "major",
+      "falsifier": "A held-out-judge child-beats-parent rate materially above 50% in the cheapest test, or a stricter rule (e.g. win 3 of 4 vs parent with a fresh judge family, Bonferroni over the k variants) that keeps null acceptance below ~10%.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-02",
+      "idea_id": "I001",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "Top-k identification bandits (LUCB; Kalyanakrishnan et al. 2012) need far fewer samples when effort concentrates near the cutoff; MATURE concentrates refinement the same way.",
+      "mechanism": "LUCB allocates measurements to identify a fixed top-k set; the objective here is the delivered quality of the top 3, and refinement changes the arms. Improving a secure rank-1 or rank-2 idea by delta raises delivered quality by delta directly; improving a rank-4 idea by delta helps only if it overtakes rank 3, and then by less than delta. Under equal edit success probability, refining the secure top ideas dominates refining boundary ideas, so the analogy points the budget in the wrong direction. The card's own biological source says the same.",
+      "evidence": "Let true qualities q1>q2>q3>q4. Gain from delta on idea 1: delta. Gain from delta on idea 4: max(0, q4+delta-q3) < delta, and zero if delta < q3-q4. Gitlin, Shulman, Nussenzweig (2014, Nature 509) is cited by the card itself: germinal centres give the most T-cell help to the highest-affinity clones, not the marginal ones.",
+      "severity": "major",
+      "falsifier": "An ablation in which refining the point-estimate top 3 (with the same contest rule) yields a lower benchmark win rate than refining the rank-3/4 boundary set at equal tokens.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-03",
+      "idea_id": "I001",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "Round 0: 3 comparisons per idea, both orders. Existing BT module, 200 bootstrap resamples, 10th-90th percentile rank interval.",
+      "mechanism": "Three comparisons per idea gives a comparison graph with 1.5n edges. Bootstrapping such a sparse graph frequently yields disconnected components and ideas with all-wins or all-losses, for which the unregularised Bradley-Terry MLE does not exist (strength diverges). The resulting rank intervals are artefacts of the fit rather than uncertainty estimates, and, as the card concedes, they will straddle rank 3/4 for almost every idea, so the boundary set collapses to 'the six ideas nearest the point-estimate cutoff'.",
+      "evidence": "For n=20 ideas, 30 pairs; a bootstrap resample keeps ~63% unique edges (~19 edges on 20 nodes), which is at the connectivity threshold for a random graph. An idea with true win probability 0.8 wins all 6 of its votes with probability 0.8^6 ~ 26%, giving an infinite MLE strength in a plain BT fit. The card states: 'Sparse round-0 data widens every interval, so H does all the selecting'.",
+      "severity": "minor",
+      "falsifier": "The existing BT module fits MAP with a Gaussian prior (or adds pseudo-comparisons) and the bootstrap intervals show a bimodal P(top3) distribution rather than everything near 0.5.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-04",
+      "idea_id": "I001",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "MATURE versus uniform development of the point-estimate top 6",
+      "mechanism": "The two arms differ in at least two ways at once: (a) which ideas receive effort (boundary set vs top 6) and (b) how the outputs are handled (single-edit mutants gated by an accept/reject contest vs unconditional development). Given the sparse round-0 intervals, the boundary set will nearly coincide with the point-estimate top 6, so any measured difference is attributable to the contest gating, not the LUCB-style targeting that is the card's pitch.",
+      "evidence": "Card's own operational spec: 'keep 6 with P(top3) nearest 0.5' selects six ideas; with wide intervals this is the six around the cutoff, overlapping heavily with the point-estimate top 6. Two changed factors and one comparison cannot isolate either.",
+      "severity": "minor",
+      "falsifier": "A 2x2 test (targeting on/off x contest gating on/off) or a demonstration that the boundary set and the point-estimate top 6 overlap by fewer than 3 ideas on typical runs.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-05",
+      "idea_id": "I008",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "fix theta of past finalists to external BT strengths",
+      "mechanism": "The existing benchmark externally rates only the system's delivered top 3 (plus the baseline's 3, which have no internal votes). The externally-anchored theta therefore exist for three ideas per brief that were selected because internal judges rated them highest, so their theta spread is heavily range-restricted. Judge discrimination a_j is the slope of vote logit on (theta_i - theta_k); with tiny theta differences, the Fisher information per vote about a_j is small, so a_j estimates from ~300 votes have standard errors larger than plausible between-judge differences. Range restriction also attenuates every judge's apparent reliability toward zero, which is the card's own 'all judges equally weak' failure mode, produced by the data design rather than by the judges.",
+      "evidence": "Var(a_j) ~ 1 / (n_j * Delta^2 * p(1-p)). With Delta ~ 0.3 among top-3 finalists (vs ~2 across a full pool) and p ~ 0.5: Var ~ 44/n_j. For sd(a_j) = 0.25, n_j ~ 700 votes per judge; with 300 votes total across several judges, sd(a_j) > 0.6. Range restriction attenuating validity coefficients is standard (Thorndike case II correction).",
+      "severity": "major",
+      "falsifier": "External ratings for all finalists (not just the top 3) on each benchmarked brief, giving Delta comparable to the pool spread; or posterior sd of a_j below 0.2 on the existing data.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-06",
+      "idea_id": "I008",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "judges sampled proportional to max(a_j,0)^2 (Fisher information per vote)",
+      "mechanism": "Squaring noisy a_j estimates and using them as sampling weights amplifies estimation noise: the judge that happened to be lucky on past finalists gets a disproportionate share of votes. It also concentrates the budget on one or two (model, prompt) pairs, discarding the error decorrelation that is the reason a panel beats a single judge (Verga et al. 2024, the card's own citation). Prompt variants of the same model are highly correlated judges, so 'reliable' variants of one model will dominate and the effective panel size shrinks toward one.",
+      "evidence": "With a_j = (1.3, 1.0, 0.8, 0.5), weights are 1.69:1:0.64:0.25, i.e. 47% of 90% of the budget to one judge; with sd(a_j) ~ 0.6 (see previous critique), the ordering of a_j is itself unreliable. PoLL (arXiv:2404.18796) gains come from aggregating disparate model families, not from picking the single best.",
+      "severity": "major",
+      "falsifier": "Held-out agreement with external rankings improves under reliability sampling versus uniform at equal vote count, with a_j posteriors tight enough (sd < 0.2) that the weight ordering is stable across refits.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-07",
+      "idea_id": "I008",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "compare held-out-brief pairwise agreement with external rankings and Kendall tau of theta vs external strengths",
+      "mechanism": "The external reference covers three system finalists per brief, so the offline test has three externally-ordered pairs per brief and a Kendall tau that can take only four values. Distinguishing uniform from judge-aware BT requires a large effect or many dozens of briefs, so the proposed cheapest test is underpowered on the data the card says it needs.",
+      "evidence": "Two-proportion test for pairwise agreement 0.60 vs 0.70 at 80% power, alpha 0.05: n ~ (1.96+0.84)^2 * (0.6*0.4 + 0.7*0.3) / 0.01 ~ 353 pairs per arm, i.e. ~118 briefs at 3 pairs each. The card assumes ~300 votes, i.e. ~10 briefs.",
+      "severity": "major",
+      "falsifier": "External labels for all finalists per brief (raising pairs per brief from 3 to ~45), or an observed effect far larger than 10 points of agreement.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-08",
+      "idea_id": "I008",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "Every pair shown in both orders.",
+      "mechanism": "When every pair is judged in both orders, a per-judge additive position bias b_j cancels exactly in the aggregate for that pair, so estimating and subtracting b_j adds parameters without changing the estimated theta. The position-bias component of the model is redundant with the schedule the card itself mandates; only a_j and c_j can matter, which shrinks the claimed bias-correction story to self-preference alone.",
+      "evidence": "For a pair judged in both orders, the summed log-odds is [a(theta_i-theta_k)+b] + [a(theta_i-theta_k)-b] = 2a(theta_i-theta_k); b drops out. Zheng et al. 2023 recommend exactly this swap-and-aggregate as the fix for position bias.",
+      "severity": "minor",
+      "falsifier": "A schedule where some pairs are judged in one order only (then b_j matters), or a demonstration that b_j interacts non-additively with theta differences.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-09",
+      "idea_id": "I002",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "a 40%-to-50% difference needs about 390 per arm at 80% power, hand-calculated",
+      "mechanism": "The arithmetic is right but the assumed 10-point lift is implausible given how the memory is partitioned. Records are split by operator (8) and targeted criterion (~6), then thinned by the cosine>=0.6 filter, so the warm-up leaves a handful of observations per cell; the Beta posteriors are wide and Thompson sampling behaves close to uniform through the 30 test briefs. Adaptive operator selection in evolutionary computation yields modest gains even with thousands of in-run evaluations.",
+      "evidence": "Warm-up: 20 briefs x ~18 contests = 360 records over ~48 (operator, criterion) cells ~ 7.5 per cell before similarity thinning. Beta(1+3.5, 1+4) has sd ~ 0.16, larger than plausible operator win-rate differences (~0.05-0.10). If the best operator is 0.50 vs a 0.42 mean and is identified half the time, expected lift ~0.04, needing ~2400 contests per arm rather than 390. Fialho et al. 2010 report operator-selection gains over uniform on the order of a few percent of evaluations, not a 25% relative improvement in per-application success.",
+      "severity": "major",
+      "falsifier": "Empirical operator win rates in the warm-up library differing by more than 15 points within a criterion, or a pooled (criterion-agnostic) model that concentrates the data enough to identify winners in 20 briefs.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-10",
+      "idea_id": "I002",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "Primary measured outcome: child-beats-parent rate",
+      "mechanism": "The child-beats-parent verdict is produced by the in-loop LLM judge, so it is a rater opinion, not a measured outcome. Optimising operator choice against it selects the edit types that most reliably please that judge (e.g. 'quantify the claim', 'add falsifiable test' add judge-attractive surface features), which is Goodhart on the internal judge rather than a gain visible to independent raters. The card concedes 'Memory learns in-loop judge quirks, not quality' but still labels the proxy as measured.",
+      "evidence": "Rubric definition of measurable_effect: outcomes 'rather than only by opinion'. Panickssery et al. 2024 and Zheng et al. 2023 show LLM judge preferences carry systematic style biases that a bandit will exploit as reward.",
+      "severity": "major",
+      "falsifier": "Child-beats-parent measured by a held-out judge family (or humans) also rising in the memory arm, and the benchmark secondary showing a gain.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-11",
+      "idea_id": "I002",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "records with cosine sim>=0.6",
+      "mechanism": "Cosine similarity thresholds are not portable across embedding models: on some models unrelated briefs already score 0.5-0.7, on others related briefs score 0.4. A fixed 0.6 either admits nearly every record (memory becomes global, similarity conditioning is inert) or almost none (falls back to 'all records when fewer than 10 match', again global). Either way the novel part of the card, brief-conditioned transfer, is switched off by the parameter rather than tested.",
+      "evidence": "The card gives no embedding model and no calibration; the fallback rule guarantees that in low-match regimes the behaviour equals an unconditioned bandit.",
+      "severity": "minor",
+      "falsifier": "A calibration step that sets the threshold at a quantile of pairwise brief similarities in the library (e.g. top 20%), or an ablation showing similarity-weighted and unweighted memory differ in operator choice.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-12",
+      "idea_id": "I002",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "graft a rival's strongest component",
+      "mechanism": "This operator (and 'add falsifiable test', 'quantify the claim') necessarily adds material, while the contest loop it depends on (I001) requires 'same-length single-edit variants' with a 10% length cap. Either the operator taxonomy violates the parent card's length control, re-opening length bias in the contest, or the operators are hobbled and their measured win rates reflect the cap rather than the edit type.",
+      "evidence": "I001 operational constraint: 'k=3 same-length single-edit variants' and 'a 10% length cap'. Grafting a component from another idea into a card without removing something is not a same-length edit.",
+      "severity": "minor",
+      "falsifier": "Operators defined as substitutions (remove-then-add within the cap) with the cap enforced by the mutator prompt and verified by word count before the contest.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-13",
+      "idea_id": "I007",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "Label: fraction of counterbalanced external comparisons it wins against the baseline's three cards.",
+      "mechanism": "The label is relative to a brief-specific opponent set, so its mean is driven by how strong that brief's baseline happened to be, not by the finalist's quality within its run. Features are z-scored per run but the label is not, so with ~10 labels per brief and ~15 briefs the between-brief variance in labels is a dominant nuisance that the L2-regularised head will fit with whatever features happen to correlate with brief difficulty. Each label is also a proportion from only six comparisons and is therefore very noisy.",
+      "evidence": "Binomial label from 6 comparisons at p=0.5 has sd sqrt(0.25/6) ~ 0.20. The card itself lists 'Brief heterogeneity swamps ~10 labels per brief' as a failure mode but offers no per-brief centring or random effect in the spec.",
+      "severity": "major",
+      "falsifier": "Adding a per-brief intercept (or centring label logits within brief) and showing leave-one-brief-out AUC exceeds internal BT by more than its standard error.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-14",
+      "idea_id": "I007",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "At selection, zero nuisance terms so they absorb bias without being rewarded.",
+      "mechanism": "Zeroing the word-count and hedge terms removes only the label panel's direct preference for those features. The internal BT strength, which keeps its (large, prior-anchored) coefficient, was produced by internal LLM judges with the same verbosity and self-preference biases, so length is still rewarded through BT. The LC-AlpacaEval move the card borrows works because length is regressed out of the metric itself; here the analogous step, residualising BT on the nuisance covariates before it enters the score, is absent.",
+      "evidence": "Dubois et al. 2024 (arXiv:2404.04475) regress the preference on length and zero that term in the metric being reported. Zheng et al. 2023 show the internal judges that produce BT have the verbosity bias, so BT is itself a length-contaminated feature.",
+      "severity": "minor",
+      "falsifier": "Showing the partial correlation between selected-idea word count and BT strength is near zero in existing runs, or residualising BT on length before fitting.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-15",
+      "idea_id": "I007",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "Replace the final top-3 cut with a regularised logistic model",
+      "mechanism": "The head can only reorder existing finalists, so its ceiling is the gap between the externally-best 3 finalists and the current top 3, typically one swap. Detecting such a reordering gain with ~150 noisily-labelled finalists across ~12 features is marginal: the standard error of a leave-one-brief-out AUC at that sample size is about the size of the improvement one could hope for, so the offline test will mostly report noise even if the head is correct.",
+      "evidence": "15 briefs x ~10 finalists = 150 labelled items; SE of AUC with ~75 positives/negatives is roughly 0.04-0.05 (Hanley-McNeil), so a 0.05 AUC gain is ~1 SE. Si et al. 2024 (arXiv:2409.04109) found LLM ranker-expert agreement is weak, which bounds how much systematic (learnable) error there is versus irreducible noise.",
+      "severity": "minor",
+      "falsifier": "A LOBO AUC gain over internal BT of more than 2 SE on the existing library, or a top-3 win-rate gain on later briefs that survives a different-family panel.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-003-16",
+      "idea_id": "I007",
+      "critic_id": "critic-003",
+      "critic_model": "fable",
+      "target": "panel-rate all finalists once (~10 x 3 baseline cards x 2 orders)",
+      "mechanism": "The training labels and the benchmark's evaluation panel would come from the same rating procedure unless a second family is reserved. The card's own assumption requires the training panel to differ from the eval panel, which means either doubling panel families (extra cost not in the effort estimate) or shrinking the counterbalanced eval panel by removing the training family, which weakens the very benchmark used to claim the gain.",
+      "evidence": "Card assumption: 'Training labels come from humans or a model family different from the eval panel'; benchmark definition: 'a counterbalanced panel of LLM reviewers'. Removing a family from a counterbalanced panel reduces its bias-cancelling coverage.",
+      "severity": "minor",
+      "falsifier": "Human labels for the ~150 finalists (cost stated), or an evaluation showing gains transfer across held-out judge families with the panel intact.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-01",
+      "idea_id": "I007",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "Label: fraction of counterbalanced external comparisons it wins against the baseline's three cards.",
+      "mechanism": "The label for a finalist is its win rate against that brief's baseline cards, so it mixes idea quality with how strong the baseline happened to be on that brief. Brief-level baseline strength is a confound that the features (BT z-scored per run, critic scores) cannot explain. The residual w must then fit brief noise. With about 10 finalists per brief and 15 briefs there are about 150 rows for a feature set that includes per-criterion scores, generator id, similarity, 4+ nuisance terms and family match. The fit is under-determined, and lambda=1 with label weight 3 does not fix that.",
+      "evidence": "About 150 rows against 15-25 parameters, with each row a noisy binomial from 6 comparisons (3 cards x 2 orders). Leave-one-brief-out AUC on this sample will have a confidence interval wider than any plausible gain over BT. The card's own fallback threshold of 15 briefs is the smallest size at which this is estimable, not a size at which it is stable.",
+      "severity": "major",
+      "falsifier": "Leave-one-brief-out AUC and top-3 win rate exceed internal BT with a bootstrap CI excluding zero at about 15 briefs, and the result holds after adding a per-brief random intercept.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-02",
+      "idea_id": "I007",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "At selection, zero nuisance terms so they absorb bias without being rewarded.",
+      "mechanism": "Zeroing a nuisance coefficient removes bias only if the covariate is unrelated to true quality. Word count and citation count are correlated with real quality in ideas that went through development (more specific, more grounded). The regression cannot separate that from rater verbosity bias, so zeroing at selection will also discard genuine signal. It will also fail to remove the bias that flows through unmeasured features such as polish.",
+      "evidence": "Dubois 2024 controls length in a setting where the model outputs are matched in content. Here word count is a by-product of the development phase, which is meant to add substance. Panel labels cannot identify which part of the length coefficient is bias.",
+      "severity": "minor",
+      "falsifier": "Under a human or measured-outcome label, the nuisance coefficients are near zero or the zeroed model's top-3 does not lose to the un-zeroed model.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-03",
+      "idea_id": "I007",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "Training labels come from humans or a model family different from the eval panel",
+      "mechanism": "The only labels the library holds are the benchmark panel's verdicts (the card's own cheapest test uses panel ratings), and they are the same instrument that later scores the change. The learned head therefore fits the panel's biases, and the top-3 win rate against a panel from a different family is only checked at the end. Human or measured labels are the exception, not the plan, yet they are needed for the Goodhart mitigation. The assumption is listed but the workflow does not supply it.",
+      "evidence": "The card's own failure mode says 'Labels from the eval panel teach its biases (Goodhart)'. The cheapest test uses panel-rated finalists and the same panel for evaluation, so a positive result is circular unless the panel is split by family.",
+      "severity": "major",
+      "falsifier": "The head trained on family-A panel labels beats BT when scored by a family-B panel or by human raters on briefs not used in training.",
+      "gate": "testable_with_benchmark",
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-04",
+      "idea_id": "I007",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "Replace the final top-3 cut with a regularised logistic model, trained on past blinded benchmark verdicts, that predicts which finalists beat the baseline.",
+      "mechanism": "This is a stage-limited gain. It reorders finalists that are already the internal top group, so the ceiling is the difference between the best 3 and the internal top 3 of the same pool. If the generators, critique and development produce no idea better than the baseline's, reselection cannot fix it. Nothing here is unavailable to a single agent either: its selection could be calibrated the same way against the same labels. The claim 'A lone agent never sees its own selection error' is therefore not a structural advantage.",
+      "evidence": "Si et al. 2024 found ranking agreement is weak in both directions, but a learned reranker on ~150 rows is unlikely to recover much of the gap. Finalists are range-restricted, so within-pool variance is small compared with between-brief variance.",
+      "severity": "major",
+      "falsifier": "An oracle top-3 from the labelled finalists shows a large win-rate gap over internal BT top-3 on the benchmark, showing selection headroom exists.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-05",
+      "idea_id": "I005",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "a sandbox script that consumes the claim's numbers and prints PASS/FAIL",
+      "mechanism": "The numbers a script consumes are the ones the idea's author asserted, and the sandbox has no network. A check can therefore test only internal arithmetic consistency (does 3x cost saving times volume equal the claimed total), not whether a market size, adoption rate or physical constant is true. Self-consistent invented numbers PASS. Falsification of real-world claims, the thing that matters for idea quality, needs external data the sandbox lacks. The ledger then measures numeracy, not truth.",
+      "evidence": "Spec: 'Script: last stdout line PASS|FAIL, 30 s, numpy/scipy, no network'. The card itself assumes only 'About 40% of claims are checkable', and those are the arithmetic-type ones. Gou 2023 (CRITIC) got gains from tools such as search and code interpreters that have external access, not from offline scripts over model-asserted values.",
+      "severity": "major",
+      "falsifier": "On a benchmark brief, falsified-claim rate under a held-out checker tracks external rater or outcome preference, and a good share of FAILs come from claims that are not arithmetic.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-06",
+      "idea_id": "I005",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "The selector sees only the ledger, never critic prose.",
+      "mechanism": "Ranking on s = P - 2F rewards ideas whose claims are easy to check and pass, so it selects for safe, modest, verifiable claims and against ambitious, novel ones whose payoff is uncertain. It also discards the information that tells importance apart from correctness: a strong idea with two hard-to-check claims scores near 0 and loses to a trivial idea with five arithmetic claims that PASS. Judge-bias robustness is claimed by removing prose, but the extractor's rewrite is now the sole information channel.",
+      "evidence": "The card's own risk: 'Qualitative briefs yield mostly `not_checkable`; s ~ 0 discriminates nothing.' In addition 'Cards with under 3 checkable claims rank last' forces generators to write checkable, smaller claims to survive. Ideation benchmarks reward novelty and impact, which the ledger does not score.",
+      "severity": "major",
+      "falsifier": "The top-3 chosen by ledger score is preferred by blinded raters over the BT top-3 for the same pool, and the chosen ideas are not shorter or less novel by similarity to library entries.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-07",
+      "idea_id": "I005",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "One brief, critique run twice at equal tokens: prose-only (off) vs ledger (on).",
+      "mechanism": "One brief cannot detect a selection-stage effect. With a single pool, the top-3 differs by at most a few ideas and rater noise on 3 vs 3 cards swamps the effect. The card also states cost as 'critique-phase tokens +30-50%', which contradicts running 'at equal tokens', so either the off arm gets more critique or the on arm is starved. The outcome, falsified-claim rate under a held-out checker, is the quantity the ledger optimises, so a drop shows only that it can be gamed (Goodhart).",
+      "evidence": "Rater noise: with 3 cards per side and 2 orders, a win-rate difference under about 0.3 is not significant. Effort line: 'One week; critique-phase tokens +30-50%'. Test line: 'equal tokens'.",
+      "severity": "major",
+      "falsifier": "The test is repeated over at least 10 briefs with the blinded panel ranking as the primary outcome, and the ledger arm wins there and not only on falsified-claim rate.",
+      "gate": "testable_with_benchmark",
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-08",
+      "idea_id": "I005",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "a library lookup of past ideas at cosine >= 0.85 with recorded outcomes and falsifications (a novelty claim FAILs on a falsified hit)",
+      "mechanism": "A cosine of 0.85 or higher on an embedding is mostly a similarity of topic and phrasing, not of the same idea, so the check will FAIL genuinely novel ideas that share vocabulary with a failed library entry and PASS re-worded duplicates. In early runs the library is small, so the lookup rarely fires. Outcome records also exist only for briefs with measured outcomes, which the benchmark says are not available on all briefs.",
+      "evidence": "The card lists 'k = 5' and 0.85 without any calibration on library data. Sentence-embedding cosine between different ideas for one brief is commonly above 0.8 because they share the topic.",
+      "severity": "minor",
+      "falsifier": "A calibration on library pairs shows 0.85 separates duplicates from distinct ideas with a low false-positive rate.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-09",
+      "idea_id": "I008",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "Every pair shown in both orders.",
+      "mechanism": "Showing every pair in both orders already cancels position bias in the aggregate vote, so the b_j term has nothing left to correct, and only the a_j and c_j parts of the model can add value. The card counts position-bias correction as a benefit ('A lone agent is one judge with unknown a and uncorrected b, c') although its own schedule removes it. The remaining gain is reweighting a handful of judges (model x prompt), which changes the ranking little unless judges differ greatly in a_j.",
+      "evidence": "Under the model P = sigmoid(a(theta_i - theta_k) + b), averaging the two orders gives the b-free term, so b_j cancels exactly. With a small judge pool, weights 0.5-1.5 alter the BT ranking of the top 6 mainly by breaking near-ties.",
+      "severity": "major",
+      "falsifier": "Ablating the b_j term while keeping both orders leaves held-out agreement unchanged and reliability weighting still raises Kendall tau over uniform BT with a CI excluding zero.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-10",
+      "idea_id": "I008",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "judges sampled proportional to max(a_j,0)^2 (Fisher information per vote)",
+      "mechanism": "a_j is fitted against external BT strengths, so a high a_j means agreeing with the external raters, not being more correct. Concentrating 90% of the budget on the highest-a judges shrinks the effective panel to one or two model families whose errors are correlated, which removes the diversity gain PoLL reported and makes the internal ranking imitate the external raters' style. If the external reference is the benchmark panel, this is the same Goodhart loop as I007, and the change would reward the panel's biases instead of removing them.",
+      "evidence": "Verga et al. 2024 (PoLL) found gains from a diverse panel of smaller models, not from weighting a large judge. Squared weighting makes a judge with a=1.5 receive 2.25x the votes of a=1. Correlated errors mean Fisher information per vote overstates real information.",
+      "severity": "major",
+      "falsifier": "Reliability-weighted BT improves agreement with a human or measured-outcome reference on held-out briefs and a family-different panel.",
+      "gate": "robust_to_judge_bias",
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-11",
+      "idea_id": "I008",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "fix theta of past finalists to external BT strengths, fit (a_j, b_j, c_j) by MAP with priors N(1,0.5), N(0,0.5), N(0,0.5), then freeze.",
+      "mechanism": "External BT strengths are fitted within each brief, so their scale is only defined up to brief-specific spread. Fixing them and fitting one a_j across briefs mixes scale differences into judge discrimination, and a_j will partly reflect brief heterogeneity. The card assumes 'Judge reliability is stable across briefs', which contradicts how a per-brief-scaled theta behaves. Freezing after each batch leaves the parameters stale when the judge prompt or model changes.",
+      "evidence": "Cheapest test: 'Kendall tau of theta vs external strengths' is per-brief and uses the same external strengths that were fitted, so it is in-sample unless split by brief. ~300 votes across 15 briefs is ~20 per brief.",
+      "severity": "minor",
+      "falsifier": "Held-out-brief tau improves and the fitted a_j are stable when refit on disjoint brief subsets.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-12",
+      "idea_id": "I008",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "Zero extra tokens at equal budget.",
+      "mechanism": "The gain is bounded by the finals-vote stage, and the card offers no reason the top ideas would be better, only that the ordering of the same finalists becomes less noisy. It does not change the content of any idea. Against a single agent's self-selected top 3 the effect on the benchmark win rate would be second-order, while the card's largest cost is cross-run infrastructure to gather 300 externally-rated votes.",
+      "evidence": "Beats_baseline anchors: low is 'makes the process more elaborate without a reason the top ideas would improve'. Only selection is changed, and a scheduler concentrating on pairs with |theta_i - theta_k| < 0.5 mostly reorders ideas within the top 6.",
+      "severity": "major",
+      "falsifier": "Offline replay shows the top-3 set changes on a substantial fraction of briefs and the changed ideas win more often with external raters.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-13",
+      "idea_id": "I006",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "Card 0's ledger or an equivalent set of executable checks exists at development time.",
+      "mechanism": "The card cannot be evaluated alone. It depends on I005's ledger and there is no 'Card 0' in the set, so the effect of the repair loop is entangled with the effect of the claim extractor, the checker scripts and the ranking rule. The on/off flags isolate the loop only after I005 is built, and a positive result cannot be attributed to the loop. If I005's checks are weak (arithmetic-only, mostly not_checkable) the loop has few rows to repair.",
+      "evidence": "Operational spec uses 'ledger.where(outcome in {FAIL, INCONCLUSIVE})'. I005 itself expects 'About 40% of claims are checkable'.",
+      "severity": "major",
+      "falsifier": "A ledger-independent variant runs the loop on rows produced by a fixed checker, and the loop shows a gain over one-shot in that variant.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-14",
+      "idea_id": "I006",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "After iteration 3 every non-PASS claim is struck.",
+      "mechanism": "Striking is the cheapest route to a clean ledger, so the developer and the final rule together push ideas to fewer, vaguer commitments, which is the opposite of what raters reward (specificity, concrete detail). Because final cards 'show no badges or check text', the surviving ideas look identical to raters but have less content. The card recognises the risk ('Developers weaken claims to triviality') but only offers a diagnostic, not a constraint.",
+      "evidence": "A strike lowers F to 0 with no penalty in s for lost content. Raters are shown one card format with no check text, so striking cannot be seen as a plus.",
+      "severity": "major",
+      "falsifier": "Struck-claim counts are low, claims per final card do not fall, and rater specificity scores of repaired ideas are not below one-shot ones.",
+      "gate": null,
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-15",
+      "idea_id": "I006",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "Same brief, development run twice at equal tokens: one-shot (off) vs repair loop (on).",
+      "mechanism": "The card says development tokens are 'roughly 2x' but the test is at equal tokens, so either the one-shot arm gets extra budget or the loop is capped. The relevant comparison for a repair loop is against a same-cost alternative such as drawing more development samples and choosing by check outcome. Olausson 2023 found that self-repair often gives little over resampling at matched compute; the card cites that paper as motivation for the cap when its finding actually cautions against the expected gain. One brief cannot detect the effect and the outcomes named (claims struck, template reuse) are process counts, not idea quality.",
+      "evidence": "Olausson et al. 2023, 'Is Self-Repair a Silver Bullet for Code Generation?', reports modest, feedback-quality-limited gains against equal-budget sampling. Template reuse rate on a second brief measures reuse, not merit.",
+      "severity": "major",
+      "falsifier": "At matched tokens, repair beats best-of-n development on blinded panel rank over at least 10 briefs.",
+      "gate": "testable_with_benchmark",
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  },
+  {
+    "critique": {
+      "id": "critic-004-16",
+      "idea_id": "I006",
+      "critic_id": "critic-004",
+      "critic_model": "sonnet",
+      "target": "Claim patterns recur across briefs enough for templates to be reused.",
+      "mechanism": "Ideas for different briefs have claims in different domains (chemistry yields, marketing conversion, orbital mechanics), so parameterised numeric-check templates from one brief seldom match another at cosine > 0.8. Compounding across runs also cannot be seen in a benchmark run in isolation: it needs many prior briefs before the library helps, which is a long-horizon effect not testable in a per-brief comparison. A wrong template propagates, and the 30% contested-rate filter needs many contests to fire.",
+      "evidence": "The card's test measures 'template reuse rate on a second brief' with two briefs. Voyager's skill reuse is in one Minecraft world with shared APIs, unlike heterogeneous idea briefs.",
+      "severity": "major",
+      "falsifier": "Reuse rate above 30% across at least 10 unrelated briefs, and templates.enabled on/off changes the outcome when the library is warmed up with independent briefs.",
+      "gate": "testable_with_benchmark",
+      "resolution": "open"
+    },
+    "quote_score": 1.0,
+    "flags": []
+  }
+]

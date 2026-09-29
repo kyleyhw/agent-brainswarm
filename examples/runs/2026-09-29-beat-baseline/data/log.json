@@ -1,0 +1,104 @@
+[
+  {
+    "phase": "audit",
+    "at": "2026-09-29T18:24:40Z",
+    "lines": [
+      "rubric audit: 14 issue(s); revise rubric_draft.json, then run freeze"
+    ]
+  },
+  {
+    "phase": "angles",
+    "at": "2026-09-29T18:26:56Z",
+    "lines": [
+      "angle round: 8 angles, 8 domains from 4 generators"
+    ]
+  },
+  {
+    "phase": "angle_clusters",
+    "at": "2026-09-29T18:27:16Z",
+    "lines": [
+      "slots: angle/middle=2, cross_domain/rare=1, free/-=1"
+    ]
+  },
+  {
+    "phase": "ideate",
+    "at": "2026-09-29T18:28:25Z",
+    "lines": [
+      "pre-registered 8 raw ideas from 4 generators at 2026-09-29T18:28:25Z"
+    ]
+  },
+  {
+    "phase": "research",
+    "at": "2026-09-29T18:30:47Z",
+    "lines": [
+      "retry G01: G01.cards[0]: 457 words exceeds the 400-word cap",
+      "retry G02: G02.cards[0]: 497 words exceeds the 400-word cap",
+      "retry G03: G03.cards[0]: 689 words exceeds the 400-word cap",
+      "retry G04: G04.cards[0]: 493 words exceeds the 400-word cap"
+    ]
+  },
+  {
+    "phase": "research",
+    "at": "2026-09-29T18:36:09Z",
+    "lines": [
+      "research: 8 idea cards (0 research-derived)"
+    ]
+  },
+  {
+    "phase": "idea_clusters",
+    "at": "2026-09-29T18:36:26Z",
+    "lines": [
+      "clusters: 8 distinct among 8 ideas; 0 repeat(s) of library ideas"
+    ]
+  },
+  {
+    "phase": "critique",
+    "at": "2026-09-29T18:41:26Z",
+    "lines": [
+      "critique: 64 critiques from 4 critics; 0 flagged by code checks"
+    ]
+  },
+  {
+    "phase": "checker",
+    "at": "2026-09-29T18:42:01Z",
+    "lines": [
+      "generic filter: 0 failed the substitution test",
+      "no workshop at this size; 8 finalists by preliminary value"
+    ]
+  },
+  {
+    "phase": "finals",
+    "at": "2026-09-29T18:43:27Z",
+    "lines": [
+      "judged 24 ordered matches so far"
+    ]
+  },
+  {
+    "phase": "boundary",
+    "at": "2026-09-29T18:44:49Z",
+    "lines": [
+      "judged 36 ordered matches so far"
+    ]
+  },
+  {
+    "phase": "report",
+    "at": "2026-09-29T18:44:50Z",
+    "lines": [
+      "brainswarm 20260929-182309-3ff0: 8 cards, 8 finalists (quick/balanced)",
+      "Top families:",
+      "1. Boundary-targeted help budget with survivor-mutation cycles [I001]: rank 1 (95% 1-6), P(top 5) 96%, mean win 76%",
+      "2. Loss-conditioned revision under a fixed card budget with a two-order verifier gate [I004]: rank 2 (95% 1-6), P(top 5) 94%, mean win 67%",
+      "3. Claim ledger with executable checks; survival scored on checks passed [I005]: rank 3 (95% 1-7), P(top 5) 85%, mean win 64%",
+      "4. Top-3 chosen as a portfolio by posterior expected maximum with mechanism clusters [I003]: rank 4 (95% 1-7), P(top 5) 78%, mean win 54%",
+      "5. Judge-reliability Bradley-Terry fitted to external verdicts [I008]: rank 5 (95% 1-7), P(top 5) 70%, mean win 51%",
+      "6. Check-repair development loop with a cross-run library of check templates [I006]: rank 6 (95% 2-7), P(top 5) 62%, mean win 46%",
+      "Wildcards:",
+      "- Residual selection head learned from the library's blinded verdicts [I007]",
+      "- Cross-run memory of mutation-operator success, chosen by similarity-weighted Thompson sampling [I002]",
+      "Tokens (subagents): ~0.92M new, ~2.31M cache reads",
+      "Limitations: generic filter: 0 failed the substitution test; finals had only 12 judge dispatches; uncertainty uses the Laplace approximation, not the bootstrap; the top-k set changes with the prior scale; treat the cutoff as soft",
+      "Report: /root/.agent-brainswarm/runs/20260929-182309-3ff0/report.html",
+      "library now holds 8 ideas for project agent-arena"
+    ]
+  }
+]

@@ -1,0 +1,293 @@
+{
+  "I001": {
+    "id": "I001",
+    "title": "Boundary-targeted help budget with survivor-mutation cycles",
+    "pitch": "Spend critique and mutation calls only on ideas whose rank interval straddles the top-3 cutoff, and re-enter their single-edit mutants for up to 3 cycles.",
+    "mechanism": "New phase MATURE between critique and finals. Round 0: order-swapped pairwise judging against the frozen brief-plus-rubric; fit Bradley-Terry; bootstrap rank intervals. Up to H=6 ideas straddling rank 3/4 each get one critique naming their weakest criterion, then one mutator call writing k=3 same-length single-edit variants. A variant replaces its parent only if it beats the parent and the rank-3 incumbent. Refit and repeat.",
+    "rationale": "Top-k identification bandits (LUCB; Kalyanakrishnan et al. 2012) need far fewer samples when effort concentrates near the cutoff; MATURE concentrates refinement the same way. A lone agent lacks an independent signal: models favour their own outputs (Panickssery et al. 2024) and self-correct poorly without external feedback (Huang et al. 2023). No code was run.",
+    "assumptions": [
+      "In-loop judge preferences track the independent panel's",
+      "Single targeted edits help more often than they harm",
+      "Some ideas sit near the cutoff"
+    ],
+    "failure_modes": [
+      "Mutants overfit the in-loop judge; mitigate with a judge family different from the panel and a 10% length cap",
+      "Sparse round-0 data widens every interval, so H does all the selecting",
+      "Partial transfer: real germinal centres give most help to top clones (Gitlin et al. 2014), not boundary ones",
+      "Mutants converge to near-duplicates"
+    ],
+    "cheapest_test": "10 briefs, equal tokens: MATURE versus uniform development of the point-estimate top 6. Primary: blinded, counterbalanced benchmark win rate against the single agent's top 3. Secondary: child-beats-parent rate under a held-out judge family.",
+    "effort": "3-5 days; per cycle about 6 critiques, 6 mutator calls and 72 short judge calls; roughly +30-50% run cost.",
+    "provenance": {
+      "generator_id": "G01",
+      "model": "opus",
+      "slot_type": "cross_domain",
+      "angle_id": "D006",
+      "band": "rare",
+      "transfer": "partial",
+      "research_derived": false
+    },
+    "sources": [
+      "Kalyanakrishnan et al. (2012) PAC subset selection in stochastic multi-armed bandits, ICML",
+      "Gitlin, Shulman, Nussenzweig (2014) Nature 509",
+      "Huang et al. (2023) arXiv:2310.01798",
+      "Panickssery, Bowman, Feng (2024) arXiv:2404.13076"
+    ],
+    "spec": "Round 0: 3 comparisons per idea, both orders. Existing BT module, 200 bootstrap resamples, 10th-90th percentile rank interval. Boundary: lo<=3 and hi>=4; keep 6 with P(top3) nearest 0.5. Accept a variant iff it wins both orderings against its parent and one against the rank-3 incumbent. Max 3 cycles; stop when the boundary set is unchanged.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I002": {
+    "id": "I002",
+    "title": "Cross-run memory of mutation-operator success, chosen by similarity-weighted Thompson sampling",
+    "pitch": "Store each parent-versus-child contest as a measured win or loss for a typed edit operator in the idea library, and in later runs pick operators by Thompson sampling over brief-similar history.",
+    "mechanism": "The mutator labels each variant with one operator from a fixed taxonomy: narrow scope, swap mechanism, add falsifiable test, graft a rival's strongest component, invert an assumption, cut cost, change target user, quantify the claim. Each contest writes a record (brief embedding, operator, targeted criterion, win/loss, judge model). The run's top 3 are the 'plasma' output; operator statistics are the 'memory'. At mutation time, for the idea's weak criterion, compute alpha=1+sum(sim*wins) and beta=1+sum(sim*losses) over records with cosine sim>=0.6 and the same criterion, then sample to choose operators.",
+    "rationale": "Bandit-based adaptive operator selection is established in evolutionary computation (Fialho et al. 2010). PromptBreeder (Fernando et al. 2023) shows evolving mutation instructions helps. The new part is conditioning across runs on brief similarity. Ideas rarely transfer between briefs, but good edit moves may.",
+    "assumptions": [
+      "Operator efficacy generalises across similar briefs",
+      "Operator labels are applied faithfully",
+      "Card 0's contest loop exists"
+    ],
+    "failure_modes": [
+      "Effects too small to detect within a few dozen runs",
+      "Memory learns in-loop judge quirks, not quality",
+      "Exploitation collapses operator diversity (guard: 1 of 3 slots uniform-random)",
+      "Stretch transfer: immune memory stores binders, not edit types"
+    ],
+    "cheapest_test": "Warm the library with 20 training briefs using uniform operators. Run 30 held-out briefs in both arms, memory on versus uniform, at equal cost. Primary measured outcome: child-beats-parent rate (about 540 contests per arm; a 40%-to-50% difference needs about 390 per arm at 80% power, hand-calculated). Secondary: benchmark win rate.",
+    "effort": "2-3 days on top of card 0; negligible token cost (one embedding per brief).",
+    "provenance": {
+      "generator_id": "G01",
+      "model": "opus",
+      "slot_type": "cross_domain",
+      "angle_id": "D006",
+      "band": "rare",
+      "transfer": "stretch",
+      "research_derived": false
+    },
+    "sources": [
+      "Fialho et al. (2010) Analyzing bandit-based adaptive operator selection mechanisms, Ann Math Artif Intell 60",
+      "Fernando et al. (2023) Promptbreeder, arXiv:2309.16797",
+      "Agrawal & Goyal (2012) Thompson sampling analysis, COLT"
+    ],
+    "spec": "Library table operator_outcomes(run_id, brief_emb, operator, criterion, win, judge). Similarity threshold 0.6; fall back to all records when fewer than 10 match. Thompson draws pick 2 operators, the third is uniform-random. Contest rule as in card 0.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I003": {
+    "id": "I003",
+    "title": "Top-3 chosen as a portfolio by posterior expected maximum with mechanism clusters",
+    "pitch": "Replace 'take the 3 highest Bradley-Terry scores' with a set-selection rule that maximises the expected best idea among the delivered 3.",
+    "mechanism": "Scoring-module change only. (1) Bootstrap the pairwise records B=2000 times and refit BT/PL with a weak ridge prior to get score samples s_b[i]. (2) One cheap call labels each finalist with a mechanism cluster (the core lever pulled, not the topic), from a closed list of at most 6. (3) Add a shared cluster shift s_b[i] += tau*z_b[c(i)], z ~ N(0,1), tau = 0.5 x pooled score SD, so same-lever ideas succeed or fail together. (4) Greedy: take the highest mean score, then repeatedly add the item maximising mean_b[max over set of s_b]; ties within 1 SE go to a new cluster.",
+    "rationale": "A user mostly needs one good idea, and best-of-k value depends on variance and correlation, not only the mean (Girotra, Terwiesch, Ulrich 2010). Top-k by score ignores correlated duplicates; MMR reranking (Carbonell and Goldstein 1998) targets the same problem. A single agent picking 3 of its own 20 tends to choose variants of its favourite theme and has no posterior. Cited from memory; web was off.",
+    "assumptions": [
+      "Same-lever ideas have positively correlated ratings (checkable on existing data)",
+      "Cluster labels are consistent",
+      "The comparison bootstrap approximates real score uncertainty"
+    ],
+    "failure_modes": [
+      "If the metric is mean rating of the top 3, diversification loses by construction; make best-of-3 primary",
+      "Finalists already diverse, so a null result",
+      "Noisy labels make the tie-break random"
+    ],
+    "cheapest_test": "Offline replay on saved pairwise records and panel ratings: compute both selections per brief, compare best-of-3, mean-of-3 and distinct clusters with a paired bootstrap over briefs. Cost: one labelling call per brief.",
+    "effort": "2-3 days: about 60 lines of NumPy, one prompt, one config flag.",
+    "provenance": {
+      "generator_id": "G02",
+      "model": "sonnet",
+      "slot_type": "free",
+      "angle_id": null,
+      "band": null,
+      "transfer": "strong",
+      "research_derived": false
+    },
+    "sources": [
+      "Girotra, Terwiesch, Ulrich (2010) Management Science, Idea generation and the quality of the best idea",
+      "Carbonell and Goldstein (1998) SIGIR, MMR"
+    ],
+    "spec": "select_top3(records, labels, B=2000, tau=0.5*sd_pooled, k=3, tie_se=1.0). Flag portfolio_select on/off. Metrics: best-of-3 rating, mean-of-3, distinct clusters.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I004": {
+    "id": "I004",
+    "title": "Loss-conditioned revision under a fixed card budget with a two-order verifier gate",
+    "pitch": "Give each finalist's developer the judges' reasons for its losses, allow only a same-length revision, and accept it only if a different-family judge prefers it in both orderings.",
+    "mechanism": "Development sub-phase after the first pairwise round. (1) Collect up to 5 written reasons from each finalist's lost comparisons. (2) The developer gets the card plus those reasons and must fix only the cited weaknesses, keeping the mechanism, within +/-5% of the original token count (Python check; one retry, else the original stays). (3) A judge from a family different from generator and developer compares revised vs original in both orders, blinded. Accept only if the revision wins both. (4) Accepted revisions replace originals in the PL fit; rerun comparisons for changed items only.",
+    "rationale": "Unverified self-revision often fails to help (Huang et al. 2023); Self-Refine gains (Madaan et al. 2023) depend on useful feedback. Here the feedback is an independent adversary's reasons, and the gate makes the loop monotone in a verifier's preference. Length matching and both-order acceptance target verbosity and position bias (Zheng et al. 2023). A lone agent has no independent losses to condition on. Cited from memory; web was off.",
+    "assumptions": [
+      "Stated judge reasons identify real weaknesses",
+      "The verifier's preference correlates with final raters' preference",
+      "A 5% budget leaves room for substantive fixes"
+    ],
+    "failure_modes": [
+      "Revisions fix what judges say but cut ambition",
+      "Acceptance rate near zero, so no effect",
+      "Verifier and final panel share a family, reinforcing its style"
+    ],
+    "cheapest_test": "On 20 briefs from existing finalist sets, run revise plus gate and report the acceptance rate. A third-family panel rates accepted revisions vs originals, blinded. A control arm revising without loss reasons isolates the value of conditioning.",
+    "effort": "About 1 week: new sub-phase, length check, verifier prompt, PL replacement handling. Roughly +25% run cost.",
+    "provenance": {
+      "generator_id": "G02",
+      "model": "sonnet",
+      "slot_type": "free",
+      "angle_id": null,
+      "band": null,
+      "transfer": "strong",
+      "research_derived": false
+    },
+    "sources": [
+      "Huang et al. (2023) LLMs Cannot Self-Correct Reasoning Yet",
+      "Madaan et al. (2023) Self-Refine",
+      "Zheng et al. (2023) MT-Bench and Chatbot Arena"
+    ],
+    "spec": "revise(card, loss_reasons[:5], budget=0.95-1.05 x tokens) -> verify(revised, original, family not in {gen, dev}, orders AB and BA) -> accept iff both wins -> replace in PL. Arms: unrevised, no-reasons revision, loss-conditioned.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I005": {
+    "id": "I005",
+    "title": "Claim ledger with executable checks; survival scored on checks passed",
+    "pitch": "Falsifiable claims replace prose critique; sandbox runs and library lookups decide them, so ideas advance on checks passed, not eloquence.",
+    "mechanism": "New phase `claim_extraction` before critique: an extractor role (different model family) rewrites each sketch into 4-8 typed claims, each with a tolerance. Every critic objection must carry exactly one artifact: (a) a sandbox script that consumes the claim's numbers and prints PASS/FAIL; (b) a library lookup of past ideas at cosine >= 0.85 with recorded outcomes and falsifications (a novelty claim FAILs on a falsified hit); or (c) `not_checkable`, weight 0. The state machine runs artifacts; errors or timeouts = INCONCLUSIVE. Score s = P - 2F (P passed, F falsified) ranks ideas into development. The selector sees only the ledger, never critic prose. Cards with under 3 checkable claims rank last.",
+    "rationale": "Self-critique without external signal does not improve LLM reasoning (Huang 2023); tool-grounded critique does (Gou 2023). Atomic-claim decomposition makes verification more reliable (Min 2023). Persuasive prose sways judges independently of truth (Khan 2024; Zheng 2023); withholding it closes that channel. A single agent has no cross-run outcome library and does not falsify its own claims. Stage: critique and selection.",
+    "assumptions": [
+      "About 40% of claims are checkable by a 30 s numpy script or a lookup.",
+      "Falsified-claim rate in a top-3 tracks rater or outcome preference."
+    ],
+    "failure_modes": [
+      "Rigged checks (unconditional FAIL); mitigated by the consume-the-numbers rule and a 10% third-family audit.",
+      "Qualitative briefs yield mostly `not_checkable`; s ~ 0 discriminates nothing.",
+      "Generators hedge claims into unfalsifiable form; the 3-claim floor only partly blocks this."
+    ],
+    "cheapest_test": "One brief, critique run twice at equal tokens: prose-only (off) vs ledger (on). A held-out model family re-runs extractor plus checker over both top-3s and the single agent's top 3; report falsified-claim rate and blinded panel ranking. No sandbox code was run.",
+    "effort": "One week; critique-phase tokens +30-50%.",
+    "provenance": {
+      "generator_id": "G03",
+      "model": "fable",
+      "slot_type": "angle",
+      "angle_id": "A004",
+      "band": "middle",
+      "transfer": "partial",
+      "research_derived": false
+    },
+    "sources": [
+      "Huang 2023, arXiv:2310.01798",
+      "Gou 2023, arXiv:2305.11738",
+      "Min 2023, arXiv:2305.14251",
+      "Khan 2024, arXiv:2402.06782",
+      "Zheng 2023, arXiv:2306.05685"
+    ],
+    "spec": "Script: last stdout line PASS|FAIL, 30 s, numpy/scipy, no network. Lookup: cosine >= 0.85, k = 5. s = P - 2F; min-checkable 3; tie-break BT. Off-switch `critique.mode = prose|ledger`, equal tokens.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I006": {
+    "id": "I006",
+    "title": "Check-repair development loop with a cross-run library of check templates",
+    "pitch": "A bounded repair loop sees only failed checks and must pass or strike them; every executed check becomes a reusable cross-run template.",
+    "mechanism": "Repair loop, at most 3 iterations. The developer receives ledger rows with outcome FAIL or INCONCLUSIVE, plus check output, no critic prose. Options per row: (1) revise the idea until the same check passes on re-execution; (2) strike the claim; (3) contest with a counter-check, adjudicated by a third-model-family role that picks the check faithful to the claim's wording, else INCONCLUSIVE. After iteration 3 every non-PASS claim is struck. Each executed check is stored in the idea library as a parameterised template; prompts authoring a check are prepended with the top-3 templates at cosine > 0.8, to parameterise rather than rewrite. Final cards show no badges or check text.",
+    "rationale": "Code self-repair improves with execution feedback (Chen 2023) but the gain is bounded by feedback quality (Olausson 2023), motivating the 3-iteration cap and concrete check outcomes instead of prose. Voyager (Wang 2023) shows an accumulating library of verified executable skills lets later episodes reuse rather than re-improvise. A single agent has no prior runs to borrow checks from. Stage: development, compounding across runs.",
+    "assumptions": [
+      "Card 0's ledger or an equivalent set of executable checks exists at development time.",
+      "Claim patterns recur across briefs enough for templates to be reused."
+    ],
+    "failure_modes": [
+      "Developers weaken claims to triviality; diagnostic: claims per final card and rater specificity scores.",
+      "A wrong template propagates across runs; mitigated by dropping templates with adjudicator-contested rate above 30%."
+    ],
+    "cheapest_test": "Same brief, development run twice at equal tokens: one-shot (off) vs repair loop (on). Outcomes: falsified-claim rate of the top 3 under a held-out checker of another model family; claims struck per idea; template reuse rate on a second brief. No sandbox code was run.",
+    "effort": "One to two weeks; development tokens roughly 2x.",
+    "provenance": {
+      "generator_id": "G03",
+      "model": "fable",
+      "slot_type": "angle",
+      "angle_id": "A004",
+      "band": "middle",
+      "transfer": "partial",
+      "research_derived": false
+    },
+    "sources": [
+      "Chen 2023, arXiv:2304.05128",
+      "Olausson 2023, arXiv:2306.09896",
+      "Wang 2023, arXiv:2305.16291"
+    ],
+    "spec": "for it in 1..3: rows = ledger.where(outcome in {FAIL, INCONCLUSIVE}); developer(rows, templates) -> revise | strike | contest; re-execute; contested -> adjudicator. Retrieval: cosine > 0.8, k = 3, exclude contested_rate > 0.3. Flags: `develop.mode = oneshot|repair`, `develop.max_iter = 3`, `templates.enabled` isolates library from loop.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I007": {
+    "id": "I007",
+    "title": "Residual selection head learned from the library's blinded verdicts",
+    "pitch": "Replace the final top-3 cut with a regularised logistic model, trained on past blinded benchmark verdicts, that predicts which finalists beat the baseline.",
+    "mechanism": "The library stores per finalist x: internal BT strength (z-scored per run), per-criterion critic scores, development score delta, generator id, max cosine similarity to library ideas, and nuisance covariates (word count, citation/hedge counts, judge-generator family match). Label: fraction of counterbalanced external comparisons it wins against the baseline's three cards. Residual model: logit p = beta0*BT + w.x, beta0 fixed at the current internal weight, w ~ N(0, sigma^2), so with few labels it reduces to today's ranking.",
+    "rationale": "Length-controlled AlpacaEval (Dubois et al. 2024) regresses preferences on length and zeroes that term, removing much verbosity bias; this applies it to selection. Zheng et al. 2023 and Panickssery et al. 2024 document the verbosity, position and self-preference biases the covariates target. Si et al. 2024 found LLM idea rankings agree weakly with experts, so internal ranking error exists to learn. A lone agent never sees its own selection error. No code run (sandbox unavailable).",
+    "assumptions": [
+      "At least ~15 benchmarked briefs with all finalists labelled",
+      "Selection error is partly systematic across briefs",
+      "Training labels come from humans or a model family different from the eval panel"
+    ],
+    "failure_modes": [
+      "Labels from the eval panel teach its biases (Goodhart)",
+      "Brief heterogeneity swamps ~10 labels per brief",
+      "Generator changes shift the distribution"
+    ],
+    "cheapest_test": "Offline on existing runs: panel-rate all finalists once (~10 x 3 baseline cards x 2 orders). Compare leave-one-brief-out AUC and top-3 win rate, calibrated vs internal BT. No new generation.",
+    "effort": "~4 days: schema, labelling job, ~80-line NumPy IRLS fit, switch. Benchmark panel cost doubles once; run cost unchanged.",
+    "provenance": {
+      "generator_id": "G04",
+      "model": "opus",
+      "slot_type": "angle",
+      "angle_id": "A001",
+      "band": "middle",
+      "transfer": "partial",
+      "research_derived": false
+    },
+    "sources": [
+      "arXiv:2404.04475 (Dubois 2024)",
+      "arXiv:2306.05685 (Zheng 2023)",
+      "arXiv:2404.13076 (Panickssery 2024)",
+      "arXiv:2409.04109 (Si 2024)"
+    ],
+    "spec": "select_by in {internal_BT, calibrated}. Binomial log-likelihood on (wins, trials), L2 lambda=1 on w, per-run z-scored features; label weight 3 for human/measured, 1 for panel. At selection, zero nuisance terms so they absorb bias without being rewarded. Fall back to internal_BT below 15 labelled briefs. Evaluate by leave-one-brief-out log-loss/AUC, then top-3 win rate on later briefs with a different-family panel.",
+    "version": 1,
+    "parent_id": null
+  },
+  "I008": {
+    "id": "I008",
+    "title": "Judge-reliability Bradley-Terry fitted to external verdicts",
+    "pitch": "Weight each finals judge by how well its votes predicted independent raters on past runs, and spend the fixed comparison budget on reliable judges near the top-3 boundary.",
+    "mechanism": "Judge j is a (model, prompt variant) pair. Vote model: P(i>k | j, i first) = sigmoid(a_j(theta_i - theta_k) + b_j + c_j(f_ij - f_kj)); a_j is discrimination, b_j position bias, f_ij = 1 if idea i's generator shares judge j's family (self-preference). Fit: fix theta of past finalists to external BT strengths, fit (a_j, b_j, c_j) by MAP with priors N(1,0.5), N(0,0.5), N(0,0.5), then freeze. At runtime estimate theta by MAP with N(0,1) prior, subtracting b_j and c_j terms.",
+    "rationale": "Crowd-BT (Chen et al. 2013) and Dawid-Skene (1979) show reliability-weighted aggregation beats uniform weighting. PoLL (Verga et al. 2024) shows judges differ in agreement with humans. Zheng et al. 2023 and Panickssery et al. 2024 show position and self-preference biases are measurable. A lone agent is one judge with unknown a and uncorrected b, c. No code run (sandbox unavailable).",
+    "assumptions": [
+      "Judge reliability is stable across briefs",
+      "At least ~300 past internal votes on externally rated ideas",
+      "External reference differs from the evaluation panel"
+    ],
+    "failure_modes": [
+      "Noisy a_j estimates add variance",
+      "If all judges are equally weak, it reduces to uniform with no gain",
+      "Judge model updates invalidate frozen parameters"
+    ],
+    "cheapest_test": "Offline refit on existing runs: compare held-out-brief pairwise agreement with external rankings and Kendall tau of theta vs external strengths, uniform vs judge-aware BT at equal vote count.",
+    "effort": "~3 days: scoring-module extension and scheduler change. Zero extra tokens at equal budget.",
+    "provenance": {
+      "generator_id": "G04",
+      "model": "opus",
+      "slot_type": "angle",
+      "angle_id": "A001",
+      "band": "middle",
+      "transfer": "partial",
+      "research_derived": false
+    },
+    "sources": [
+      "Chen et al. 2013, Crowd-BT, WSDM",
+      "Dawid & Skene 1979, Applied Statistics 28(1)",
+      "arXiv:2404.18796 (Verga 2024)",
+      "arXiv:2306.05685 (Zheng 2023)"
+    ],
+    "spec": "judge_model in {uniform, reliability}. Of fixed budget B, 10% uniform across judges (monitoring); 90% to pairs among current top 6 with |theta_i - theta_k| < 0.5, judges sampled proportional to max(a_j,0)^2 (Fisher information per vote). Every pair shown in both orders. Refit a, b, c after each benchmark batch.",
+    "version": 1,
+    "parent_id": null
+  }
+}

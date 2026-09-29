@@ -1,0 +1,98 @@
+[
+  {
+    "idea_id": "I005",
+    "upside": 4,
+    "probability": 2,
+    "critic_id": "critic-001"
+  },
+  {
+    "idea_id": "I004",
+    "upside": 3,
+    "probability": 3,
+    "critic_id": "critic-001"
+  },
+  {
+    "idea_id": "I006",
+    "upside": 3,
+    "probability": 2,
+    "critic_id": "critic-001"
+  },
+  {
+    "idea_id": "I003",
+    "upside": 2,
+    "probability": 3,
+    "critic_id": "critic-001"
+  },
+  {
+    "idea_id": "I001",
+    "upside": 3,
+    "probability": 2,
+    "critic_id": "critic-002"
+  },
+  {
+    "idea_id": "I002",
+    "upside": 2,
+    "probability": 2,
+    "critic_id": "critic-002"
+  },
+  {
+    "idea_id": "I003",
+    "upside": 3,
+    "probability": 2,
+    "critic_id": "critic-002"
+  },
+  {
+    "idea_id": "I004",
+    "upside": 3,
+    "probability": 3,
+    "critic_id": "critic-002"
+  },
+  {
+    "idea_id": "I001",
+    "upside": 4,
+    "probability": 3,
+    "critic_id": "critic-003"
+  },
+  {
+    "idea_id": "I008",
+    "upside": 3,
+    "probability": 2,
+    "critic_id": "critic-003"
+  },
+  {
+    "idea_id": "I002",
+    "upside": 3,
+    "probability": 2,
+    "critic_id": "critic-003"
+  },
+  {
+    "idea_id": "I007",
+    "upside": 3,
+    "probability": 3,
+    "critic_id": "critic-003"
+  },
+  {
+    "idea_id": "I007",
+    "upside": 3,
+    "probability": 2,
+    "critic_id": "critic-004"
+  },
+  {
+    "idea_id": "I005",
+    "upside": 4,
+    "probability": 2,
+    "critic_id": "critic-004"
+  },
+  {
+    "idea_id": "I008",
+    "upside": 2,
+    "probability": 3,
+    "critic_id": "critic-004"
+  },
+  {
+    "idea_id": "I006",
+    "upside": 3,
+    "probability": 2,
+    "critic_id": "critic-004"
+  }
+]

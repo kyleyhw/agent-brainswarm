@@ -1,0 +1,6 @@
+{"verdicts": [
+{"critique_id": "critic-004-13", "generic": false, "reason": "It rests on I006's stated dependency on 'Card 0's ledger', its ledger.where(FAIL, INCONCLUSIVE) spec and I005's 40% checkable figure, none of which would fit I008."},
+{"critique_id": "critic-004-14", "generic": false, "reason": "It targets I006's specific rule that every non-PASS claim is struck after iteration 3, together with the F=0 no-penalty scoring and badge-free final cards, so it could not be pasted onto I007."},
+{"critique_id": "critic-004-15", "generic": false, "reason": "It attacks I006's equal-token on/off test against its stated 'roughly 2x' development cost and cites Olausson 2023 on self-repair, which is specific to a repair-loop idea and not applicable to I007."},
+{"critique_id": "critic-004-16", "generic": false, "reason": "It depends on I006's cross-brief template reuse assumption, the cosine > 0.8 match, the 30% contested-rate filter and the two-brief reuse test, none of which belong to I005."}
+]}
