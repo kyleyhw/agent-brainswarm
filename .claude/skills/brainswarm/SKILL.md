@@ -139,7 +139,7 @@ When `next` returns `done`:
 - **Rubric hash error:** someone edited `rubric.json`; stop and tell the user. Never
   "fix" it by re-freezing mid-run.
 - **Sandbox unavailable:** fine; agents are told to run no code and say so.
-- **Usage shows no tokens:** descriptions were not `bs <run> <id>`; say so.
+- **Usage shows no tokens:** descriptions were not `bs <run> <phase>/<id>`; say so.
 
 ## Do not
 

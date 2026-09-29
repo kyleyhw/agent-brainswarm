@@ -145,8 +145,38 @@ def judge_batches(
     models: Sequence[str],
     rng: np.random.Generator,
     prefix: str = "judge",
+    design: str = "crossover",
 ) -> list[JudgeBatch]:
-    """Split both orders of every pair into dispatches; the two orders never share one."""
+    """Split both orders of every pair into dispatches; the two orders never share one.
+
+    ``crossover`` (default): each pair goes to one judge model, which sees it in both orders
+    in two different dispatches. Every model's verdicts then contain within-model order
+    contrasts, which is what identifies the position bias. ``split`` (runs recorded before
+    2026-09-30): the two orders go to different models; with few dispatches the position
+    bias is then aliased with disagreement between models (DESIGN.md §10).
+    """
+    if design == "split":
+        return _split_batches(pairs, per_dispatch, models, rng, prefix)
+    shuffled = list(pairs)
+    rng.shuffle(shuffled)
+    out: list[JudgeBatch] = []
+    for m, model in enumerate(models):
+        mine = shuffled[m :: len(models)]
+        for half in ([(a, b) for a, b in mine], [(b, a) for a, b in mine]):
+            rng.shuffle(half)
+            for start in range(0, len(half), per_dispatch):
+                chunk = tuple(half[start : start + per_dispatch])
+                out.append(JudgeBatch(f"{prefix}-{len(out) + 1:03d}", chunk, model))
+    return out
+
+
+def _split_batches(
+    pairs: Sequence[tuple[str, str]],
+    per_dispatch: int,
+    models: Sequence[str],
+    rng: np.random.Generator,
+    prefix: str,
+) -> list[JudgeBatch]:
     forward = [(a, b) for a, b in pairs]
     backward = [(b, a) for a, b in pairs]
     rng.shuffle(forward)
@@ -155,8 +185,6 @@ def judge_batches(
     for half, offset in ((forward, 0), (backward, 1)):
         for j, start in enumerate(range(0, len(half), per_dispatch)):
             chunk = tuple(half[start : start + per_dispatch])
-            # The reverse half is shifted by one model so a pair's two orders
-            # are judged by different models whenever more than one is set.
             model = models[(j + offset) % len(models)]
             out.append(JudgeBatch(f"{prefix}-{len(out) + 1:03d}", chunk, model))
     return out

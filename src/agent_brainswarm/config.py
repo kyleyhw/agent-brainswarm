@@ -61,6 +61,7 @@ class RunConfig:
     judge_models: tuple[str, ...]
     checkpoint: bool
     seed: int
+    judge_design: str = "crossover"  # see schedule.judge_batches
 
 
 SIZE_PRESETS: dict[Size, dict[str, Any]] = {
@@ -246,6 +247,7 @@ def config_to_dict(config: RunConfig) -> dict[str, Any]:
 def config_from_dict(data: Mapping[str, Any]) -> RunConfig:
     """Inverse of :func:`config_to_dict`."""
     fields = {f.name for f in dataclasses.fields(RunConfig)}
+    data = {"judge_design": "split", **data}  # runs recorded before the field existed
     missing = fields - set(data)
     if missing:
         raise SchemaError([f"config missing {sorted(missing)}"])

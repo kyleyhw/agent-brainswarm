@@ -8,7 +8,7 @@ hooks:
     - matcher: "Bash|Write|Edit|MultiEdit"
       hooks:
         - type: command
-          command: brainswarm guard
+          command: "command -v brainswarm >/dev/null 2>&1 && exec brainswarm guard || { echo 'brainswarm CLI not on PATH, so the guard cannot run; tool call blocked (run install.py)' >&2; exit 2; }"
 ---
 
 You are the **brainswarm checker**. For each critique you decide whether it would be

@@ -1,7 +1,10 @@
 """PreToolUse guard for brainswarm roles (declared in the role agents' frontmatter).
 
 Claude Code passes the pending tool call as JSON on stdin. Exit code 0
-allows it; exit code 2 blocks it and shows stderr to the agent.
+allows it; exit code 2 blocks it and shows stderr to the agent. Any other
+exit code is a non-blocking error, so the tool call would go ahead: the
+guard therefore turns every failure into exit 2 (fail closed), and the
+agents' hook command exits 2 itself when the CLI is not on PATH.
 
 Rules:
 
@@ -54,7 +57,10 @@ def main() -> int:
     except json.JSONDecodeError:
         print("guard: unreadable hook input", file=sys.stderr)
         return 2
-    allowed, reason = decide(call)
+    try:
+        allowed, reason = decide(call)
+    except Exception as exc:  # noqa: BLE001 - any crash must block: exit codes other than 2 allow
+        allowed, reason = False, f"guard: could not evaluate the call ({exc!r})"
     if not allowed:
         print(reason, file=sys.stderr)
         return 2

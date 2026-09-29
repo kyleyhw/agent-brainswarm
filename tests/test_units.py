@@ -195,6 +195,12 @@ def test_match_pairs_and_orders_in_different_dispatches() -> None:
             where[(a, c)] = b.dispatch_id
     for a, c in pairs:
         assert where[(a, c)] != where[(c, a)]
+    # Crossover: the same model judges both orders of a pair, and both models are used.
+    model_of = {b.dispatch_id: b.model for b in batches}
+    assert all(model_of[where[(a, c)]] == model_of[where[(c, a)]] for a, c in pairs)
+    assert {b.model for b in batches} == {"opus", "fable"}
+    split = judge_batches(pairs, 10, ("opus", "fable"), np.random.default_rng(2), design="split")
+    assert sum(len(b.pairs) for b in split) == sum(len(b.pairs) for b in batches) == 2 * len(pairs)
 
 
 def test_boundary_pairs_only_uncertain() -> None:
@@ -253,10 +259,11 @@ def test_sandbox_command_is_locked_down(tmp_path: Path) -> None:
     assert any(x.endswith(":/data:ro") for x in cmd)
 
 
-def test_sandbox_reports_unavailable_docker(tmp_path: Path) -> None:
-    ok, _reason = sandbox.available()
-    if ok:
-        pytest.skip("docker is available here")
+def test_sandbox_reports_unavailable_docker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(sandbox.shutil, "which", lambda _name: None)
+    assert sandbox.available() == (False, "docker is not installed")
     with pytest.raises(sandbox.SandboxUnavailable):
         sandbox.run(tmp_path / "s.py", tmp_path / "scratch")
 
@@ -289,9 +296,17 @@ def test_usage_dedupes_and_estimates_missing_output(tmp_path: Path) -> None:
         },
     ]
     (sub / "agent-a.jsonl").write_text("\n".join(json.dumps(r) for r in rows))
-    (sub / "agent-a.meta.json").write_text(json.dumps({"description": "bs RUN1 critic-001"}))
+    (sub / "agent-a.meta.json").write_text(
+        json.dumps({"description": "bs RUN1 critique/critic-001"})
+    )
+    # A retry reuses the description; both attempts must be counted (regression).
+    (sub / "agent-b.jsonl").write_text("\n".join(json.dumps(r) for r in rows))
+    (sub / "agent-b.meta.json").write_text(
+        json.dumps({"description": "bs RUN1 critique/critic-001"})
+    )
     found = usage.find_run_transcripts("RUN1", tmp_path)
-    u = usage.parse_transcript(found["critic-001"])
+    assert len(found["critique/critic-001"]) == 2
+    u = usage.parse_transcript(found["critique/critic-001"][0])
     assert (u.input, u.cache_read, u.messages) == (15, 100, 2)
     assert u.output_logged == 53 and u.output_estimated == 100 + 50  # 400 chars / 4
 

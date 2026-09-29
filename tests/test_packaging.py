@@ -1,9 +1,11 @@
 """Packaging checks: the package imports, the CLI is complete, the skill is named for its trigger."""
 
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 
 import agent_brainswarm
 from agent_brainswarm import cli
@@ -40,7 +42,7 @@ def test_every_dispatched_role_has_a_guarded_agent_definition() -> None:
         text = (REPO / f".claude/agents/brainswarm-{role}.md").read_text()
         front = yaml.safe_load(text.split("---")[1])
         assert front["name"] == f"brainswarm-{role}"
-        assert front["hooks"]["PreToolUse"][0]["hooks"][0]["command"] == "brainswarm guard"
+        assert front["hooks"]["PreToolUse"][0]["hooks"][0]["command"] == hook_command()
         if role in ("clusterer", "checker", "advocate", "judge", "rubric-auditor", "ideator"):
             assert "Web" not in front["tools"] and "Bash" not in front["tools"]
 
@@ -59,3 +61,34 @@ def test_installer_links_skill_and_agents(tmp_path: Path, monkeypatch: pytest.Mo
     assert "brainswarm-judge.md" in agents and len(agents) == 9
     # Re-running is idempotent.
     assert all(line.startswith("ok") for line in install.install_skills(force=False))
+
+
+def hook_command() -> str:
+    """The guard hook command shared by every role agent."""
+    text = (REPO / ".claude/agents/brainswarm-judge.md").read_text()
+    front = yaml.safe_load(text.split("---")[1])
+    return front["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+
+
+@pytest.mark.parametrize("on_path", [True, False])
+def test_guard_hook_fails_closed(tmp_path: Path, on_path: bool) -> None:
+    # Claude Code blocks only on exit 2; a missing CLI (exit 127) would silently allow.
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    if on_path:
+        fake = bin_dir / "brainswarm"
+        fake.write_text("#!/bin/sh\necho guard-ran\nexit 0\n")
+        fake.chmod(0o755)
+    env = {"PATH": f"{bin_dir}:/usr/bin:/bin"}
+    done = subprocess.run(
+        ["sh", "-c", hook_command()],
+        input="{}",
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    if on_path:
+        assert done.returncode == 0 and "guard-ran" in done.stdout
+    else:
+        assert done.returncode == 2 and "not on PATH" in done.stderr

@@ -1,6 +1,6 @@
 """Token accounting from Claude Code transcripts (DESIGN.md §14).
 
-Every dispatch is launched with the description ``bs <run> <dispatch>``,
+Every dispatch is launched with the description ``bs <run> <phase>/<dispatch>``,
 which Claude Code stores in ``<projects>/<slug>/<session>/subagents/
 agent-<id>.meta.json`` next to the transcript ``agent-<id>.jsonl``. This
 module finds a run's subagent transcripts that way and sums their usage.
@@ -103,9 +103,14 @@ def parse_transcript(path: Path) -> Usage:
     return usage
 
 
-def find_run_transcripts(run_name: str, root: Path | None = None) -> dict[str, Path]:
-    """Map dispatch id -> transcript path for subagents launched for this run."""
-    found: dict[str, Path] = {}
+def find_run_transcripts(run_name: str, root: Path | None = None) -> dict[str, list[Path]]:
+    """Map dispatch key -> transcript paths for subagents launched for this run.
+
+    The key is ``<phase>/<id>`` (descriptions ``bs <run> <phase>/<id>``) or, for runs
+    recorded before phases were added, the bare id. It maps to a list because a retried
+    dispatch reuses its description, and every attempt costs tokens.
+    """
+    found: dict[str, list[Path]] = {}
     marker = f"bs {run_name} "
     for meta in (root or projects_dir()).glob("*/*/subagents/*.meta.json"):
         try:
@@ -115,7 +120,7 @@ def find_run_transcripts(run_name: str, root: Path | None = None) -> dict[str, P
         if description.startswith(marker):
             transcript = meta.with_name(meta.name.replace(".meta.json", ".jsonl"))
             if transcript.exists():
-                found[description[len(marker) :].strip()] = transcript
+                found.setdefault(description[len(marker) :].strip(), []).append(transcript)
     return found
 
 

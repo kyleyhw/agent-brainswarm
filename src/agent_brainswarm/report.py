@@ -398,10 +398,17 @@ def build(run: Run) -> list[str]:
 
     # ---- usage
     transcripts = usage.find_run_transcripts(run.root.name)
-    phase_of = {p.stem: p.parent.name for p in run.path("out").glob("*/*.json")}
+    phases_of: dict[str, set[str]] = defaultdict(set)
+    for p in run.path("out").glob("*/*.json"):
+        phases_of[p.stem].add(p.parent.name)
     by_phase: dict[str, usage.Usage] = defaultdict(usage.Usage)
-    for did, path in transcripts.items():
-        by_phase[phase_of.get(did, "other")].add(usage.parse_transcript(path))
+    for key, paths in transcripts.items():
+        if "/" in key:
+            phase = key.split("/")[0]
+        else:  # legacy bare id: ambiguous when the id recurs across phases (G01 ...)
+            phase = "+".join(sorted(phases_of.get(key, {"other"})))
+        for path in paths:
+            by_phase[phase].add(usage.parse_transcript(path))
     total = usage.Usage()
     for u in by_phase.values():
         total.add(u)

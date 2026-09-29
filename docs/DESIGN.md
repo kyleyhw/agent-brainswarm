@@ -199,7 +199,7 @@ items B3/B4):
 All state is on disk and `next` is idempotent: after a compaction or crash
 the referee runs `brainswarm status` and continues. The referee never opens
 `tasks/` or `out/`. Every dispatch is launched with the description
-`bs <run> <id>`, which is how token usage is attributed (§14).
+`bs <run> <phase>/<id>`, which is how token usage is attributed (§14).
 
 ### Phases
 

@@ -1196,7 +1196,12 @@ def _judge_plan(run: Run, pairs: Sequence[tuple[str, str]], phase: str) -> list[
     cfg, r = _config(run), _rubric(run)
     cards = _cards(run)
     batches = judge_batches(
-        pairs, cfg.pairs_per_judge, cfg.judge_models, _rng(run, phase), prefix=phase
+        pairs,
+        cfg.pairs_per_judge,
+        cfg.judge_models,
+        _rng(run, phase),
+        prefix=phase,
+        design=cfg.judge_design,
     )
     stored = (
         run.read("data", "judge_batches.json") if run.exists("data", "judge_batches.json") else []
@@ -1494,7 +1499,7 @@ def _dispatch_view(run: Run, phase: str, dispatches: Sequence[Dispatch]) -> dict
         "instruction": (
             f"Launch these {len(dispatches)} subagents (at most {wave} at a time). For each, use "
             "subagent_type = agent, model = model, and prompt exactly as given; set the description "
-            f"to 'bs {run.root.name} <id>'. Then run: brainswarm ingest {run.root}"
+            f"to 'bs {run.root.name} {phase}/<id>'. Then run: brainswarm ingest {run.root}"
         ),
         "dispatches": [
             {"id": d.id, "agent": f"brainswarm-{d.role}", "model": d.model, "prompt": d.prompt(run)}
