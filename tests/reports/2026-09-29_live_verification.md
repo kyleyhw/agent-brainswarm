@@ -47,7 +47,7 @@ These ran against the real platform, not fakes. Where a check needed tokens its 
 
 - **Position bias** (live): a judge-prompt change reduced first-listed wins only from 11/12 to
   10/12; a crossover showed the bias is real (20/24, each model flipping in 4 of 6 pairs). Fixed
-  by the crossover schedule; see `examples/README.md`.
+  by the crossover schedule; see `docs/studies/position_bias.md`.
 - **Workshop word cap** (live): three of four cards over the cap in the demo; with a per-field
   budget, zero of four in the rerun.
 - **Usage undercount**: repeated dispatch ids and retries overwrote transcripts; the demo's

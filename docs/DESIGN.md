@@ -837,7 +837,7 @@ winner with the order in 4 of 6 pairs), which led to the crossover
 schedule (§5); and a rerun from the workshop gave cards within the word
 cap at first attempt and a reversed finals order, showing that variation
 between workshop attempts can exceed the stated rank intervals. Details and
-figure: `examples/README.md`. Not demoed: web research, the multi-run
+figure: [`docs/studies/position_bias.md`](studies/position_bias.md); a tour of the run: `examples/README.md`. Not demoed: web research, the multi-run
 library.
 
 ## 18. Build order

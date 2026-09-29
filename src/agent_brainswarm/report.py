@@ -337,8 +337,16 @@ def build(run: Run) -> list[str]:
 
     # ---- limitations and bias metrics
     limitations: list[str] = []
-    failed_lines = [x for e in log for x in e["lines"] if "failed" in x or x.startswith("dropped")]
-    limitations += failed_lines
+    # Skip the report phase's own log lines: a rebuilt report would otherwise re-collect the
+    # previous digest's Limitations line. dict.fromkeys dedupes and keeps order.
+    failed_lines = [
+        x
+        for e in log
+        if e["phase"] != "report"
+        for x in e["lines"]
+        if "failed" in x or x.startswith("dropped")
+    ]
+    limitations += list(dict.fromkeys(failed_lines))
     if final.get("method") == "laplace":
         limitations.append(
             f"finals had only {final.get('clusters')} judge dispatches; uncertainty uses the Laplace approximation, not the bootstrap"

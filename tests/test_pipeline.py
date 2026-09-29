@@ -233,3 +233,17 @@ def test_judge_verdicts_name_winner_and_criterion(tmp_path: Path) -> None:
         assert any(why in p for p in problems), (bad, problems)
     task = branch.path("tasks", "finals", f"{d.id}.md").read_text()
     assert step["phase"] == "finals" and f"**{a}** vs **{b}**" in task and "first**" not in task
+
+
+def test_rebuilt_report_does_not_repeat_limitations(tmp_path: Path) -> None:
+    # Regression: the digest re-collected its own Limitations line on every rebuild.
+    from agent_brainswarm import report
+
+    run = new_run(tmp_path)
+    drive(run)
+    pipeline._log(run, "critique", ["generic filter: 3 failed the substitution test"])
+    for _ in range(3):
+        pipeline._log(run, "report", report.build(run))
+    digest = run.path("digest.txt").read_text()
+    assert digest.count("Limitations:") == 1
+    assert digest.count("3 failed the substitution test") == 1

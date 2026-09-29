@@ -1,14 +1,168 @@
 # Examples
 
+A step-by-step tour of one recorded brainswarm run, followed by how to run the demos. Every
+number and quotation below comes from the files in `demo-run/`.
+
 | File | What it is |
 |---|---|
-| `demos/etf-strategy.yaml` | Manifest for the live mini demo: a rule-based ETF trading strategy (recorded below) |
-| `demos/exoplanet-transit.yaml` | Manifest: a low-cost exoplanet-transit setup for a 20 cm amateur telescope (not yet run) |
+| `demo-run/` | A recorded live run: brief, config, rubric, every task file and agent output, the code-owned `data/`, and the rendered `report.md` / `report.html` |
+| `demo_run.py` | Offline replay: re-runs the code over the recorded agent outputs (zero tokens) and checks the ranking is reproduced exactly |
+| `make_figures.py` | Draws the README figures from `demo-run/` |
+| `demos/etf-strategy.yaml` | Manifest of the recorded run |
 | `demos/home-heating.yaml` | Manifest: cutting home heating energy by 30 % for under $3,000 (not yet run) |
-| `demo-run/` | A recorded live run of that manifest: brief, config, rubric, every task file and agent output, the code-owned `data/`, and the rendered `report.md` / `report.html` |
-| `demo_run.py` | Offline replay: re-runs the code layer over the recorded agent outputs (zero tokens) and checks the ranking is reproduced exactly |
-| `demo-reruns/` | New agent outputs of three controlled reruns of the recorded run (finals-only, crossover, from-workshop) |
-| `rerun_comparison.py` | Rebuilds the reruns offline from `demo-run/` plus `demo-reruns/` and writes `demo-reruns/comparison.json` and the figure below |
+| `demos/exoplanet-transit.yaml` | Manifest: a low-cost exoplanet-transit setup for a 20 cm amateur telescope (not yet run) |
+| `demo-reruns/`, `rerun_comparison.py` | Controlled reruns of this run, analysed in [`docs/studies/position_bias.md`](../docs/studies/position_bias.md) |
+
+## Tour of the recorded run (2026-09-29)
+
+![What each stage of the demo run produced](../docs/figures/demo_pipeline.png)
+
+*Each box is one stage, left to right, with what it produced; the sections below follow the
+same order.*
+
+### 1. Brief and rubric
+
+The brief asked for a rule-based, long-only strategy over 10 liquid ETFs that trades on at
+least 3 days a week, keeps weekly turnover at or below 20 %, uses only daily closing prices,
+and optimises long-run growth with maximum drawdown below 20 % while staying diversified. The
+run used a reduced `quick` size (4 generators, 2 ideas each, 2 critic reviews per idea, 4
+development slots) with web research off.
+
+The referee turned the brief into a rubric, and an auditor agent checked it before it was
+frozen (15 issues raised; clarifications accepted, numeric weights rejected because the finals
+are pairwise). The rubric has two kinds of criteria:
+
+- **Hard rules (gates)**, only those the user stated, plus legality: `long_only_fixed_universe`,
+  `trades_three_days_per_week`, `turnover_cap`, `daily_close_data_only`, `legal_and_ethical`.
+  An idea that breaks one is marked in the report, never deleted.
+- **Judged criteria**: `growth`, `drawdown_control`, `diversification`, `robustness`,
+  `constraint_fit`, `specificity`, `novelty`.
+
+### 2. Approaches and far domains
+
+Before any idea was written, each generator proposed approach angles and "far domains" (fields
+with nothing to do with finance) without seeing the others'. Examples:
+
+- *Angle:* "Treat the 20 % drawdown limit as a consumable budget that is part of the
+  portfolio's state."
+- *Angle:* "Make the correlation structure itself the signal."
+- *Far domains:* TCP congestion control, fisheries harvest rules, athlete load management,
+  reservoir drought rules, the artificial pancreas, **power-grid frequency regulation**.
+
+Code grouped the 16 proposals by how many generators thought of them (common, middle, rare)
+and gave each generator one assignment: two got a middle-band angle, one got a rare far domain
+(power-grid regulation), and one had a free choice.
+
+### 3. Ideas, sketched blind, then developed
+
+Each generator sketched 2 ideas **before any research**, a pre-registration that stops
+research from pulling every idea toward the most-cited answer, then turned them into full idea
+cards (mechanism, rationale, assumptions, failure modes, cheapest test, operational spec).
+
+| Idea | Assignment | Title |
+|---|---|---|
+| I001 | angle (middle) | Absorption-ratio throttle on an inverse-volatility book |
+| I002 | angle (middle) | Stress-mixture covariance sizing with a rank-1 stress prior |
+| I003 | far domain (rare) | Droop-governed risk parity |
+| I004 | far domain (rare) | N-1 contingency reserve |
+| I005 | angle (middle) | Effective-bets throttle with a daily turnover budget |
+| I006 | angle (middle) | Down-day correlation gap ladder on three trade days |
+| I007 | free | Grossman–Zhou cushion sizing of a 3-bucket risk-parity core |
+| I008 | free | Crisis-correlation risk budgeting |
+
+The two power-grid ideas, I003 and I004, borrow grid engineering directly: a "droop" law that
+cuts exposure in proportion to the drawdown, and a reserve large enough to survive losing the
+largest asset-class cluster, as grids keep a reserve against losing their largest generator.
+
+### 4. Critique
+
+Critics reviewed anonymised cards in small overlapping batches: 66 critiques in all. Every
+critique quotes the text it attacks (code checks the quote), explains the mechanism, gives
+evidence, a severity, and what would prove the critic wrong. An example, on I004:
+
+> **Target:** "Within cluster: inverse 63-day vol, halved if close < 200-day SMA, renormalized."
+>
+> **Mechanism:** Renormalizing within the cluster cancels the halving whenever every asset in
+> the cluster is below its 200-day SMA, which is exactly the bear-market state. Weights then
+> revert to plain inverse-vol. […]
+>
+> **Evidence:** Arithmetic. Five equity ETFs all below their SMA each get 0.5·v_i, and the sum
+> is renormalized to 1, so the weights equal the unfiltered inverse-vol weights. […]
+>
+> **Severity:** major. **Would be refuted by:** a backtest showing the filter changes
+> drawdown materially in 2008 or 2022.
+
+A checker agent then applies a substitution test to every critique: would it fit any other
+idea unchanged? Three were flagged as generic and carry no weight. (On inspection, at least one
+of the three contains idea-specific arithmetic, so the test can over-flag.)
+
+Critics also ranked their batch. The preliminary ranking put the two rare-domain ideas first:
+I004, then I003.
+
+### 5. Development
+
+Four ideas were developed ("workshopped") by a different model from their author: three for
+high preliminary value (I004, I003, I008) and one as a wildcard, the most novel remaining idea
+(I002). The developer must answer every serious critique as fixed, rebutted or conceded. On the
+critique above: *"Agreed: renormalisation cancelled the filter. Trend now halves weights
+without renormalising, so freed weight goes to cash."* Fresh critics then re-checked the
+developed versions (12 re-checks); they judged this fix holds and found no idea had drifted
+into a different one.
+
+### 6. Finals and report
+
+The 4 developed ideas met in pairwise finals, each pair judged in both presentation orders (12
+verdicts), and a statistical model turned the verdicts into ranks with 95 % intervals.
+
+![Finalists' ranks with 95 % intervals](../docs/figures/demo_ranking.png)
+
+*Each row is a finalist; the dot is its rank (1 = best) and the line its 95 % interval. On the
+right is its estimated chance of beating a randomly chosen other finalist. Every interval spans
+ranks 1 to 4, so the report says the four cannot be separated at this size, with weak evidence
+for I008.*
+
+The judges showed a strong bias toward whichever idea was listed first (11 of 12 verdicts).
+The model estimates that bias and removes it from the strengths, which is why the result is
+"not separable" rather than a false winner; a later study changed the finals design so the
+bias can be measured more cleanly ([`position_bias.md`](../docs/studies/position_bias.md)).
+
+### 7. What you receive
+
+- **`digest.txt`**: a few lines for the chat: the top idea families with rank intervals, the
+  wildcards shown, token use, and the main limitations.
+- **`report.md` / `report.html`**: every idea with its full critique record, how each
+  critique was answered, gate status, preliminary and final rankings, and the limitations.
+- **Export bundles** (`brainswarm export`): for a chosen idea, `idea.md`, `hypotheses.md`, an
+  implementation brief and a draft `agent-evolve.yaml`, ready for agent-evolve to build and
+  measure.
+- **The idea library**: this run's ideas, available to the next run in the same project.
+
+The digest of this run, abridged:
+
+```
+Top families:
+1. Crisis-correlation risk budgeting ... [I008-v2]: rank 1 (95% 1-4), mean win 72%
+2. N-1 contingency reserve ... [I004-v2]: rank 2 (95% 1-4), mean win 50%
+3. Droop-governed 3-bucket risk parity ... [I003-v2]: rank 3 (95% 1-4), mean win 50%
+4. Stress-Mixture Covariance Sizing ... [I002-v2]: rank 4 (95% 1-4), mean win 28%
+Wildcards:
+- Down-day correlation gap ladder on three trade days [I006]
+- Effective-bets throttle with a daily turnover budget [I005]
+```
+
+### Run facts
+
+- **Cost:** at least 1.41M new tokens and 6.5M cache reads, from the 35 recoverable transcripts
+  of about 40 subagent dispatches (retries included); the referee session is not counted. The
+  run first reported 0.90M because the usage count kept one transcript per dispatch id
+  (fixed; [`DESIGN.md` §14](../docs/DESIGN.md#14-logging-and-telemetry)). Early phases used
+  general-purpose subagents because the role agents had not yet loaded in this cloud session;
+  those cost about 55k tokens per dispatch against 12–35k for the role agents.
+- **Problems the run exposed, all since fixed with regression tests:** critics who ranked all
+  4 cards instead of their top 3 were rejected (longer rankings are now truncated); ideas with
+  *fixable* gate citations were excluded from the finals as if barred (the run was rolled back
+  to the start of the finals and continued); three developed cards exceeded the 400-word cap
+  (the workshop now gets a per-field word budget); and the judges' position bias (see above).
 
 ## Running the demos
 
@@ -16,119 +170,10 @@
 uv run python examples/demo_run.py        # offline, zero tokens, ~5 s
 ```
 
-Live (in Claude Code, after `uv run python install.py`): say "run the
-brainswarm demo", or `brainswarm init --manifest examples/demos/<name>.yaml`
-and follow `/brainswarm`. All three manifests use the same reduced `quick`
-size as the recorded run (4 generators x 2 ideas, 2 critic reviews per
-idea, 4 workshop slots, web off), so each should cost about 1.4M new
-tokens. The two unrun briefs were chosen because their outcomes are
-measurable against physics rather than taste: photometric scatter in
-mmag per bin for the transit setup, and heat-loss arithmetic
-($Q = UA\,\Delta T$ summed over heating degree-days) for the house. They
-therefore test whether critics catch quantitative errors, which the
-trading brief could not.
-
-## The recorded run (2026-09-29)
-
-**Brief.** A rule-based, long-only strategy for 10 liquid ETFs that trades
-on at least 3 days a week, keeps weekly turnover at or below 20 %, uses
-only daily closes, and optimises growth with maximum drawdown below 20 %
-while staying diversified. Reduced `quick` size: 4 generators x 2 ideas,
-2 critic reviews per idea, 4 workshop slots, full round-robin finals, web
-off.
-
-| Phase | Outcome |
-|---|---|
-| Rubric | 15 audit issues; clarifications accepted, scales/weights rejected (pairwise design); 5 user-stated gates + legality |
-| Angle round | 8 angles, 8 far domains; slots: 2 angle (middle band), 1 cross-domain (rare), 1 free |
-| Generation | 8 pre-registered sketches -> 8 cards; the cross-domain slot produced two power-grid ideas (droop control, N-1 contingency reserve) |
-| Critique | 66 justified critiques; 3 failed the substitution test (generic); 3 malformed outputs retried |
-| Workshop | 4 ideas developed by a different model; 3 over the 400-word cap were sent back once |
-| Re-critique | 12 critiques of developed versions; no drift |
-| Finals | 4 finalists, 12 ordered verdicts from a Sonnet and an Opus judge |
-
-**Result.** The first-shown idea won **11 of 12** verdicts; the fitted
-position bias is $\gamma = 1.93$ logits (87 % first-position win rate
-between equal ideas). Because both orders of every pair went to different
-judges and the model estimates $\gamma$, the bias did not become a fake
-ranking: only I008 (crisis-correlation risk budgeting) won a pair in both
-orders, and every finalist's 95 % rank interval is 1-4. The honest reading
-is **not separable at this size**, with weak evidence for I008. The top-k
-set also changes with the prior scale, which the report flags.
-
-**Cost.** At least 1.41M new tokens and 6.5M cache reads, from the 35
-recoverable transcripts of about 40 subagent dispatches (retries
-included); the referee session is not counted. The run first reported
-0.90M: the usage count kept one transcript per dispatch id, and the
-generator ids repeat across three phases (fixed; DESIGN.md §14). Early phases used general-purpose subagents (the role agents had
-not yet loaded in this cloud session); those cost ~55k tokens per dispatch
-versus ~12-35k for the role agents.
-
-**Issues found by the run and fixed in the code** (both have regression
-tests):
-- Critics who ranked all 4 cards instead of their top 3 were rejected and
-  forced into full rewrites; a longer valid ranking is now truncated.
-- Ideas with *fixable* gate citations were excluded from the finals as if
-  barred; only barred ideas are now excluded. The run was rolled back to
-  the start of the finals (no verdicts existed) and continued.
-
-## Reruns with the fixes (2026-09-29)
-
-Three controlled branches of the recorded run test the fixes for the problems
-it exposed. Each branch replays the recording to a phase with
-`brainswarm replay --until` and then re-runs the later phases with live agents,
-so everything upstream (ideas, critiques, workshop slots, pairs) is
-identical. `uv run python examples/rerun_comparison.py` rebuilds all of them
-offline from `demo-reruns/` and recomputes the table and figure.
-
-| Condition | What changed | First-listed wins | $\gamma$ (95 % interval) | Order |
-|---|---|---|---|---|
-| original | — | 11/12 | 1.93 (0.39, 3.46) | I008 > I004 > I003 > I002 |
-| finals-only | judge prompt: strengths of both, named winner, cited criterion | 10/12 | 1.62 (0.13, 3.11) | I008 > I004 > I002 > I003 |
-| crossover | finals-only plus each model judging the other order (24 verdicts) | 20/24 | 1.78 (0.59, 2.98) | I008 > I003 > I004 > I002 |
-| from-workshop | workshop word budget, new judge prompt, crossover schedule | 8/12 | 0.89 (−0.50, 2.27) | I002 > I003 > I004 > I008 |
-
-![Position bias and finalist strengths across the reruns](../docs/figures/position_bias.png)
-
-*The judges' preference for the first-listed idea is real, and the prompt
-change did not remove it. Left: the fitted position bias $\gamma$ per
-condition (dot) with its 95 % Laplace interval; the dashed line is no bias,
-and $\gamma = 1.8$ means two equal ideas are split 86 : 14 in favour of the
-one listed first. Right: finalist strengths $\beta$ fitted on the same four
-cards from the original 12 verdicts (orange) and the 24 crossover verdicts
-(blue). The intervals overlap everywhere, so no finalist is separable from
-another on these cards.*
-
-**Position bias.** In the crossover, each model saw both orders of every
-pair (in different dispatches) and changed its winner with the order in 4 of
-6 pairs, for Sonnet and Opus alike. Under no bias, 20 or more first-listed
-wins out of 24 has probability
-$\sum_{k=20}^{24}\binom{24}{k}2^{-24} \approx 7.7\times10^{-4}$. The first
-finals design sent the two orders of a pair to different models, so with
-two judge dispatches it could not tell "each judge prefers the first idea"
-from "the judges disagree". The schedule is now a crossover: one model
-judges both orders of a pair. In the from-workshop run this gave within-model
-contrasts (Sonnet flipped 0 of 3 pairs, Opus 2 of 3) and a smaller $\gamma$
-whose interval includes 0. The bias matters most between near-equal ideas:
-the only verdicts that survived both orders in the crossover were I008 over
-I002 and I008 over I003.
-
-**Workshop.** With a per-field word budget, all four developed cards were
-within the 400-word cap at first attempt (338–383 words); the original
-workshop sent three back (533, 455 and 694 words). In both workshops every
-critique was answered as `fixed` (35 of 35; before, 33 fixed and 1
-conceded), so the re-critique's test of whether rebuttals hold was never
-used; this is on the watch list (DESIGN.md §15).
-
-**Ranking.** The from-workshop finals put I002 first (rank interval 1–2,
-mean win 90 %) and I008 last, the reverse of the original. The ideas are
-the same, but their developed cards are new: I002's card changed from
-"Stress-Mixture Covariance Sizing with Rank-1 PC1 Stress Prior" to
-"Stress-Mixture ERC with Sign-Preserving Stress Prior and Drawdown Taper".
-The rank intervals are conditional on the cards; they do not include the
-variation between two workshop attempts at the same idea, which here was
-larger than the variation between judges. Among four near-equal finalists,
-one run's order should not be read as a verdict on the ideas.
-
-**Cost.** Re-running the workshop, re-critique and finals took about 0.43M
-new tokens; the finals-only rerun about 0.05M, and the crossover 0.05M.
+Live (in Claude Code, after installing): say "run the brainswarm demo", or
+`brainswarm init --manifest examples/demos/<name>.yaml`, and follow `/brainswarm`. All three
+manifests use the same reduced `quick` size as the recorded run, so each should cost about
+1.4M new tokens. The two unrun briefs were chosen because their outcomes can be checked with
+arithmetic rather than taste: photometric scatter per time bin for the transit setup, and
+heat loss ($Q = UA\,\Delta T$ summed over heating degree-days) for the house. They therefore
+test whether critics catch quantitative errors, which the trading brief could not.

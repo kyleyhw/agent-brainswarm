@@ -7,6 +7,6 @@ Top families:
 Wildcards:
 - Down-day correlation gap ladder on three trade days [I006]
 - Effective-bets throttle with a daily turnover budget [I005]
-Tokens (subagents): ~0.90M new, ~3.95M cache reads
-Limitations: generic filter: 3 failed the substitution test; Limitations: generic filter: 3 failed the substitution test; finals had only 2 judge dispatches; uncertainty uses the Laplace approximation, not the bootstrap; the top-k set changes with the prior scale; treat the cutoff as soft; finals had only 2 judge dispatches; uncertainty uses the Laplace approximation, not the bootstrap
+Tokens (subagents): ~1.41M new, ~6.54M cache reads
+Limitations: generic filter: 3 failed the substitution test; finals had only 2 judge dispatches; uncertainty uses the Laplace approximation, not the bootstrap
 Report: /root/.agent-brainswarm/runs/20260929-134819-36e5/report.html

@@ -35,6 +35,13 @@ This document outlines the planned phases and tasks for developing agent-brainsw
 17. [completed] Live mini demo run on a concrete trading brief; recorded in `examples/demo-run/`.
     - [completed] Manifests for two physically checkable briefs in `examples/demos/` (exoplanet-transit setup; home heating)
     - [pending] Live runs of the two new manifests (shelved until usage allows)
+18a. [completed] README and example tour rewritten around one real run (pipeline figure, one idea's path, ranking figure, use cases, limits); rerun analysis moved to `docs/studies/position_bias.md`.
+18b. [pending] Showcase demos, shelved until usage allows (new-token estimates at reduced size):
+    - [pending] Home heating, web on, as the flagship the README tour is rebuilt around (~2–3M)
+    - [pending] Make this repo's test suite faster without losing coverage, exported to agent-evolve with a measured metric (~1.5M)
+    - [pending] Home heating at `conservative` vs `wild`, to show the exploration setting (2 × ~1.5M)
+    - [pending] Home heating run twice, to show the idea library across runs (~1.5M)
+    - [pending] Exoplanet-transit setup, web on (~2–3M)
     - [completed] Controlled rerun of the ETF demo from the workshop and from the finals with the fixes; crossover judge experiment
 18. [completed] Offline replay demo (`examples/demo_run.py`); reproduces the ranking exactly.
 19. [completed] `install.py` (editable uv tool; symlink skill and agents).
