@@ -1,0 +1,182 @@
+{
+  "rows": [
+    {
+      "arm": "control",
+      "idea": "I001",
+      "words": 355,
+      "cap": 362,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "control",
+      "idea": "I002",
+      "words": 350,
+      "cap": 354,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "control",
+      "idea": "I003",
+      "words": 343,
+      "cap": 342,
+      "within_cap": false,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "control",
+      "idea": "I004",
+      "words": 359,
+      "cap": 366,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "control",
+      "idea": "I005",
+      "words": 367,
+      "cap": 374,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "control",
+      "idea": "I006",
+      "words": 384,
+      "cap": 389,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "control",
+      "idea": "I007",
+      "words": 365,
+      "cap": 374,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "control",
+      "idea": "I008",
+      "words": 336,
+      "cap": 342,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "treatment",
+      "idea": "I001",
+      "words": 358,
+      "cap": 362,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "treatment",
+      "idea": "I002",
+      "words": 338,
+      "cap": 354,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "treatment",
+      "idea": "I003",
+      "words": 338,
+      "cap": 342,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "treatment",
+      "idea": "I004",
+      "words": 361,
+      "cap": 366,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "treatment",
+      "idea": "I005",
+      "words": 369,
+      "cap": 374,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "treatment",
+      "idea": "I006",
+      "words": 385,
+      "cap": 389,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "treatment",
+      "idea": "I007",
+      "words": 368,
+      "cap": 374,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    },
+    {
+      "arm": "treatment",
+      "idea": "I008",
+      "words": 341,
+      "cap": 342,
+      "within_cap": true,
+      "accepted": true,
+      "panel_win_rate": 1.0,
+      "panel_n": 6
+    }
+  ],
+  "summary": {
+    "treatment": {
+      "revisions": 8,
+      "within_cap": 8,
+      "accepted": 8,
+      "panel_win_rate_all": 1.0,
+      "panel_win_rate_accepted": 1.0,
+      "panel_win_rate_rejected": null
+    },
+    "control": {
+      "revisions": 8,
+      "within_cap": 7,
+      "accepted": 8,
+      "panel_win_rate_all": 1.0,
+      "panel_win_rate_accepted": 1.0,
+      "panel_win_rate_rejected": null
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+ "revisions": {
+  "I001": {
+   "title": "Boundary-targeted help budget with survivor-mutation cycles",
+   "pitch": "Spend critique and mutation calls only on ideas whose rank interval straddles the top-3 cutoff, and re-enter their single-edit mutants for up to 3 cycles.",
+   "mechanism": "New phase MATURE between critique and finals. Round 0: order-swapped pairwise judging against the frozen brief-plus-rubric; fit Bradley-Terry; bootstrap rank intervals. Up to H=6 ideas straddling rank 3/4 each get one critique naming their weakest criterion, then one mutator call writing k=3 same-length single-edit variants. A variant replaces its parent only if it beats the parent and the rank-3 incumbent. Refit and repeat. Finals re-rank on fresh comparisons, avoiding winner's-curse selection.",
+   "rationale": "Top-k identification bandits (LUCB; Kalyanakrishnan et al. 2012) need far fewer samples when effort concentrates near the cutoff; MATURE concentrates refinement the same way. A lone agent lacks an independent signal: models favour their own outputs (Panickssery et al. 2024) and self-correct poorly without external feedback (Huang et al. 2023). No code was run.",
+   "assumptions": [
+    "In-loop judge preferences track the independent panel's",
+    "Single targeted edits help more often than they harm",
+    "Some ideas sit near the cutoff"
+   ],
+   "failure_modes": [
+    "Mutants overfit the in-loop judge; mitigate with a judge family different from the panel and a 10% length cap",
+    "Sparse round-0 data widens every interval, so H does all the selecting",
+    "Partial transfer: real germinal centres give most help to top clones (Gitlin et al. 2014), not boundary ones",
+    "Mutants converge to near-duplicates"
+   ],
+   "cheapest_test": "10 briefs, equal tokens: MATURE versus uniform development of the point-estimate top 6. Primary: blinded, counterbalanced benchmark win rate against the single agent's top 3. Secondary: child-beats-parent rate under a held-out judge family (kill if below 50%).",
+   "effort": "3-5 days; per cycle about 6 critiques, 6 mutator calls and 72 short judge calls; +30-50% run cost.",
+   "spec": "Round 0: 3 comparisons per idea, both orders. BT module, 200 bootstrap resamples, 10th-90th percentile rank interval. Boundary: lo<=3 and hi>=4; keep 6 with P(top3) nearest 0.5. Accept a variant iff it wins both orderings against its parent and one against the rank-3 incumbent. Max 3 cycles; stop when the boundary set is unchanged."
+  },
+  "I007": {
+   "title": "Residual selection head learned from the library's blinded verdicts",
+   "pitch": "Replace the final top-3 cut with a regularised logistic model, trained on past blinded benchmark verdicts, that predicts which finalists beat the baseline.",
+   "mechanism": "The library stores per finalist x: internal BT strength (z-scored per run), per-criterion critic scores, development score delta, generator id, max cosine similarity to library ideas, and nuisance covariates (word count, citation/hedge counts, judge-generator family match). Label: fraction of counterbalanced external comparisons it wins against the baseline's three cards. Residual model: logit p = beta0*BT + w.x, beta0 fixed at the current internal weight, w ~ N(0, sigma^2), so with few labels it reduces to today's ranking.",
+   "rationale": "Length-controlled AlpacaEval (Dubois et al. 2024) regresses preferences on length and zeroes that term, removing much verbosity bias; this applies it to selection. Zheng et al. 2023 and Panickssery et al. 2024 document the verbosity, position and self-preference biases the covariates target. Si et al. 2024 found LLM idea rankings agree weakly with experts. A lone agent never sees its own selection error. No code run.",
+   "assumptions": [
+    "At least ~15 benchmarked briefs with all finalists labelled",
+    "Selection error is partly systematic across briefs",
+    "Training labels come from humans or a model family different from the eval panel"
+   ],
+   "failure_modes": [
+    "Labels from the eval panel teach its biases (Goodhart)",
+    "Brief heterogeneity swamps ~10 labels per brief",
+    "Generator changes shift the distribution"
+   ],
+   "cheapest_test": "Offline on existing runs: rate all finalists with two different-family panels (~10 x 3 baseline cards x 2 orders each); fit on panel A, score on B. Compare leave-one-brief-out AUC and top-3 win rate, calibrated vs internal BT. Kill if the AUC-gain bootstrap interval over briefs includes 0. No new generation.",
+   "effort": "~4 days: schema, labelling job, ~80-line NumPy IRLS fit, switch. Benchmark panel cost doubles once; run cost unchanged.",
+   "spec": "select_by in {internal_BT, calibrated}. Binomial log-likelihood on (wins, trials), L2 lambda=1 on w, per-run z-scored features; label weight 3 for human/measured, 1 for panel. At selection, zero nuisance terms so they absorb bias without being rewarded. Fall back to internal_BT below 15 labelled briefs. Evaluate top-3 win rate on later briefs with a different-family panel."
+  },
+  "I008": {
+   "title": "Judge-reliability Bradley-Terry fitted to external verdicts",
+   "pitch": "Weight each finals judge by how well its votes predicted independent raters on past runs, and spend the fixed comparison budget on reliable judges near the top-3 boundary.",
+   "mechanism": "Judge j is a (model, prompt variant) pair. Vote model: P(i>k | j, i first) = sigmoid(a_j(theta_i - theta_k) + b_j + c_j(f_ij - f_kj)); a_j is discrimination, b_j position bias, f_ij = 1 if idea i's generator shares judge j's family (self-preference). Fit: fix theta of past finalists to external BT strengths, fit (a_j, b_j, c_j) by MAP with priors N(1,0.5), N(0,0.5), N(0,0.5), then freeze. At runtime estimate theta by MAP with N(0,1) prior, subtracting b_j and c_j terms.",
+   "rationale": "Crowd-BT (Chen et al. 2013) and Dawid-Skene (1979) show reliability-weighted aggregation beats uniform weighting. PoLL (Verga et al. 2024) shows judges differ in agreement with humans. Zheng et al. 2023 and Panickssery et al. 2024 show position and self-preference biases are measurable. A lone agent is one judge with unknown a and uncorrected b, c. No code run.",
+   "assumptions": [
+    "Judge reliability is stable across briefs",
+    "At least ~300 past internal votes on externally rated ideas",
+    "External reference differs from the evaluation panel"
+   ],
+   "failure_modes": [
+    "Noisy a_j estimates add variance",
+    "If all judges are equally weak, it reduces to uniform with no gain",
+    "Judge model updates invalidate frozen parameters"
+   ],
+   "cheapest_test": "Offline leave-one-brief-out refit on existing runs: compare pairwise agreement and Kendall tau of theta vs external strengths for {uniform, reliability} weights x {uniform, boundary} allocation at equal votes. Kill if reliability's tau-gain bootstrap interval includes 0.",
+   "effort": "~3 days: scoring-module extension and scheduler change. Zero extra tokens at equal budget.",
+   "spec": "judge_model in {uniform, reliability}. Of fixed budget B, 10% uniform across judges (monitoring); 90% to pairs among current top 6 with |theta_i - theta_k| < 0.5, judges sampled proportional to max(a_j,0)^2 (Fisher information per vote), capped at 40% each. Every pair shown in both orders. Refit a, b, c after each benchmark batch."
+  },
+  "I002": {
+   "title": "Cross-run memory of mutation-operator success, chosen by similarity-weighted Thompson sampling",
+   "pitch": "Store each parent-versus-child contest as a win or loss for a typed edit operator in the idea library, and in later runs pick operators by Thompson sampling over brief-similar history.",
+   "mechanism": "The mutator labels each variant with one operator from a fixed taxonomy: narrow scope, swap mechanism, add falsifiable test, graft a rival's strongest component, invert an assumption, cut cost, change target user, quantify the claim. Each contest writes a record (brief embedding, operator, targeted criterion, win/loss, judge model). The run's top 3 are the 'plasma' output; operator statistics are the 'memory'. At mutation time, for the idea's weak criterion, compute alpha=2m+sum(sim*wins) and beta=2(1-m)+sum(sim*losses), m = operator's global win rate, over records with cosine sim>=0.6 and the same criterion, then sample to choose operators.",
+   "rationale": "Bandit-based adaptive operator selection is established in evolutionary computation (Fialho et al. 2010). PromptBreeder (Fernando et al. 2023) shows evolving mutation instructions helps. The new part is conditioning across runs on brief similarity. Ideas rarely transfer between briefs, but good edit moves may.",
+   "assumptions": [
+    "Operator efficacy generalises across similar briefs",
+    "Operator labels are applied faithfully",
+    "Card 0's contest loop exists"
+   ],
+   "failure_modes": [
+    "Effects too small to detect within a few dozen runs",
+    "Memory learns in-loop judge quirks, not quality",
+    "Exploitation collapses operator diversity (guard: 1 of 3 slots uniform-random)",
+    "Stretch transfer: immune memory stores binders, not edit types"
+   ],
+   "cheapest_test": "Warm the library with 20 training briefs using uniform operators. Run 30 held-out briefs in both arms, memory on versus uniform, at equal cost. Primary: per-brief child-beats-parent rate, paired by brief (contests within a brief are correlated, so per-contest power would overstate). Kill if the paired 95% interval over 30 briefs includes 0. Secondary: benchmark win rate.",
+   "effort": "2-3 days on top of card 0; negligible token cost (one embedding per brief).",
+   "spec": "Library table operator_outcomes(run_id, brief_emb, operator, criterion, win, judge). Similarity threshold 0.6; fall back to all records when fewer than 10 match. Thompson draws pick 2 operators, the third is uniform-random. Contest rule as in card 0."
+  }
+ }
+}

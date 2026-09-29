@@ -146,6 +146,29 @@ mean 0.28) reached the best possible mean, one brief of evidence. The main findi
 two rows: **even the best 3 of brainswarm's 8 ideas rate below every single-agent card**, so
 on this brief the gap is in what was generated, not in which ideas were selected.
 
+### Loss-conditioned revision tested (Stage 2)
+
+`benchmark/experiments/loss_revision.py` tests idea I004 on the self-run's 8 finalists. For each
+idea, a developer of another model family wrote two revisions within 5 % of the original's
+length: **treatment** was given the judges' stated reasons for each of the idea's finals losses,
+**control** only "make it stronger". A gate judge of a third family compared each revision with
+its original in both orders (separate dispatches); a panel of three reviewers (Opus, Sonnet,
+Fable) did the same for every revision, whatever the gate decided.
+
+| Arm | Revisions within the length cap | Accepted by the gate | Panel verdicts won by the revision |
+|---|---|---|---|
+| treatment (loss reasons) | 8 of 8 | 8 of 8 | 48 of 48 |
+| control (no reasons) | 7 of 8 (one 1 word over) | 8 of 8 | 48 of 48 |
+
+Every revision beat its original in every comparison, in both orders and for all three
+families (judges chose the revision whether it was shown first or second, so this is not
+position bias). Two readings follow. **A same-length second pass by another model improved
+every card**; and **the loss reasons added nothing detectable**, because both arms hit the
+ceiling, so the gate, which accepted everything, did no selecting. The self-run had no
+development round (quick size), while the single agent developed its own top 3 into full
+cards, so the Stage 0 gap may partly be a missing development pass; whether revised cards
+close it is untested (it needs the six-reviewer panel re-run with the revised cards).
+
 ## Cost
 
 The ETF baseline agent used 59k new tokens and 0.15M cache reads in one dispatch (the

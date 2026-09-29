@@ -1,0 +1,84 @@
+{
+  "verdicts": [
+    {
+      "pair": "p01",
+      "winner": "Y",
+      "reason": "Y closes X's own listed failure (verifier sharing a family with the final panel) by excluding the panel family, filters opponent-praise reasons the developer cannot act on, gates on ambition, and replays the same opponents for the PL refit, with explicit kill thresholds; X leaves those gaps open."
+    },
+    {
+      "pair": "p02",
+      "winner": "Y",
+      "reason": "Y adds the min-comparisons eligibility guard that expected-max selection specifically needs (undersampled items look high-variance and get picked), fits tau from residual covariance leave-one-brief-out instead of asserting 0.5 SD, and adds a kappa fallback for labels and kill criteria; X's mechanism is otherwise identical."
+    },
+    {
+      "pair": "p03",
+      "winner": "Y",
+      "reason": "Y's witness-value flip requirement blocks rigged unconditional-FAIL checks mechanically rather than by audit alone, normalises the score so more claims are not rewarded, restricts to load-bearing claims, and tests on 10 briefs with a panel-vs-single-agent primary metric, where X tests on one brief."
+    },
+    {
+      "pair": "p04",
+      "winner": "Y",
+      "reason": "Y re-extracts claims from the revised text before re-running the frozen check and uses a matched-token prose-feedback control, which together isolate check-grounded feedback from mere revision and from text-only gaming; X's control (one-shot with no feedback) confounds the two."
+    },
+    {
+      "pair": "p05",
+      "winner": "Y",
+      "reason": "The only substantive difference is Y's fresh-comparison finals re-rank, which removes the winner's-curse inflation of variants that survived by beating parent and incumbent under the same in-loop judging; the rest is identical, so that correction decides it narrowly."
+    },
+    {
+      "pair": "p06",
+      "winner": "Y",
+      "reason": "Y's fit-on-panel-A, score-on-panel-B design operationalises the third assumption and directly tests X's own top failure mode (labels teaching the eval panel's biases), and adds a kill rule; X's single-panel test cannot distinguish learned quality from learned panel style."
+    },
+    {
+      "pair": "p07",
+      "winner": "Y",
+      "reason": "Y's 2x2 factorial (weights x allocation) with leave-one-brief-out separates the two mechanisms X bundles, and the 40% per-judge cap guards the Fisher-information scheduler against collapsing onto one noisily-estimated judge, the variance failure X names but does not mitigate."
+    },
+    {
+      "pair": "p08",
+      "winner": "Y",
+      "reason": "Y corrects X's power analysis by pairing on brief (contests within a brief are correlated, so X's 390-per-arm figure overstates power) and shrinks sparse similar-brief posteriors toward each operator's global win rate instead of a flat prior; the mechanism is otherwise the same."
+    },
+    {
+      "pair": "p09",
+      "winner": "Y",
+      "reason": "Y's placebo paraphrase gives a measured style-bias baseline that turns the gate's acceptance rate into an interpretable quantity and answers X's shared-family failure with two outside families; it also makes the primary outcome the benchmark's own win rate vs the single agent, matching the brief."
+    },
+    {
+      "pair": "p10",
+      "winner": "Y",
+      "reason": "Y fits tau from within-cluster correlation rather than fixing it, adds a 1-SE mean-of-3 non-inferiority cap so variance-seeking cannot trade much expected quality for diversity, and reports win rate vs the single agent's top 3, the metric the brief actually specifies; X has none of these guards."
+    },
+    {
+      "pair": "p11",
+      "winner": "Y",
+      "reason": "Y's codebase-probe artifact makes the brief's own hard rule (implementable in this codebase) a checkable claim and answers the qualitative-brief failure, and replacing last-place with pool-median for low-checkability cards converts that failure from harm to null; step 0 measures checkable fraction before committing tokens."
+    },
+    {
+      "pair": "p12",
+      "winner": "Y",
+      "reason": "Y removes X's dependency on another card's ledger with its own extractor fallback, caps tokens at 1.4x instead of 2x, reverts cards stripped below 3 claims, and tests offline on saved finalists with a win-rate-vs-single-agent outcome, making it implementable and testable with the existing benchmark on its own."
+    },
+    {
+      "pair": "p13",
+      "winner": "Y",
+      "reason": "Y's gate judges from a third family that see only length-normalised claim, mechanism and test fields, plus a measured overfit gap (gate-family minus held-out win rate) with a kill threshold, turn X's stated primary failure (mutants overfitting the in-loop judge) into a bounded and measured quantity."
+    },
+    {
+      "pair": "p14",
+      "winner": "Y",
+      "reason": "Y's within-run conditional logit cancels the brief heterogeneity X names as a failure, its sign-constrained nuisance-only stage 1 needs ~5 briefs and can only penalise polish, and the oracle-headroom kill checks that selection error exists before fitting; keeping the negative nuisance weights at selection is also the coherent way to correct internal verbosity bias, where X's zeroing would discard the correction."
+    },
+    {
+      "pair": "p15",
+      "winner": "Y",
+      "reason": "Y's label-free probes (order swaps, authorship relabels, length-inflated paraphrases) calibrate b, c and a shared verbosity term g without external verdicts, cutting the external-label requirement from ~300 to ~100 votes and adding a bias-only arm; X needs the full external dataset before any parameter can be fit."
+    },
+    {
+      "pair": "p16",
+      "winner": "Y",
+      "reason": "Y's offline warm start on ~100 saved finalists and its own ~40-line contest loop remove X's dependency on another card and make stage 1 (do operator win rates differ, does similarity weighting beat pooling) testable with existing data before any new runs; X's test requires 50 fresh briefs on an unbuilt prerequisite."
+    }
+  ]
+}

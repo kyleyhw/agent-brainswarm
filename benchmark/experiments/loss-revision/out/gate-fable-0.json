@@ -1,0 +1,64 @@
+{
+  "verdicts": [
+    {
+      "pair": "p01",
+      "winner": "Y",
+      "reason": "X's strongest point is a clean, monotone verifier gate; Y's is that it closes X's own listed failure modes (verifier family also excluded from the final panel, an ambition rating blocking scope-cutting revisions, a filter removing opponent-praise reasons) and replays the same opponents for a clean PL refit with explicit kill thresholds, so the mechanism is more likely to survive its own critique."
+    },
+    {
+      "pair": "p02",
+      "winner": "Y",
+      "reason": "X's strongest point is a cheap, well-motivated expected-max set rule; Y's is that it removes X's arbitrary tau=0.5 SD by fitting it leave-one-brief-out from rating residuals, guards variance-seeking with a minimum-comparison rule, checks label consistency (kappa>=0.6) with a fallback to plain top-3, and pre-registers a kill criterion, which makes the test decisive rather than exploratory."
+    },
+    {
+      "pair": "p03",
+      "winner": "Y",
+      "reason": "X's strongest point is the LUCB-style boundary concentration of effort; Y is otherwise identical but adds a finals re-rank on fresh comparisons, which removes the winner's-curse inflation of accepted mutants that X would carry into the final PL fit, plus a kill threshold on the held-out child-beats-parent rate."
+    },
+    {
+      "pair": "p04",
+      "winner": "Y",
+      "reason": "X's strongest point is the shrinkage-to-current-ranking residual design; Y keeps that and fixes the test's main confound (Goodhart on the labelling panel) by fitting on one different-family panel and scoring on another, with a bootstrap kill criterion on AUC gain, so a positive result would actually be evidence of transferable selection error."
+    },
+    {
+      "pair": "p05",
+      "winner": "Y",
+      "reason": "X's strongest point is the Crowd-BT vote model with position and self-preference terms; Y keeps it and adds a factorial offline test separating the reliability-weighting from the boundary-allocation effect, a leave-one-brief-out protocol, a per-judge 40% budget cap that bounds the damage from noisy a_j estimates, and a tau-gain kill criterion."
+    },
+    {
+      "pair": "p06",
+      "winner": "Y",
+      "reason": "X's strongest point is the explicit per-contest power calculation; Y's is recognising that contests within a brief are correlated so that calculation overstates power, replacing it with a brief-paired primary analysis and kill rule, and centring the Beta prior on each operator's global win rate so the similarity-weighted posterior shrinks sensibly when brief-similar records are sparse."
+    },
+    {
+      "pair": "p07",
+      "winner": "Y",
+      "reason": "X's strongest point is its simpler single-verifier gate with higher expected acceptance; Y's is the placebo paraphrase arm, which directly measures how often the gate accepts style-only changes and so distinguishes real fixes from verifier style bias, and it sets the primary outcome as the benchmark's own comparison against the single agent's top 3, matching the brief."
+    },
+    {
+      "pair": "p08",
+      "winner": "Y",
+      "reason": "X's strongest point is the compact expected-max greedy rule; Y's is that tau is derived from measured within-cluster correlation via the correct shared-effect formula sd*sqrt(rho/(1-rho)), a mean-of-3 non-inferiority cap bounds the downside, the output provably reduces to top-3 when finalists are diverse, and win rate against the single agent's top 3 is added as a metric aligned with the brief."
+    },
+    {
+      "pair": "p09",
+      "winner": "Y",
+      "reason": "X's strongest point is the boundary-targeted allocation with explicit acceptance rules; Y's is that the acceptance gate uses a third family outside both ranker and panel, judges only length-normalised claim/mechanism/test fields, and defines a measurable overfit gap with kill thresholds, turning X's vaguely stated mitigation for judge overfitting into a tested quantity."
+    },
+    {
+      "pair": "p10",
+      "winner": "Y",
+      "reason": "X's strongest point is the shrink-to-BT residual logit; Y's is the within-run conditional logit, which cancels the brief heterogeneity X itself lists as a failure mode, together with a nuisance-only sign-constrained stage needing about 5 briefs and an oracle-headroom kill check that establishes whether any selection error exists before fitting anything."
+    },
+    {
+      "pair": "p11",
+      "winner": "Y",
+      "reason": "X's strongest point is a clean, established judge-reliability model; Y's is label-free calibration of position, self-preference and shared verbosity terms from synthetic probes (order swaps, authorship relabelling, length-inflated paraphrases), which cuts the external-label requirement from about 300 to about 100 votes, adds a bias-only arm to isolate the gain, and shrinks a_j toward a common value to bound the noise X lists as its main failure."
+    },
+    {
+      "pair": "p12",
+      "winner": "Y",
+      "reason": "X's strongest point is the brief-similarity-conditioned Thompson prior; Y's is an offline warm start on about 800 saved-finalist contests with a chi-square check that operator win rates differ at all before any new runs, plus a contest gate under a non-mutator family with both orders and a length cap, so the memory is filled with less judge-quirk-contaminated signal and the core assumption is tested first."
+    }
+  ]
+}

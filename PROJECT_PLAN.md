@@ -61,3 +61,6 @@ This document outlines the planned phases and tasks for developing agent-brainsw
 25. [pending] External CLIs as generators; data-driven band-share defaults.
 26. [pending] Re-critique checks that each claimed fix is in the developed card (every critique was answered as fixed in both workshops).
 27. [pending] Measure workshop variance at standard size (two attempts reversed the demo's finals order).
+28. [completed] Trial of the self-run's ideas (docs/BENCHMARK.md): the single agent beat the self-run on its own brief (6 of 6 reviewers); portfolio selection (I003) changed nothing; judge-reliability weighting (I008) reached the best available set; loss-conditioned revision (I004) and a plain revision both improved every card (48 of 48 panel verdicts each).
+    - [pending] Re-run the reviewer panel with revised cards against the single agent (~0.15M tokens): does a development pass close the gap?
+    - [pending] Executable checks (I005, I006) and revision cycles (I001), planned separately

@@ -1,0 +1,64 @@
+{
+  "verdicts": [
+    {
+      "pair": "p01",
+      "winner": "X",
+      "reason": "X strongest: verifier drawn from outside generator, developer and final panel plus an ambition check and explicit kill thresholds; Y strongest: same core loop with a simpler, cheaper gate. X wins on how critiques were answered: it converts Y's own listed failure modes (ambition cut, verifier sharing the panel's family) into mechanism guards and adds a reason filter and kill criteria, whereas Y leaves them as unmitigated risks."
+    },
+    {
+      "pair": "p02",
+      "winner": "X",
+      "reason": "X strongest: minimum-comparison eligibility guard against the expected-max rule rewarding under-sampled high-variance items, tau fitted leave-one-brief-out with a fallback, and a kappa check on labels; Y strongest: same clean 60-line scoring change. X wins on mechanism soundness: without X's min_comp guard the expected-maximum criterion systematically favours items whose scores are merely uncertain, a flaw Y does not address, and X's fitted tau replaces Y's arbitrary 0.5 SD."
+    },
+    {
+      "pair": "p03",
+      "winner": "X",
+      "reason": "X strongest: finals re-ranked on fresh comparisons to avoid winner's-curse selection of mutants accepted on the same noisy votes, plus a numeric kill threshold; Y strongest: identical boundary-targeted mechanism with slightly lower cost. X wins on mechanism: reusing the acceptance comparisons in the final ranking inflates accepted mutants, and X is the only version that closes that loop and states a kill rule."
+    },
+    {
+      "pair": "p04",
+      "winner": "X",
+      "reason": "X strongest: fit on panel A, score on panel B, with a bootstrap kill criterion on AUC gain; Y strongest: the same residual model and fallback to internal BT. X wins on evidence design: Y's assumption that labels come from a family different from the eval panel is left unoperationalised in its test, so its offline result would be contaminated by the Goodhart failure it itself names, while X's two-panel split isolates it."
+    },
+    {
+      "pair": "p05",
+      "winner": "X",
+      "reason": "X strongest: a 2x2 offline factorial separating reliability weighting from boundary allocation, a 40% per-judge cap so weighting cannot collapse to a single judge, and a kill rule; Y strongest: identical vote model with zero extra tokens. X wins on testability: Y's single comparison confounds two mechanism changes and has no stopping rule, whereas X's factorial attributes any tau gain to the component responsible."
+    },
+    {
+      "pair": "p06",
+      "winner": "X",
+      "reason": "X strongest: brief-paired primary analysis that respects within-brief correlation of contests, and a prior shrinking to the operator's global win rate; Y strongest: explicit power calculation showing 540 contests per arm suffice. X wins on evidence: Y's power calculation treats correlated contests within a brief as independent and so overstates power, a flaw X names and corrects by pairing over briefs."
+    },
+    {
+      "pair": "p07",
+      "winner": "X",
+      "reason": "X strongest: a same-length paraphrase placebo that measures the gate's style bias and a primary outcome read directly off the benchmark's own delivered-top-3 comparison; Y strongest: a simpler single-verifier gate with lower cost and likely higher acceptance. X wins on fit to the brief: it tests the intervention against the single-agent baseline with the existing benchmark and calibrates acceptance against a placebo, whereas Y only measures revision-versus-original preference and leaves its named shared-family failure unaddressed."
+    },
+    {
+      "pair": "p08",
+      "winner": "X",
+      "reason": "X strongest: tau derived from measured within-cluster correlation (sd*sqrt(rho/(1-rho)), correct for the additive shift model), a mean-of-3 non-inferiority cap, and provable identity with top-3 when finalists are diverse; Y strongest: the same minimal scoring change. X wins on mechanism: it bounds the downside of diversification and removes the arbitrary tau, while Y accepts an unbounded mean-of-3 loss on a hand-set constant."
+    },
+    {
+      "pair": "p09",
+      "winner": "X",
+      "reason": "X strongest: gate judges from a family outside both ranker and benchmark panel seeing only length-normalised fields, with an overfit gap metric and kill thresholds; Y strongest: the same LUCB-motivated boundary targeting. X wins on how critiques were answered: Y's overfitting mitigation is a sentence in the failure list, whereas X builds it into the acceptance rule and makes the overfit gap a measured, killable quantity."
+    },
+    {
+      "pair": "p10",
+      "winner": "X",
+      "reason": "X strongest: within-run conditional logit that cancels brief effects, a sign-constrained nuisance-only stage usable at 5 briefs, and an oracle-headroom kill check before any fitting; Y strongest: the full residual head with clean fallback to internal BT. X wins on mechanism: Y names brief heterogeneity swamping ~10 labels per brief as a failure mode and does nothing about it, while X's conditional logit removes it and its staging makes the idea testable with the small number of benchmarked briefs the codebase plausibly has."
+    },
+    {
+      "pair": "p11",
+      "winner": "X",
+      "reason": "X strongest: label-free calibration of position, self-preference and shared-verbosity terms from synthetic probes so only a_j needs external verdicts, with shrinkage and a bias-only arm; Y strongest: a cleaner model needing no probe generator or extra calls. X wins on testability with the existing benchmark: Y needs ~300 externally rated past votes that may not exist, whereas X can measure and validate its bias terms immediately and needs a third of the external data for a_j."
+    },
+    {
+      "pair": "p12",
+      "winner": "X",
+      "reason": "X strongest: an offline warm start on ~100 saved finalists that tests whether operator win rates differ at all before any new runs, plus a self-contained contest rule with a non-mutator judge family and length cap; Y strongest: the same Thompson mechanism with negligible per-run cost. X wins on testability: Y depends on another card's contest loop and 20 new training briefs, while X's stage-1 chi-square and leave-one-brief-out log-loss give a cheap kill on the core assumption using existing data."
+    }
+  ]
+}
