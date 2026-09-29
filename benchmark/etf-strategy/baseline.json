@@ -1,146 +1,143 @@
 {
  "ideas": [
   {
-   "title": "Staggered-tranche trend-filtered risk parity",
-   "pitch": "Split the portfolio into five weekday tranches, each rebalanced once a week to an inverse-volatility portfolio whose asset budgets are switched off when the asset is below its trend. Trades happen every weekday by construction, and a full tranche flip moves only 20% of NAV, so the turnover cap is structurally respected."
+   "title": "Trend-filtered risk parity with a daily trade budget",
+   "pitch": "Hold an inverse-volatility portfolio across all 10 ETFs, cutting each asset's weight when it trades below its moving averages and sending the freed weight to Treasuries or cash. Close the gap to target a few percent per day so trades happen every weekday while weekly turnover stays under the cap."
   },
   {
-   "title": "Daily partial-step risk parity",
-   "pitch": "Compute an inverse-volatility or equal-risk-contribution target daily and move a fixed fraction of the gap each day, capped at 4% one-way NAV. The exponential smoothing turns the turnover budget into a tracking-speed parameter rather than a constraint to police."
+   "title": "Staggered five-sleeve dual momentum",
+   "pitch": "Split the portfolio into five sleeves, one rebalanced on each weekday, each holding the top relative-momentum ETFs that also pass an absolute-momentum filter. Staggering gives trades every day and smooths the timing luck of a single rebalance date."
   },
   {
-   "title": "Turnover-budgeted fractional-Kelly optimiser",
-   "pitch": "Maximise expected log growth (mean minus half variance) with heavily shrunk trend-based return forecasts and a Ledoit-Wolf covariance, subject to an L1 daily-trade budget, caps and a volatility ceiling. It targets the brief's growth objective directly while the constraints enforce diversification and drawdown control."
+   "title": "Turbulence-scaled maximum diversification",
+   "pitch": "Hold the long-only maximum-diversification-ratio portfolio and cut exposure to risky assets when the Mahalanobis turbulence of daily returns is unusually high. Turbulence tends to rise before and during stress, so risk is reduced before drawdowns get deep."
   },
   {
-   "title": "Multi-horizon time-series momentum ensemble",
-   "pitch": "Average binary trend signals over 21, 63, 126 and 252-day lookbacks to get a continuous 0-1 exposure per asset, then scale by inverse volatility. Ensembling lookbacks smooths signal flips, which directly lowers turnover."
+   "title": "Volatility targeting with a drawdown governor",
+   "pitch": "Scale an equal-risk-contribution portfolio to a fixed annual volatility, and shrink exposure linearly once the drawdown from the equity peak passes 10%. The governor enforces the 20% drawdown limit directly instead of hoping the volatility target does it."
   },
   {
-   "title": "Drawdown governor (CPPI-style) overlay",
-   "pitch": "Scale total risky exposure linearly down as portfolio drawdown from its high-water mark grows from 8% to 16%, with the freed weight held in cash or Treasuries. This makes the 20% max-drawdown constraint an explicit control rule rather than a hope."
+   "title": "Ensemble time-series momentum",
+   "pitch": "Give each asset a trend score equal to the average sign of its 1, 3, 6, 9 and 12-month returns, and multiply its risk-parity weight by that score. Averaging many lookbacks reduces the risk of overfitting to one horizon and changes positions gradually, which keeps turnover low."
   },
   {
-   "title": "Volatility-targeted all-weather portfolio",
-   "pitch": "Hold fixed strategic risk budgets across growth, inflation and deflation buckets and scale total exposure to hit an 8% ex-ante volatility using an EWMA covariance. Daily scaling adjustments are small and frequent, which suits the trade-frequency requirement."
+   "title": "Stock-bond correlation regime switch",
+   "pitch": "Estimate the 63-day correlation between US large caps and 7-10y Treasuries; when it is negative, run a balanced risk-parity mix, and when it turns positive, shift duration into TIPS, gold and commodities. This targets the 2022-type failure where bonds stop hedging equities."
   },
   {
-   "title": "Hierarchical risk parity",
-   "pitch": "Cluster the ten ETFs by correlation distance and allocate risk recursively down the dendrogram, avoiding covariance inversion. Rebalance daily in small steps toward the HRP target; it is robust to the unstable correlations of a small, heterogeneous universe."
+   "title": "Inflation-breakeven tilt from TIPS versus Treasuries",
+   "pitch": "Use the relative 3-month return of TIPS over 7-10y Treasuries as a proxy for rising breakeven inflation and tilt toward gold, commodities and TIPS when it is positive. Otherwise tilt toward nominal duration and credit."
   },
   {
-   "title": "Maximum diversification portfolio",
-   "pitch": "Maximise the ratio of weighted-average volatility to portfolio volatility, which favours low-correlation assets like gold and Treasuries. Add a trend filter so that diversification is not bought with persistently falling assets."
+   "title": "Credit-spread risk-on signal",
+   "pitch": "Use investment-grade credit's return minus Treasuries' return over 20 and 60 days as a proxy for spread changes, and add equity and REIT exposure only while spreads are tightening. Credit often leads equities at turning points."
   },
   {
-   "title": "Rebalancing-premium harvester (volatility pumping)",
-   "pitch": "Hold near-equal risk weights in low-correlation, similar-growth assets and rebalance frequently to capture the diversification return of roughly half the difference between average variance and portfolio variance. Daily trading of drift keeps turnover low and trade days high."
+   "title": "Shrinkage growth-optimal portfolio",
+   "pitch": "Maximise the expected log growth rate using heavily shrunk mean estimates (time-series momentum) and a Ledoit-Wolf covariance, with a half-Kelly scale and caps on asset classes. It aims directly at the brief's growth objective, while the caps and shrinkage keep the estimates from making the weights unstable."
   },
   {
-   "title": "Exponentiated-gradient online portfolio",
-   "pitch": "Use Helmbold et al.'s multiplicative-update online log-optimal portfolio with a small learning rate, projected onto the capped simplex. The learning rate directly bounds daily weight change, so turnover is controlled by design, and the algorithm has regret guarantees against the best constant-rebalanced portfolio."
+   "title": "Hierarchical risk parity with slow drift",
+   "pitch": "Build weights by clustering the correlation matrix and splitting risk recursively (HRP), then move toward the new weights at no more than 4% per day. HRP avoids inverting the covariance matrix, so its weights are more stable than mean-variance weights."
   },
   {
-   "title": "Correlation-regime switcher",
-   "pitch": "Estimate the rolling 63-day stock-bond correlation; when positive (inflationary regime) shift defensive weight from Treasuries to TIPS, gold and commodities, and when negative lean on Treasuries as the hedge. Transitions are drip-fed over two weeks to respect turnover."
+   "title": "Breadth-based defensive switch",
+   "pitch": "Count how many of the 10 ETFs trade above their 200-day average; with high breadth, run a growth tilt, and with low breadth, move gradually to Treasuries, TIPS and gold. Breadth is a simple, robust gauge of how widely a market is trending."
   },
   {
-   "title": "Breakeven-proxy inflation tilt",
-   "pitch": "Use the TIPS/Treasury price ratio as a closing-price proxy for breakeven inflation momentum and tilt real-asset budgets up when it trends up. It extracts macro information from within the universe without any external data."
+   "title": "Rebalancing-premium equal weight",
+   "pitch": "Hold fixed strategic weights and trade drift back toward them each day within a 4% daily budget, harvesting the volatility-pumping gain from rebalancing among assets with low correlation. It is the simplest robust baseline and trades every day by construction."
   },
   {
-   "title": "Relative momentum with correlation penalty",
-   "pitch": "Rank assets by 6-12 month risk-adjusted momentum minus a penalty for average correlation with the current holdings, holding the top five with inverse-volatility weights. The penalty forces cross-asset-class diversification rather than concentration in correlated winners."
+   "title": "Online exponentiated-gradient allocation",
+   "pitch": "Update weights each day in proportion to exp(eta times the asset's return relative to the portfolio), with an L1 turnover penalty and floors on asset classes. This online-learning rule has regret guarantees against the best fixed rebalanced portfolio in hindsight."
   },
   {
-   "title": "Crash-speed equity brake",
-   "pitch": "Measure the 10-day drawdown speed and realised volatility of the equity sleeve; when both exceed thresholds, cut equity budgets by half over three days. It targets fast crashes that slow trend filters miss."
+   "title": "Kalman-filter trend weights",
+   "pitch": "Estimate each asset's local drift with a Kalman filter on log prices and tilt risk-parity weights by the ratio of that drift to its uncertainty. The filter adapts faster than moving averages at similar noise."
   },
   {
-   "title": "Short-term cross-asset mean reversion within risk budget",
-   "pitch": "Within a fixed risk-parity core, tilt up to \u00b13% per asset toward 5-day losers and away from 5-day winners, rebalancing daily. It exploits short-horizon reversal in liquid ETFs while the core keeps the portfolio diversified."
+   "title": "Three-bucket risk budgets",
+   "pitch": "Split risk equally across three buckets, equities (US large, US small, developed ex-US, EM), rates and credit (Treasuries, TIPS, IG credit) and real assets (gold, commodities, REITs), then apply momentum only within each bucket. The structure guarantees diversification across asset classes whatever the signals say."
   },
   {
-   "title": "Minimum-variance core plus momentum satellite",
-   "pitch": "Hold 70% in a shrinkage-covariance minimum-variance portfolio and 30% in the top-three momentum ETFs, each sleeve drip-rebalanced. The core anchors drawdown while the satellite supplies growth."
+   "title": "Absorption-ratio systemic risk overlay",
+   "pitch": "Compute the share of return variance explained by the first two principal components; a rising absorption ratio signals that markets are moving together and fragile, so risky weights are reduced. This complements volatility-based signals, which lag."
   },
   {
-   "title": "Dual momentum with defensive rotation, drip-fed",
-   "pitch": "Apply Antonacci-style absolute and relative momentum by asset class and rotate losers into Treasuries or TIPS, executing any switch in 4% daily slices. It is a simple, well-studied rule adapted to the turnover cap."
+   "title": "Short-term reversal tilt within a trend core",
+   "pitch": "Hold a trend-following core and use the daily trade budget to buy assets that fell sharply over the last 5 days while their long-term trend is still up. It exploits the short-horizon reversal found in liquid ETFs at no extra turnover."
   },
   {
-   "title": "Risk-budget trend strength scaling",
-   "pitch": "Scale each asset's risk budget continuously by its t-statistic of trend (price regressed on time over 126 days) clipped to [0,1]. Continuous signals avoid the whipsaw costs of binary filters."
+   "title": "Downside-deviation risk parity",
+   "pitch": "Weight assets by inverse downside semi-deviation instead of total volatility, so upside volatility (common in commodities and gold) is not penalised. The portfolio aligns better with the drawdown constraint than variance-based weights."
   },
   {
-   "title": "Volatility-managed equity sleeve",
-   "pitch": "Scale the four equity ETFs inversely to their own 21-day realised variance (Moreira-Muir volatility management) inside a fixed cross-asset allocation. It raises equity Sharpe and cuts left-tail exposure during high-volatility episodes."
+   "title": "CPPI with Treasuries as the floor asset",
+   "pitch": "Keep a multiple of the cushion above a trailing 82%-of-peak floor in a diversified risky basket and the rest in 7-10y Treasuries and TIPS. This caps drawdown by construction, apart from gap risk and cases where the safe asset itself falls."
   },
   {
-   "title": "Ensemble of allocators with meta-weighting",
-   "pitch": "Run three simple allocators (trend risk parity, minimum variance, momentum rotation) and blend them with weights proportional to their trailing 1-year log growth, shrunk toward equal. The blend diversifies model risk and the final weights are drip-rebalanced within the turnover budget."
+   "title": "Dispersion-conditioned momentum",
+   "pitch": "Scale the strength of relative momentum by cross-sectional return dispersion: when dispersion is high, concentrate in leaders, and when it is low, stay close to risk parity. Momentum pays mainly when assets diverge, so conditioning on dispersion avoids trend-less whipsaw."
   }
  ],
  "top3": [
   {
-   "title": "Staggered-tranche trend-filtered risk parity with drawdown governor",
-   "pitch": "Five weekday tranches each rebalance once a week to a trend-filtered, volatility-targeted inverse-volatility portfolio, with a drawdown governor that de-risks as losses approach the 20% limit.",
-   "mechanism": "Each weekday d, tranche d (20% of NAV) is reset to target weights. Target: raw weight r_i = 1/sigma_i (sigma_i = 63-day EWMA vol) times trend score s_i = average over lookbacks {21,63,126,252} of 1[P_t > P_{t-L}]. Normalise, apply caps, then scale total exposure so ex-ante portfolio vol (EWMA covariance, 63-day halflife) is 8%, capped at 100% invested; remainder in cash. Governor multiplies risky exposure by g = clip(1 - (DD - 0.08)/0.08, 0.5, 1), where DD is drawdown from the high-water mark.",
-   "rationale": "Risk parity gives balanced exposure to growth, inflation and deflation shocks; trend filters historically cut the deep equity and commodity drawdowns (2008) and the 2022 bond sell-off; volatility targeting stabilises risk, and staggering removes rebalance-day timing luck.",
+   "title": "Trend-filtered risk parity with a daily trade budget",
+   "pitch": "An inverse-volatility portfolio of all 10 ETFs that cuts assets trending down, targets 8% volatility, has a drawdown governor, and moves toward its target a few percent per day so it trades every weekday within the turnover cap.",
+   "mechanism": "Each day after the close: estimate each asset's volatility sigma_i with an EWMA of daily returns (halflife 30 days). Raw weight is proportional to 1/sigma_i. Trend multiplier: the fraction of the 50-, 100- and 200-day simple moving averages that the price is above (0, 1/3, 2/3 or 1). Removed weight goes to Treasuries if they are above their 200-day moving average, otherwise to TIPS, or otherwise to cash. Scale the result to 8% annual volatility using a 120-day covariance, with gross exposure capped at 100%. Drawdown governor: once the drawdown from peak exceeds 10%, multiply risky weights by max(0.3, 1-(DD-10%)/8%).",
+   "rationale": "Risk parity diversifies risk rather than dollars, which the brief's diversification goal needs. A trend filter over several averages avoids most of the long bear markets in each asset. The volatility target and the governor act together as two layers of drawdown control.",
    "assumptions": [
-    "Uninvested cash is allowed and earns roughly the T-bill rate.",
-    "Trend persistence at 1-12 month horizons continues across asset classes.",
-    "EWMA volatility forecasts are adequate one week ahead.",
-    "Trading costs are about 2-5 bp per side for these ETFs."
+    "Trends persist at 2-10 month horizons in these asset classes",
+    "Recent volatility forecasts near-term volatility",
+    "Holding cash is allowed when the defensive assets are also in downtrends"
    ],
    "failure_modes": [
-    "Sharp V-shaped reversals (2020) cause whipsaw: sold low, re-entered late.",
-    "Simultaneous stock-bond drawdown faster than trend lookbacks (early 2022) before filters react.",
-    "Low vol target caps growth in long bull markets; underperforms 60/40 in 2010s-style regimes.",
-    "Cash-heavy periods cede returns if cash yields near zero."
+    "Fast crashes (for example March 2020) outrun the 4%/day trade budget",
+    "Stocks and bonds falling together (2022) remove the Treasury hedge",
+    "Whipsaw around the moving averages in range-bound markets"
    ],
-   "cheapest_test": "Backtest 2004-present on the ten ETFs (proxy indices pre-inception) with 5 bp costs; report CAGR, max DD, weekly turnover distribution, trade days per week, and compare to static inverse-vol and 60/40. Then sweep vol target 6-10% and governor thresholds for stability.",
-   "effort": "Low: about 1-2 days to implement and backtest in pandas; no optimiser required.",
-   "spec": "Universe: 10 ETFs. Data: daily closes only. Caps: 25% per ETF; equities (4) <= 50%, bonds (Treasuries, TIPS, IG) <= 50%, real assets (gold, commodities, REITs) <= 40%; effective N = 1/sum(w^2) >= 4 when invested. Trade days: one tranche per weekday gives 5 trade days/week; holidays skip that tranche. Turnover: each tranche is 20% of NAV so one-way weekly turnover <= 20% by construction; additionally clip any day's trade to 4% one-way NAV. Drawdown: 8% vol target plus governor (full de-risk to 50% at 16% DD) aims at max DD around 12-16%, below 20%. Execution at next close after signal."
+   "cheapest_test": "A daily-close backtest from 2006 to the present with 5 bp costs, reporting CAGR, maximum drawdown, rolling 5-day turnover and trade days per week, compared with plain inverse-volatility and 60/40 portfolios.",
+   "effort": "Low: 1-2 days.",
+   "spec": "Caps: each ETF 25%; equities (US large, US small, developed ex-US, EM) at most 50%; rates and credit (Treasuries, TIPS, IG credit) at most 50%; real assets (gold, commodities, REITs) at most 40%. Execution: gap g = target - current. Each weekday, trade toward the target with sum|trade| at most 4% of NAV, scaling all trades pro rata, so turnover (sum of absolute weight changes) over any 5 trading days is at most 20%. Trade-day rule: if the week has fewer than 3 trade days by Wednesday, Thursday or Friday, trade at least 0.25% on the largest gap. Data: closing prices only, and signals from close t are executed at close t+1. At least 5 holdings above 3% each."
   },
   {
-   "title": "Turnover-budgeted fractional-Kelly optimiser",
-   "pitch": "Each day, solve a log-growth maximisation with shrunk trend forecasts, shrinkage covariance, a volatility ceiling and an explicit 4% daily L1 trade budget.",
-   "mechanism": "Maximise w'mu - (1/2) w'Sigma w - lambda*||w - w_prev||_1 subject to w >= 0, sum(w) <= 1, sqrt(w'Sigma w) <= 9%, ||w - w_prev||_1 / 2 <= 4%, per-asset and per-class caps. mu_i = k * sigma_i * s_i where s_i is the multi-horizon trend score in [-1,1] and k = 0.3 (a Sharpe of 0.3 per unit signal, deliberately conservative); Sigma is Ledoit-Wolf shrunk from 252 days of returns. Solve with cvxpy daily.",
-   "rationale": "Mean minus half variance is the second-order approximation to expected log growth, the brief's objective; fractional Kelly via shrunk mu and a vol ceiling curbs estimation error; the L1 penalty and hard trade budget make turnover a first-class constraint.",
+   "title": "Staggered five-sleeve dual momentum",
+   "pitch": "Five sleeves of 20% each, one rebalanced on each weekday, each holding inverse-volatility-weighted leaders that pass both relative and absolute momentum filters, which gives daily trades, smooth turnover and diversified trend exposure.",
+   "mechanism": "The portfolio is five equal sleeves, and sleeve k is rebalanced on weekday k. At rebalance, momentum score = the average of the 21-, 63-, 126- and 252-day total returns. Rank the 10 ETFs and select the top 5, subject to at most 2 equity ETFs and at least 1 non-equity. A selected asset whose 126-day return is below 0 fails the absolute filter, and its slot goes to Treasuries or TIPS (whichever has the higher 63-day return), or to cash if both are negative. Within the sleeve, weights are inverse to 60-day volatility, then scaled so the whole portfolio targets 9% volatility.",
+   "rationale": "Relative and absolute momentum together have historically captured most equity upside while leaving long bear markets. Staggered sleeves remove the timing luck of a single rebalance date, and they make trading on every weekday a natural part of the design.",
    "assumptions": [
-    "Trend-scaled expected returns carry modest but positive information.",
-    "Shrinkage covariance is stable enough week to week.",
-    "Convex solver available and deterministic daily."
+    "Cross-asset momentum persists at 1-12 month horizons",
+    "Capping how fast sleeves can change does not destroy the edge",
+    "Five holdings per sleeve are enough to count as diversified"
    ],
    "failure_modes": [
-    "Optimiser corner solutions concentrate in 2-3 assets if caps are loose.",
-    "Mis-specified mu scaling causes near-full-Kelly risk and drawdowns.",
-    "Trade budget binds during regime breaks, slowing de-risking.",
-    "Minimum trade-day requirement can fail if lambda suppresses all trades."
+    "Momentum crashes at V-shaped reversals",
+    "Too few assets pass the filter, leaving the portfolio concentrated in bonds",
+    "The daily cap makes sleeves adapt slowly in 2008-style declines"
    ],
-   "cheapest_test": "Backtest with k in {0.1, 0.3, 0.5} and lambda in {0, 5 bp, 20 bp}; compare CAGR and max DD against Idea 1 and verify trade-days and turnover logs.",
-   "effort": "Medium: 3-4 days including solver tuning and constraint validation.",
-   "spec": "Trade days: trade on any day with a solved change above 0.05% NAV; if fewer than 3 trades have occurred by Wednesday close, force a minimum 0.2% rebalance toward target on Thursday and Friday. Turnover: rolling 5-day one-way sum capped at 20% as a hard constraint (daily 4%). Diversification: 25% per ETF, class caps as Idea 1, and at least 5 ETFs with weight >= 5%. Drawdown: 9% vol ceiling plus same governor as Idea 1."
+   "cheapest_test": "A backtest from 2006 to the present with 5 bp costs, comparing staggered sleeves with a single monthly rebalance, reporting CAGR, maximum drawdown, the spread of results across rebalance days, and turnover.",
+   "effort": "Low to medium: about 2 days.",
+   "spec": "Turnover: on its day, each sleeve may trade at most 4% of total NAV (the sum of absolute weight changes), moving toward its target pro rata, which gives at most 20% of NAV per 5-day week. Trading days: all 5 weekdays, since each sleeve checks its target each week; if a sleeve's gap is below 0.25% it rebalances drift anyway. Portfolio caps: each ETF 25%; equities 50%; real assets (gold, commodities, REITs) 40%. Drawdown: the volatility target plus a governor that halves the risky slots when the drawdown exceeds 12% and restores them once the drawdown is back under 8%. Signals use closes up to t, and orders execute at close t+1. On holidays, the missed sleeve is rebalanced the next day, sharing that day's budget."
   },
   {
-   "title": "Multi-horizon trend ensemble with daily partial-step rebalancing",
-   "pitch": "A continuous trend-strength ensemble scales inverse-volatility risk budgets, and the portfolio tracks the target by moving a fixed fraction of the gap each day under a 4% cap.",
-   "mechanism": "Target weight t_i proportional to (1/sigma_i) * s_i with s_i = mean over L in {21,63,126,252} of clip(ret_L / (sigma_i * sqrt(L/252)), 0, 1); scale to 8% portfolio vol, cap 100% invested. Daily trade: Delta w = alpha*(t - w), alpha = 0.25, then scale Delta w so one-way turnover <= 4% of NAV.",
-   "rationale": "Continuous signals and exponential tracking (half-life about 2.4 days at alpha 0.25) minimise whipsaw and spread trades across days, meeting the 3-days-per-week rule naturally while retaining trend protection.",
+   "title": "Turbulence-scaled maximum diversification",
+   "pitch": "A long-only maximum-diversification portfolio that moves gradually from equities, REITs and commodities into Treasuries, TIPS and gold when the Mahalanobis turbulence index signals stress.",
+   "mechanism": "The core weights maximise the diversification ratio DR = (w'sigma)/sqrt(w'Sigma w) with long-only weights summing to 1. Sigma is a Ledoit-Wolf shrinkage covariance over 252 days, re-optimised daily. Turbulence d_t = (r_t - mu)' Sigma_3y^-1 (r_t - mu) from daily returns, smoothed over 10 days, with its percentile P measured against a trailing 3-year window. When P > 80, risky weights (equities, REITs, commodities) are multiplied by 0.5, and the freed weight goes to Treasuries, TIPS and gold in proportion to their core weights. When P > 95, the multiplier is 0.3.",
+   "rationale": "Maximum diversification spreads exposure across factors that are only loosely correlated, which suits a 10-asset set of different asset classes. Turbulence (Kritzman and Li) measures unusual returns and unusual co-movement, and it tends to stay high through stress episodes, so it has some predictive value for drawdowns.",
    "assumptions": [
-    "Trend strength measured as risk-adjusted return is informative.",
-    "Partial tracking lag does not destroy the trend edge.",
-    "Cash allowed."
+    "Turbulence clusters in time and persists",
+    "Gold and Treasuries remain defensive in most stress regimes",
+    "The core weights are stable enough when the covariance is shrunk"
    ],
    "failure_modes": [
-    "Tracking lag deepens losses in fast crashes.",
-    "In trendless markets the portfolio drifts to low exposure and growth stalls.",
-    "Signals correlated across assets during crises reduce diversification."
+    "Stress arrives faster than the 4%/day trade budget can move",
+    "Inflationary stress hits bonds as well",
+    "The maximum-diversification core concentrates in bonds"
    ],
-   "cheapest_test": "Same backtest harness as Idea 1; sweep alpha in {0.1, 0.25, 0.5} and plot turnover vs CAGR vs max DD.",
-   "effort": "Low: about 1 day once Idea 1 harness exists.",
-   "spec": "Trade days: trade whenever gap exceeds 0.05% NAV, which drift makes true on nearly every day; fallback forced trade on Mon/Wed/Fri. Turnover: 4% daily one-way cap gives <= 20% weekly. Caps and class limits as Idea 1; drawdown governor as Idea 1; closes only, execute next close."
+   "cheapest_test": "Compute the turbulence percentile from 2006 to the present and check whether P > 80 predicts lower 20-day forward returns for the risky assets, then backtest the full rule set with costs.",
+   "effort": "Medium: about 3 days, including the optimiser.",
+   "spec": "Constraints: each ETF between 2% and 25% (the minimum keeps all 10 assets held); equities at most 50%; rates and credit at most 55%; real assets at most 40%. Execution: every weekday, trade toward the target with the sum of absolute weight changes at most 4% of NAV, so turnover over any 5 trading days is at most 20%, and since the daily optimisation rarely leaves a gap below 0.25%, trades occur on at least 3 days. Drawdown backstop: once the drawdown exceeds 12%, multiply risky weights by 0.5 until it recovers to 6%. All inputs are daily closes, and orders execute at close t+1."
   }
  ]
 }

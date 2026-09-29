@@ -13,7 +13,9 @@ Design a rule-based, long-only trading strategy for a universe of 10 liquid ETFs
 2. Choose the 3 you would most want to pursue.
 3. Develop each of those 3 into a full idea card of at most 400 words (title, pitch, mechanism,
    rationale, assumptions, failure modes, cheapest test, effort, operational spec). Be concrete:
-   parameters, rules, and how each constraint in the brief is met.
+   parameters, rules, and how each constraint in the brief is met. Each card must be
+   self-contained: never refer to another idea or card ("as in Idea 1", "same harness as
+   above"); repeat what is needed instead, because each card will be read on its own.
 
 ## Output
 

@@ -27,10 +27,13 @@ worth it.
    `benchmark/<brief>/baseline_task.md`: 20 ideas with a two-sentence pitch each, then its own
    top 3 developed into full cards. It has the same web setting as the brainswarm run and the
    same card fields and 400-word cap as brainswarm's workshopped finalists, so length and
-   format do not favour either side.
+   format do not favour either side. Each card must be self-contained: the first ETF baseline
+   wrote "same harness as Idea 1", which revealed its origin, and was regenerated.
 3. **Blinding.** `benchmark/make_pack.py` renders both top-3 sets in one card format without
    sources, ids or provenance, and shuffles them with a seed drawn from OS entropy by numpy.
    The seed and the label key go to `key.json`, which the judge opens only after rating.
+   The builder refuses a pack whose cards mention an idea number or id (`Idea 1`, `I008`,
+   `L0004`).
 4. **Judging.** A human rates every card from 1 to 5 on constraint fit, drawdown (or the
    brief's main risk), growth (or the main objective), diversification (or breadth), and
    "would pursue", then ranks all six. Human raters are used because the demo showed LLM
@@ -42,8 +45,9 @@ worth it.
 ## Limitations
 
 - **Style tells.** Workshopped brainswarm titles tend to be long and colon-separated, which a
-  reader may learn to recognise. Titles are kept verbatim because rewriting them would change
-  content.
+  reader may learn to recognise, and developed cards can carry traces of the critique round
+  ("conceded", "the old renormalising gate"). Both are kept verbatim because rewriting them
+  would change content.
 - **Selection.** Each side's top 3 is chosen by that side's own process, which is the
   intended comparison (what a user would receive), not a comparison of raw generation.
 - **One rater.** A single rater's taste is confounded with the brief. More raters, or an
@@ -59,7 +63,8 @@ worth it.
 
 ## Cost
 
-The ETF baseline agent used 59k new tokens and 0.15M cache reads in one dispatch, against at
+The ETF baseline agent used 59k new tokens and 0.15M cache reads in one dispatch (the
+regenerated, self-contained baseline about the same), against at
 least 1.41M new tokens and 6.5M cache reads for the recorded brainswarm run (35 recovered
 transcripts, web off): a ratio of about 24 in new tokens. Both are measured from subagent
 transcripts with the same accounting (`usage.py`).

@@ -19,25 +19,7 @@ Score 1 (poor) to 5 (excellent). *Constraints*: how convincingly the idea meets 
 | E | | | | | | |
 | F | | | | | | |
 
-## Idea A: Multi-horizon trend ensemble with daily partial-step rebalancing
-
-**Pitch.** A continuous trend-strength ensemble scales inverse-volatility risk budgets, and the portfolio tracks the target by moving a fixed fraction of the gap each day under a 4% cap.
-
-**Mechanism.** Target weight t_i proportional to (1/sigma_i) * s_i with s_i = mean over L in {21,63,126,252} of clip(ret_L / (sigma_i * sqrt(L/252)), 0, 1); scale to 8% portfolio vol, cap 100% invested. Daily trade: Delta w = alpha*(t - w), alpha = 0.25, then scale Delta w so one-way turnover <= 4% of NAV.
-
-**Rationale.** Continuous signals and exponential tracking (half-life about 2.4 days at alpha 0.25) minimise whipsaw and spread trades across days, meeting the 3-days-per-week rule naturally while retaining trend protection.
-
-**Assumptions.** Trend strength measured as risk-adjusted return is informative.; Partial tracking lag does not destroy the trend edge.; Cash allowed.
-
-**How it fails.** Tracking lag deepens losses in fast crashes.; In trendless markets the portfolio drifts to low exposure and growth stalls.; Signals correlated across assets during crises reduce diversification.
-
-**Cheapest test.** Same backtest harness as Idea 1; sweep alpha in {0.1, 0.25, 0.5} and plot turnover vs CAGR vs max DD.
-
-**Effort.** Low: about 1 day once Idea 1 harness exists.
-
-**Operational spec.** Trade days: trade whenever gap exceeds 0.05% NAV, which drift makes true on nearly every day; fallback forced trade on Mon/Wed/Fri. Turnover: 4% daily one-way cap gives <= 20% weekly. Caps and class limits as Idea 1; drawdown governor as Idea 1; closes only, execute next close.
-
-## Idea B: Droop-governed 3-bucket risk parity: deadband drawdown droop, 3.5%/day slew ramp, 10% reserve cash
+## Idea A: Droop-governed 3-bucket risk parity: deadband drawdown droop, 3.5%/day slew ramp, 10% reserve cash
 
 **Pitch.** Equal-risk-bucket inverse-vol portfolio whose exposure follows a deadband droop law on its own drawdown, executed through a 3.5%-per-day slew limit so the turnover and trading-frequency gates are the control dynamics.
 
@@ -55,41 +37,59 @@ Score 1 (poor) to 5 (excellent). *Constraints*: how convincingly the idea meets 
 
 **Operational spec.** Close t: sigma_i, sigma_k, b, P_t, DD_t, E_t, w* = E_t*b (cash = 1 - E_t). Trade at close t+1: g = w* - w over 11 positions incl. cash; T = sum|g|/2; if T > 0.035, g *= 0.035/T. If T < 0.0005, swap 0.0005 from argmin_i to argmax_i of (w*_i - w_i) over the 10 ETFs (cash untouched, always toward target). Ties: lowest ticker index.
 
-## Idea C: Turnover-budgeted fractional-Kelly optimiser
+## Idea B: Trend-filtered risk parity with a daily trade budget
 
-**Pitch.** Each day, solve a log-growth maximisation with shrunk trend forecasts, shrinkage covariance, a volatility ceiling and an explicit 4% daily L1 trade budget.
+**Pitch.** An inverse-volatility portfolio of all 10 ETFs that cuts assets trending down, targets 8% volatility, has a drawdown governor, and moves toward its target a few percent per day so it trades every weekday within the turnover cap.
 
-**Mechanism.** Maximise w'mu - (1/2) w'Sigma w - lambda*||w - w_prev||_1 subject to w >= 0, sum(w) <= 1, sqrt(w'Sigma w) <= 9%, ||w - w_prev||_1 / 2 <= 4%, per-asset and per-class caps. mu_i = k * sigma_i * s_i where s_i is the multi-horizon trend score in [-1,1] and k = 0.3 (a Sharpe of 0.3 per unit signal, deliberately conservative); Sigma is Ledoit-Wolf shrunk from 252 days of returns. Solve with cvxpy daily.
+**Mechanism.** Each day after the close: estimate each asset's volatility sigma_i with an EWMA of daily returns (halflife 30 days). Raw weight is proportional to 1/sigma_i. Trend multiplier: the fraction of the 50-, 100- and 200-day simple moving averages that the price is above (0, 1/3, 2/3 or 1). Removed weight goes to Treasuries if they are above their 200-day moving average, otherwise to TIPS, or otherwise to cash. Scale the result to 8% annual volatility using a 120-day covariance, with gross exposure capped at 100%. Drawdown governor: once the drawdown from peak exceeds 10%, multiply risky weights by max(0.3, 1-(DD-10%)/8%).
 
-**Rationale.** Mean minus half variance is the second-order approximation to expected log growth, the brief's objective; fractional Kelly via shrunk mu and a vol ceiling curbs estimation error; the L1 penalty and hard trade budget make turnover a first-class constraint.
+**Rationale.** Risk parity diversifies risk rather than dollars, which the brief's diversification goal needs. A trend filter over several averages avoids most of the long bear markets in each asset. The volatility target and the governor act together as two layers of drawdown control.
 
-**Assumptions.** Trend-scaled expected returns carry modest but positive information.; Shrinkage covariance is stable enough week to week.; Convex solver available and deterministic daily.
+**Assumptions.** Trends persist at 2-10 month horizons in these asset classes; Recent volatility forecasts near-term volatility; Holding cash is allowed when the defensive assets are also in downtrends
 
-**How it fails.** Optimiser corner solutions concentrate in 2-3 assets if caps are loose.; Mis-specified mu scaling causes near-full-Kelly risk and drawdowns.; Trade budget binds during regime breaks, slowing de-risking.; Minimum trade-day requirement can fail if lambda suppresses all trades.
+**How it fails.** Fast crashes (for example March 2020) outrun the 4%/day trade budget; Stocks and bonds falling together (2022) remove the Treasury hedge; Whipsaw around the moving averages in range-bound markets
 
-**Cheapest test.** Backtest with k in {0.1, 0.3, 0.5} and lambda in {0, 5 bp, 20 bp}; compare CAGR and max DD against Idea 1 and verify trade-days and turnover logs.
+**Cheapest test.** A daily-close backtest from 2006 to the present with 5 bp costs, reporting CAGR, maximum drawdown, rolling 5-day turnover and trade days per week, compared with plain inverse-volatility and 60/40 portfolios.
 
-**Effort.** Medium: 3-4 days including solver tuning and constraint validation.
+**Effort.** Low: 1-2 days.
 
-**Operational spec.** Trade days: trade on any day with a solved change above 0.05% NAV; if fewer than 3 trades have occurred by Wednesday close, force a minimum 0.2% rebalance toward target on Thursday and Friday. Turnover: rolling 5-day one-way sum capped at 20% as a hard constraint (daily 4%). Diversification: 25% per ETF, class caps as Idea 1, and at least 5 ETFs with weight >= 5%. Drawdown: 9% vol ceiling plus same governor as Idea 1.
+**Operational spec.** Caps: each ETF 25%; equities (US large, US small, developed ex-US, EM) at most 50%; rates and credit (Treasuries, TIPS, IG credit) at most 50%; real assets (gold, commodities, REITs) at most 40%. Execution: gap g = target - current. Each weekday, trade toward the target with sum|trade| at most 4% of NAV, scaling all trades pro rata, so turnover (sum of absolute weight changes) over any 5 trading days is at most 20%. Trade-day rule: if the week has fewer than 3 trade days by Wednesday, Thursday or Friday, trade at least 0.25% on the largest gap. Data: closing prices only, and signals from close t are executed at close t+1. At least 5 holdings above 3% each.
 
-## Idea D: Staggered-tranche trend-filtered risk parity with drawdown governor
+## Idea C: N-1 contingency reserve: cluster risk parity with stress-memory reserve and asymmetric ramps
 
-**Pitch.** Five weekday tranches each rebalance once a week to a trend-filtered, volatility-targeted inverse-volatility portfolio, with a drawdown governor that de-risks as losses approach the 20% limit.
+**Pitch.** Hold the cash needed to survive a stressed 20-day loss of the largest cluster plus the simulated joint loss; cut risk twice as fast as it is restored.
 
-**Mechanism.** Each weekday d, tranche d (20% of NAV) is reset to target weights. Target: raw weight r_i = 1/sigma_i (sigma_i = 63-day EWMA vol) times trend score s_i = average over lookbacks {21,63,126,252} of 1[P_t > P_{t-L}]. Normalise, apply caps, then scale total exposure so ex-ante portfolio vol (EWMA covariance, 63-day halflife) is 8%, capped at 100% invested; remainder in cash. Governor multiplies risky exposure by g = clip(1 - (DD - 0.08)/0.08, 0.5, 1), where DD is drawdown from the high-water mark.
+**Mechanism.** Clusters: Equity (5 ETFs), Duration (3), Real (gold, commodities). Mix u: inverse 63d vol within cluster; ERC across clusters on 63d cluster covariance. Trend: ETFs below 200d SMA have u_i halved, freed weight goes to cash (no renormalisation). Reserve S uses unfiltered u: S = max(max_c u_c L_c + 0.5*sum_others u_c L_c, HS), where HS = |1% quantile of 20d returns of current u, last 1260d|. L_c and HS are floored at half the worst 20d loss since 2004 and at 2.33*sqrt(20)*63d vol. lambda = clip((0.17 - DD)/S, 0, 0.95), DD from trailing 504d NAV peak. Ramps: cut 4%/day, restore 2%/day. Target w* = lambda * filtered u.
 
-**Rationale.** Risk parity gives balanced exposure to growth, inflation and deflation shocks; trend filters historically cut the deep equity and commodity drawdowns (2008) and the 2022 bond sell-off; volatility targeting stabilises risk, and staggering removes rebalance-day timing luck.
+**Rationale.** Grid N-1 reserves against the largest outage; here it is CPPI with a measured, stress-floored multiplier (Maillard 2010 ERC; Faber 2007 trend-to-cash). Net growth 3.5-4.5%/yr after 5bp costs.
 
-**Assumptions.** Uninvested cash is allowed and earns roughly the T-bill rate.; Trend persistence at 1-12 month horizons continues across asset classes.; EWMA volatility forecasts are adequate one week ahead.; Trading costs are about 2-5 bp per side for these ETFs.
+**Assumptions.** Stress floor plus joint simulation bounds next-month loss within about 3 points; A 2-year peak suffices as drawdown reference; 5bp costs; cash earns 0
 
-**How it fails.** Sharp V-shaped reversals (2020) cause whipsaw: sold low, re-entered late.; Simultaneous stock-bond drawdown faster than trend lookbacks (early 2022) before filters react.; Low vol target caps growth in long bull markets; underperforms 60/40 in 2010s-style regimes.; Cash-heavy periods cede returns if cash yields near zero.
+**How it fails.** Multi-year grind: rolling peak forgets, so all-time DD can exceed 17% by staircase (conceded); Unprecedented shock beyond twice the historical worst; Stress floor lowers exposure in calm years, costing growth
 
-**Cheapest test.** Backtest 2004-present on the ten ETFs (proxy indices pre-inception) with 5 bp costs; report CAGR, max DD, weekly turnover distribution, trade days per week, and compare to static inverse-vol and 60/40. Then sweep vol target 6-10% and governor thresholds for stability.
+**Cheapest test.** Backtest 2004-2025, 1-day lag. Log realised 20d portfolio loss vs S (exceedance target <=2%), max DD in 2008, 2020, 2022, and net CAGR. Kill if max DD >20% in any crisis, net CAGR <2.5%, or S exceedance >4%.
 
-**Effort.** Low: about 1-2 days to implement and backtest in pandas; no optimiser required.
+**Effort.** Moderate: 2-3 days.
 
-**Operational spec.** Universe: 10 ETFs. Data: daily closes only. Caps: 25% per ETF; equities (4) <= 50%, bonds (Treasuries, TIPS, IG) <= 50%, real assets (gold, commodities, REITs) <= 40%; effective N = 1/sum(w^2) >= 4 when invested. Trade days: one tranche per weekday gives 5 trade days/week; holidays skip that tranche. Turnover: each tranche is 20% of NAV so one-way weekly turnover <= 20% by construction; additionally clip any day's trade to 4% one-way NAV. Drawdown: 8% vol target plus governor (full de-risk to 50% at 16% DD) aims at max DD around 12-16%, below 20%. Execution at next close after signal.
+**Operational spec.** Signal at close t, trade at close t+1. g = w* - w incl. cash; T = sum|g|/2. Cap = 0.02 if exposure rising, else 0.04; scale g by min(1, cap/T). Weekly turnover <= 5*0.04 = 0.20. If scaled T < 0.0005, swap 0.0005 from most overweight to most underweight ETF vs w* (ties alphabetical); needs no cash. 5% cash floor via lambda <= 0.95.
+
+## Idea D: Staggered five-sleeve dual momentum
+
+**Pitch.** Five sleeves of 20% each, one rebalanced on each weekday, each holding inverse-volatility-weighted leaders that pass both relative and absolute momentum filters, which gives daily trades, smooth turnover and diversified trend exposure.
+
+**Mechanism.** The portfolio is five equal sleeves, and sleeve k is rebalanced on weekday k. At rebalance, momentum score = the average of the 21-, 63-, 126- and 252-day total returns. Rank the 10 ETFs and select the top 5, subject to at most 2 equity ETFs and at least 1 non-equity. A selected asset whose 126-day return is below 0 fails the absolute filter, and its slot goes to Treasuries or TIPS (whichever has the higher 63-day return), or to cash if both are negative. Within the sleeve, weights are inverse to 60-day volatility, then scaled so the whole portfolio targets 9% volatility.
+
+**Rationale.** Relative and absolute momentum together have historically captured most equity upside while leaving long bear markets. Staggered sleeves remove the timing luck of a single rebalance date, and they make trading on every weekday a natural part of the design.
+
+**Assumptions.** Cross-asset momentum persists at 1-12 month horizons; Capping how fast sleeves can change does not destroy the edge; Five holdings per sleeve are enough to count as diversified
+
+**How it fails.** Momentum crashes at V-shaped reversals; Too few assets pass the filter, leaving the portfolio concentrated in bonds; The daily cap makes sleeves adapt slowly in 2008-style declines
+
+**Cheapest test.** A backtest from 2006 to the present with 5 bp costs, comparing staggered sleeves with a single monthly rebalance, reporting CAGR, maximum drawdown, the spread of results across rebalance days, and turnover.
+
+**Effort.** Low to medium: about 2 days.
+
+**Operational spec.** Turnover: on its day, each sleeve may trade at most 4% of total NAV (the sum of absolute weight changes), moving toward its target pro rata, which gives at most 20% of NAV per 5-day week. Trading days: all 5 weekdays, since each sleeve checks its target each week; if a sleeve's gap is below 0.25% it rebalances drift anyway. Portfolio caps: each ETF 25%; equities 50%; real assets (gold, commodities, REITs) 40%. Drawdown: the volatility target plus a governor that halves the risky slots when the drawdown exceeds 12% and restores them once the drawdown is back under 8%. Signals use closes up to t, and orders execute at close t+1. On holidays, the missed sleeve is rebalanced the next day, sharing that day's budget.
 
 ## Idea E: Crisis-correlation risk budgeting: stress-day covariance, trend gates, drawdown brake, weekday sleeves
 
@@ -109,20 +109,20 @@ Score 1 (poor) to 5 (excellent). *Constraints*: how convincingly the idea meets 
 
 **Operational spec.** Close t: stress set = 100 lowest equal-weight-10 returns in [t-499,t] (ties: earlier). Sigma = 252*(0.5*S_stress about stress mean + 0.5*S_500 zero-mean). Budgets: Growth (US LC, US SC, DM, EM, REIT) 1/15 each; Duration (UST, IG, TIPS) 1/9 each; Real (gold, commodities) 1/6 each. Solve min 0.5y'Sigma y - sum b_i ln y_i (Newton, tol 1e-8); w=y/sum y. v_i = w_i*(0.5 if close<SMA200 else 1); v *= min(1, 5%/s), s = max(sqrt(v'Sigma v), 21-day realised vol of v). Brake: v *= clip(1-(DD-0.03)/0.08, 0.25, 1), DD vs trailing-252-day NAV high. Target T=v, rest cash, no upward renormalisation. Five 20%-NAV sleeves, one per weekday (holiday: skipped). Sleeve at close: g=T-u (u = post-drift sleeve weights); x=g*min(1, 0.35/sum|g|), one-way at most 3.5% NAV. Stop trading once week-to-date turnover incl. drift reaches 19.5%, unless fewer than 3 days have traded.
 
-## Idea F: N-1 contingency reserve: cluster risk parity with stress-memory reserve and asymmetric ramps
+## Idea F: Turbulence-scaled maximum diversification
 
-**Pitch.** Hold the cash needed to survive a stressed 20-day loss of the largest cluster plus the simulated joint loss; cut risk twice as fast as it is restored.
+**Pitch.** A long-only maximum-diversification portfolio that moves gradually from equities, REITs and commodities into Treasuries, TIPS and gold when the Mahalanobis turbulence index signals stress.
 
-**Mechanism.** Clusters: Equity (5 ETFs), Duration (3), Real (gold, commodities). Mix u: inverse 63d vol within cluster; ERC across clusters on 63d cluster covariance. Trend: ETFs below 200d SMA have u_i halved, freed weight goes to cash (no renormalisation). Reserve S uses unfiltered u: S = max(max_c u_c L_c + 0.5*sum_others u_c L_c, HS), where HS = |1% quantile of 20d returns of current u, last 1260d|. L_c and HS are floored at half the worst 20d loss since 2004 and at 2.33*sqrt(20)*63d vol. lambda = clip((0.17 - DD)/S, 0, 0.95), DD from trailing 504d NAV peak. Ramps: cut 4%/day, restore 2%/day. Target w* = lambda * filtered u.
+**Mechanism.** The core weights maximise the diversification ratio DR = (w'sigma)/sqrt(w'Sigma w) with long-only weights summing to 1. Sigma is a Ledoit-Wolf shrinkage covariance over 252 days, re-optimised daily. Turbulence d_t = (r_t - mu)' Sigma_3y^-1 (r_t - mu) from daily returns, smoothed over 10 days, with its percentile P measured against a trailing 3-year window. When P > 80, risky weights (equities, REITs, commodities) are multiplied by 0.5, and the freed weight goes to Treasuries, TIPS and gold in proportion to their core weights. When P > 95, the multiplier is 0.3.
 
-**Rationale.** Grid N-1 reserves against the largest outage; here it is CPPI with a measured, stress-floored multiplier (Maillard 2010 ERC; Faber 2007 trend-to-cash). Net growth 3.5-4.5%/yr after 5bp costs.
+**Rationale.** Maximum diversification spreads exposure across factors that are only loosely correlated, which suits a 10-asset set of different asset classes. Turbulence (Kritzman and Li) measures unusual returns and unusual co-movement, and it tends to stay high through stress episodes, so it has some predictive value for drawdowns.
 
-**Assumptions.** Stress floor plus joint simulation bounds next-month loss within about 3 points; A 2-year peak suffices as drawdown reference; 5bp costs; cash earns 0
+**Assumptions.** Turbulence clusters in time and persists; Gold and Treasuries remain defensive in most stress regimes; The core weights are stable enough when the covariance is shrunk
 
-**How it fails.** Multi-year grind: rolling peak forgets, so all-time DD can exceed 17% by staircase (conceded); Unprecedented shock beyond twice the historical worst; Stress floor lowers exposure in calm years, costing growth
+**How it fails.** Stress arrives faster than the 4%/day trade budget can move; Inflationary stress hits bonds as well; The maximum-diversification core concentrates in bonds
 
-**Cheapest test.** Backtest 2004-2025, 1-day lag. Log realised 20d portfolio loss vs S (exceedance target <=2%), max DD in 2008, 2020, 2022, and net CAGR. Kill if max DD >20% in any crisis, net CAGR <2.5%, or S exceedance >4%.
+**Cheapest test.** Compute the turbulence percentile from 2006 to the present and check whether P > 80 predicts lower 20-day forward returns for the risky assets, then backtest the full rule set with costs.
 
-**Effort.** Moderate: 2-3 days.
+**Effort.** Medium: about 3 days, including the optimiser.
 
-**Operational spec.** Signal at close t, trade at close t+1. g = w* - w incl. cash; T = sum|g|/2. Cap = 0.02 if exposure rising, else 0.04; scale g by min(1, cap/T). Weekly turnover <= 5*0.04 = 0.20. If scaled T < 0.0005, swap 0.0005 from most overweight to most underweight ETF vs w* (ties alphabetical); needs no cash. 5% cash floor via lambda <= 0.95.
+**Operational spec.** Constraints: each ETF between 2% and 25% (the minimum keeps all 10 assets held); equities at most 50%; rates and credit at most 55%; real assets at most 40%. Execution: every weekday, trade toward the target with the sum of absolute weight changes at most 4% of NAV, so turnover over any 5 trading days is at most 20%, and since the daily optimisation rarely leaves a gap below 0.25%, trades occur on at least 3 days. Drawdown backstop: once the drawdown exceeds 12%, multiply risky weights by 0.5 until it recovers to 6%. All inputs are daily closes, and orders execute at close t+1.

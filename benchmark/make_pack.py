@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import string
 from pathlib import Path
 from typing import Any
@@ -42,6 +43,16 @@ def render(label: str, card: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+# References to other ideas ("as in Idea 1", "I008", "L0004") reveal which system and which
+# sibling a card came from, so a pack containing one is refused rather than built.
+LEAK = re.compile(r"\bIdea \d+\b|\bI\d{3}\b|\bL\d{4}\b")
+
+
+def leaks(card: dict[str, Any]) -> list[str]:
+    """Identity-revealing references in a card's rendered text."""
+    return LEAK.findall(render("?", card))
+
+
 def brainswarm_top(run: Path, k: int) -> list[dict[str, Any]]:
     """The top k finalists of a finished brainswarm run, by final rank."""
     final = json.loads((run / "data" / "final.json").read_text())
@@ -62,6 +73,10 @@ def main() -> int:
     entries = brainswarm_top(args.run, args.k) + [
         {**c, "origin": f"single agent #{i + 1}"} for i, c in enumerate(baseline)
     ]
+    found = {e["origin"]: leaks(e) for e in entries if leaks(e)}
+    if found:
+        print(f"refusing to build a pack: cards refer to other ideas {found}")
+        return 1
     entropy = np.random.SeedSequence().entropy  # fresh OS entropy, recorded in key.json
     assert isinstance(entropy, int)  # a SeedSequence built without arguments draws one int
     seed = entropy

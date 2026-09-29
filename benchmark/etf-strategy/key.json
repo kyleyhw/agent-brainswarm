@@ -1,11 +1,11 @@
 {
-  "seed": 173205901489917640169683935118531052275,
+  "seed": 152468990049079656665346585944705264611,
   "labels": {
-    "A": "single agent #3",
-    "B": "brainswarm I003-v2",
-    "C": "single agent #2",
-    "D": "single agent #1",
+    "A": "brainswarm I003-v2",
+    "B": "single agent #1",
+    "C": "brainswarm I004-v2",
+    "D": "single agent #2",
     "E": "brainswarm I008-v2",
-    "F": "brainswarm I004-v2"
+    "F": "single agent #3"
   }
 }
