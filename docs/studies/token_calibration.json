@@ -1,0 +1,125 @@
+{
+  "cost_per_dispatch_k": {
+    "advocate": [
+      10.7,
+      10.7
+    ],
+    "angle_clusters": [
+      20.8,
+      20.8
+    ],
+    "audit": [
+      63.3,
+      63.3
+    ],
+    "checker": [
+      23.2,
+      23.2
+    ],
+    "critique": [
+      80.9,
+      130.9
+    ],
+    "finals": [
+      23.3,
+      23.3
+    ],
+    "idea_clusters": [
+      20.8,
+      20.8
+    ],
+    "recritique": [
+      94.0,
+      94.0
+    ],
+    "workshop": [
+      38.7,
+      38.7
+    ],
+    "angles": [
+      34.0,
+      34.0
+    ],
+    "ideate": [
+      34.0,
+      34.0
+    ],
+    "research": [
+      50.0,
+      120.0
+    ],
+    "factcheck": [
+      50.0,
+      120.0
+    ],
+    "boundary": [
+      23.3,
+      23.3
+    ]
+  },
+  "presets": {
+    "quick": {
+      "dispatches": 74,
+      "per_phase": {
+        "audit": 1,
+        "angles": 8,
+        "angle_clusters": 1,
+        "ideate": 8,
+        "research": 8,
+        "idea_clusters": 1,
+        "critique": 24,
+        "checker": 5,
+        "factcheck": 10,
+        "finals": 8
+      },
+      "new_M": [
+        3.8,
+        6.3
+      ]
+    },
+    "standard": {
+      "dispatches": 178,
+      "per_phase": {
+        "audit": 1,
+        "angles": 20,
+        "angle_clusters": 1,
+        "ideate": 20,
+        "research": 20,
+        "idea_clusters": 1,
+        "critique": 60,
+        "checker": 12,
+        "advocate": 1,
+        "workshop": 12,
+        "recritique": 6,
+        "factcheck": 12,
+        "finals": 12
+      },
+      "new_M": [
+        9.5,
+        14.8
+      ]
+    },
+    "deep": {
+      "dispatches": 290,
+      "per_phase": {
+        "audit": 1,
+        "angles": 30,
+        "angle_clusters": 1,
+        "ideate": 30,
+        "research": 30,
+        "idea_clusters": 1,
+        "critique": 90,
+        "checker": 18,
+        "advocate": 1,
+        "workshop": 32,
+        "recritique": 16,
+        "factcheck": 16,
+        "finals": 24
+      },
+      "new_M": [
+        15.5,
+        23.2
+      ]
+    }
+  }
+}

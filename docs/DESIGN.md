@@ -267,8 +267,18 @@ ideas, so they are pre-registered.
 - **Finals**: an incomplete round robin. Each finalist meets at least `m`
   opponents (6 / 8 / 12 by size). Both presentation orders of every pair
   are judged, in *different* dispatches (a context that saw one order
-  would remember its verdict), at most 10 pairs per dispatch, with the
-  reverse half assigned to a different model where possible.
+  would remember its verdict), at most 10 pairs per dispatch. **Crossover
+  design:** each pair is assigned to one judge model, which judges it in
+  both orders. Every model's verdicts then contain within-model order
+  contrasts, which is what identifies the position bias $\gamma$ (§10).
+  The first design sent the two orders to *different* models; with two
+  judge dispatches, as in the demo, "each judge prefers the first-listed
+  idea" and "the two judges disagree" then produce identical data, and the
+  fit attributes all of it to $\gamma$. Runs recorded before the change
+  keep the old design (`judge_design: split`) so they replay exactly.
+- **Judge verdicts** name the winner by id (never "first" or "second"),
+  give the strongest point of each idea, and cite the judged criterion
+  that decided it.
 
 ## 6. The two knobs: size and exploration
 
@@ -283,16 +293,25 @@ ranking is always "value, judged neutrally", so runs stay comparable.
 
 | Setting | Shape | New tokens | Cache reads | Rough wall time |
 |---|---|---|---|---|
-| `quick` | 8 generators, critique, light finals, no workshop | ~2M | ~11M | ~30 min |
-| `standard` (default) | 20 generators, targeted-web critique, 12 workshop slots, re-critique, full finals | ~8M | ~45M | ~1–2 h |
-| `deep` | 30 generators, 2 workshop rounds, 16 slots, 5-judge finals | ~13M | ~80M | ~3 h+ |
+| `quick` | 8 generators, critique, light finals, no workshop | ~4–6M | ~17–29M | ~30 min |
+| `standard` (default) | 20 generators, targeted-web critique, 12 workshop slots, re-critique, full finals | ~10–15M | ~44–68M | ~1–2 h |
+| `deep` | 30 generators, 2 workshop rounds, 16 slots, 5-judge finals | ~16–23M | ~71–107M | ~3 h+ |
 
-Estimates are calibrated from measured subagent transcripts in the design
-session (web-research subagents: ~50–120k new tokens and ~0.5–1.7M
-cache-read tokens each). How subscription plans weight cache reads is not
-published, so both numbers are reported. Wall times are guesses. Every run
-logs actuals; the table is recalibrated from real runs. The preflight card
-shows the estimate; the digest shows the actual.
+The new-token ranges come from `docs/studies/token_calibration.py`, which
+models a run as $T = \sum_p n_p c_p$: $n_p$, the dispatches in phase $p$,
+is counted exactly by a fixture-mode run of each preset (quick 74,
+standard 178, deep 290 dispatches), and $c_p$, the new tokens per
+dispatch, is measured from the transcripts of the demo and its reruns
+(`token_calibration_measured.json`). Every phase was measured with web off,
+so the web-heavy phases carry a range: research and fact-check at 50–120k
+per dispatch (web-research subagents measured in the design session), and
+critique from its measured 81k up to 131k. Critique dominates (60 of 178
+dispatches at standard size). Cache reads are projected at 4.6 times new
+tokens, the ratio measured on the demo. The referee session is not
+counted. How subscription plans weight cache reads is not published, so
+both numbers are reported. Wall times are guesses. The first calibration
+(2026-09-29) raised every row: the earlier table rested on a usage count
+that dropped repeated generator ids and retries (§14).
 
 ### Exploration — where the work goes (same token cost)
 
@@ -601,15 +620,27 @@ blind spot the interval is narrow and wrong. Every report says so.
   needs (e.g. price history) is fetched once into a **read-only cache**
   before agents run.
 - **Tool allowlists per role** via agent definitions (§13); shell access
-  for generators restricted to the sandbox wrapper. *Enforcement mechanism
-  to be verified* (§16).
+  for generators restricted to the sandbox wrapper. Verified live (§16).
+- **Sandbox, as verified live on a Docker daemon.** Network and DNS are
+  blocked; writes outside `/work` fail; no host secrets are visible; the
+  scratch mount is writable (the container runs as the host user's
+  uid:gid, because the image's own user cannot write a host-owned
+  folder); Python runs unbuffered, so output printed before a
+  memory-limit kill (exit 137) survives; on the 120 s timeout the named
+  container is killed, not only the Docker client. The first live run
+  found the last three properties broken; a live test now covers them.
 - **Enforcement.** Each role agent declares a tool allowlist, which Claude
   Code enforces, and a `PreToolUse` hook, `brainswarm guard`, in its
   frontmatter. The hook allows Bash only for
   `brainswarm sandbox run <script>` with no shell control operators, and
   file writes only to JSON under the run's `out/` folder or to a sandbox
   scratch folder. Roles without research duties (ideator, clusterer,
-  checker, advocate, judge, auditor) get no web and no shell. When role
+  checker, advocate, judge, auditor) get no web and no shell. The guard
+  **fails closed**: Claude Code blocks a call only on exit code 2, and any
+  other code is a non-blocking error that lets the call proceed, so the
+  hook command exits 2 itself when `brainswarm` is not on PATH (exit 127
+  would otherwise allow everything) and the guard turns any internal error
+  into exit 2. When role
   agents are not installed, the referee falls back to general-purpose
   subagents that read their role file; the allowlists and hook are then
   **not** enforced, and the digest says so.
@@ -691,7 +722,12 @@ Token accounting notes from the design session: the Agent tool's reported
 token figure appeared to be *final context size*, not cumulative usage; and
 `output_tokens` in transcripts looked undercounted. Usage is therefore
 parsed from transcripts with message-id dedupe, and each field carries a
-reliability note until verified.
+reliability note until verified. Dispatches are described
+`bs <run> <phase>/<id>` and every transcript under a description is
+counted: the first version keyed transcripts by bare dispatch id, so the
+generator ids reused across the angle, ideation and research phases, and
+retries, overwrote one another, and the demo was under-reported as 0.9M
+new tokens instead of at least 1.41M.
 
 ## 15. Watch list: known weak points
 
@@ -706,7 +742,9 @@ reliability note until verified.
 | Rubric misinferred (autonomous) | rubric-audit disagreements; assumptions log | shown in preflight so the user can interrupt |
 | Critics harsher on novel ideas | novelty–rank correlation | tighten the "unproven" rule |
 | Generic filter miscalibrated | flag rate; random spot-checks | recalibrate substitution test |
-| Judge position bias [[10]](#ref-zheng-2023) | estimated $\gamma$ (§10); the demo measured $\gamma = 1.93$ (first shown won 11 of 12) | both orders are always judged in different dispatches and $\gamma$ is removed from the strengths; stronger prompt-level mitigation is open (§20) |
+| Judge position bias [[10]](#ref-zheng-2023) | estimated $\gamma$ (§10); demo crossover: first listed won 20 of 24, each model flipping with the order in 4 of 6 pairs | crossover schedule: each model judges both orders of its pairs in different dispatches, and $\gamma$ is removed from the strengths; a prompt fix alone did not help (§17) |
+| Workshop claims every fix | share of responses marked `fixed` (35 of 35 in the rerun) | re-critique checks claimed fixes against the card (§20) |
+| Workshop variance | finals order across repeated workshop attempts | rank intervals are conditional on the cards (§20) |
 | Judge verbosity bias | length–rank correlation | length caps are enforced |
 | Judge self-preference | win rate when judge and author share a model | mixed panels |
 | Anonymity leaks via writing style | judge verdicts tracking author family beyond chance | stricter card structure |
@@ -769,17 +807,25 @@ Status as of 2026-09-29:
 - **Live:** three manifests in `examples/demos/`. The recorded one,
   `etf-strategy.yaml`, is a concrete ETF strategy brief
   with five user-stated gates, at reduced `quick` size with web off. The
-  recorded run cost about 0.9M new tokens and 3.9M cache reads (the
+  recorded run cost at least 1.41M new tokens and 6.5M cache reads (first
+  reported as 0.9M before the usage count was fixed, §14; the
   earlier estimate of 0.3M was low: general-purpose fallback dispatches and
   retries cost more than role agents). `exoplanet-transit.yaml` and
   `home-heating.yaml` are physically checkable briefs (photometric noise
   budget; heat-loss arithmetic) at the same size, not yet run.
 
 The recorded run's main finding: judges preferred the first-shown idea in
-11 of 12 verdicts ($\gamma = 1.93$). The both-orders design and the
-$\gamma$ parameter kept that bias out of the strengths, and the report
-correctly declared the four finalists not separable. Details:
-`examples/README.md`. Not demoed: web research, the multi-run library.
+11 of 12 verdicts ($\gamma = 1.93$), and the report correctly declared the
+four finalists not separable. Three controlled reruns (branches of the
+recording made with `replay --until`) then tested the fixes: a judge prompt
+change did not reduce the bias (10 of 12); a crossover, in which each model
+judged both orders, showed it is real (20 of 24, each model flipping its
+winner with the order in 4 of 6 pairs), which led to the crossover
+schedule (§5); and a rerun from the workshop gave cards within the word
+cap at first attempt and a reversed finals order, showing that variation
+between workshop attempts can exceed the stated rank intervals. Details and
+figure: `examples/README.md`. Not demoed: web research, the multi-run
+library.
 
 ## 18. Build order
 
@@ -818,8 +864,16 @@ like *evolve*.
 ## 20. Open questions
 
 - Coverage of the critique-stage bootstrap (~60 dispatches) by simulation.
-- Prompt-level mitigation of the strong position bias seen in the demo (e.g. judges summarise both ideas before choosing), tested against $\gamma$.
-- Whether the guard hook fires for role agents in a fresh session.
+- Position bias: the prompt-level mitigation was tried and did not work
+  (§17); the crossover schedule identifies $\gamma$ instead. Open: whether
+  $\gamma$ should be estimated per judge model.
+- Workshop variance: two workshop attempts at the same four ideas reversed
+  the finals order. Options: two workshop attempts per slot with the better
+  one kept, or a report line saying the intervals are conditional on the
+  cards. Needs a measurement at standard size first.
+- Workshop answers every critique as `fixed` (35 of 35 in the rerun), so the
+  re-critique never tests a rebuttal; the re-critique should check that each
+  claimed fix is actually in the card.
 - Default model assignment per role once runs are logged.
 - Band-share defaults and generator count, once per-band yield and the
   yield curve are logged.

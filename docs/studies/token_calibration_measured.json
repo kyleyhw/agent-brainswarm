@@ -1,0 +1,116 @@
+{
+  "note": "new tokens per dispatch in thousands (uncached input + cache writes + output); 'angles+ideate+research' pools generator dispatches whose phase the legacy descriptions did not record; all measured with web off",
+  "runs": [
+    "20260929-134819-36e5",
+    "rerun-finals",
+    "rerun-workshop"
+  ],
+  "phases": {
+    "advocate": {
+      "n": 1,
+      "mean_k": 10.7,
+      "values_k": [
+        10.7
+      ]
+    },
+    "angle_clusters": {
+      "n": 1,
+      "mean_k": 20.8,
+      "values_k": [
+        20.8
+      ]
+    },
+    "angles+ideate+research": {
+      "n": 12,
+      "mean_k": 34.0,
+      "values_k": [
+        24.8,
+        37.3,
+        55.8,
+        29.3,
+        20.6,
+        37.7,
+        20.3,
+        24.0,
+        44.1,
+        55.6,
+        24.0,
+        34.9
+      ]
+    },
+    "audit": {
+      "n": 1,
+      "mean_k": 63.3,
+      "values_k": [
+        63.3
+      ]
+    },
+    "checker": {
+      "n": 3,
+      "mean_k": 23.2,
+      "values_k": [
+        29.4,
+        13.1,
+        27.0
+      ]
+    },
+    "critique": {
+      "n": 5,
+      "mean_k": 80.9,
+      "values_k": [
+        85.2,
+        67.8,
+        59.3,
+        97.9,
+        94.4
+      ]
+    },
+    "finals": {
+      "n": 8,
+      "mean_k": 23.3,
+      "values_k": [
+        22.3,
+        22.3,
+        25.8,
+        27.1,
+        22.2,
+        22.5,
+        21.5,
+        23.0
+      ]
+    },
+    "idea_clusters": {
+      "n": 1,
+      "mean_k": 20.8,
+      "values_k": [
+        20.8
+      ]
+    },
+    "recritique": {
+      "n": 3,
+      "mean_k": 94.0,
+      "values_k": [
+        109.9,
+        26.8,
+        145.4
+      ]
+    },
+    "workshop": {
+      "n": 11,
+      "mean_k": 38.7,
+      "values_k": [
+        25.2,
+        36.2,
+        28.9,
+        27.1,
+        28.6,
+        20.4,
+        62.6,
+        44.7,
+        64.7,
+        41.3,
+        46.3
+      ]
+    }
+  }
+}

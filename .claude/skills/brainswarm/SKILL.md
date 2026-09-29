@@ -75,9 +75,9 @@ Show a **preflight card** (do not wait for a reply unless `--checkpoint` was giv
 
 | Size | New tokens | Cache reads | Wall time (rough) |
 |---|---|---|---|
-| quick | ~2M | ~11M | ~30 min |
-| standard | ~8M | ~45M | ~1-2 h |
-| deep | ~13M | ~80M | ~3 h+ |
+| quick | ~4-6M | ~17-29M | ~30 min |
+| standard | ~10-15M | ~44-68M | ~1-2 h |
+| deep | ~16-23M | ~71-107M | ~3 h+ |
 
 Then write `rubric_draft.json` in the run folder:
 

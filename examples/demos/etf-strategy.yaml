@@ -1,4 +1,4 @@
-# Live mini demo (~0.9M new tokens, ~40 min in the recorded run). Run by saying:
+# Live mini demo (~1.4M new tokens, ~40 min in the recorded run). Run by saying:
 #   "run the brainswarm demo"  ->  brainswarm init --manifest examples/demos/etf-strategy.yaml
 # A reduced `quick` run with a small workshop so every phase is exercised.
 # Web is off to keep the cost down; the multi-run library is not exercised.

@@ -1,6 +1,6 @@
 # Live demo: cutting home heating energy by 30 % for under $3,000.
 # Run: brainswarm init --manifest examples/demos/home-heating.yaml
-# Same reduced size as the ETF demo (~0.9M new tokens); web off to keep it cheap.
+# Same reduced size as the ETF demo (~1.4M new tokens); web off to keep it cheap.
 brief: >
   Cut the annual space-heating energy of a detached 1970s three-bedroom house (about
   140 m2 of floor area, gas boiler with radiators, cold-temperate climate with about

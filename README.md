@@ -49,9 +49,11 @@ role agents' guard hook needs `brainswarm` on PATH and blocks writes without it.
 | Document | Content |
 |---|---|
 | [`docs/DESIGN.md`](docs/DESIGN.md) | Design specification: purpose, pipeline, knobs, fixation controls, scoring and its derivation, privacy, security, architecture, logging, watch list, design review, references |
+| [`docs/BENCHMARK.md`](docs/BENCHMARK.md) | Benchmark protocol: brainswarm versus a single strong agent, blinded human rating |
 | [`docs/studies/uncertainty_coverage.py`](docs/studies/uncertainty_coverage.py) | Coverage study behind the choice of uncertainty method |
+| [`docs/studies/token_calibration.py`](docs/studies/token_calibration.py) | Token calibration: dispatch counts per preset times measured per-dispatch costs |
 | [`PROJECT_PLAN.md`](PROJECT_PLAN.md) | Development phases and task status |
-| [`examples/README.md`](examples/README.md) | Live and offline demos |
+| [`examples/README.md`](examples/README.md) | Live and offline demos; controlled reruns of the demo with the fixes |
 | [`tests/reports/`](tests/reports/) | Dated test reports |
 
 ## Directory structure
@@ -72,8 +74,10 @@ agent-brainswarm/
 │   ├── library.py  usage.py         # idea library; token accounting
 │   ├── export.py  sandbox.py        # agent-evolve bundles; Docker runner
 │   └── guard.py  models.py  config.py  rubric.py  state.py  cli.py
-├── docs/  DESIGN.md  studies/  figures/
-├── examples/                        # demos/ (3 manifests), recorded demo run, offline replay
+├── docs/  DESIGN.md  BENCHMARK.md  studies/  figures/
+├── examples/                        # demos/ (3 manifests), recorded demo run, offline replay,
+│                                    #   demo-reruns/ + rerun_comparison.py (controlled reruns)
+├── benchmark/                       # single-agent baselines, blinded judging packs
 ├── tests/                           # unit + end-to-end tests with fake agents; reports/
 ├── install.py  PROJECT_PLAN.md  CLAUDE.md
 └── pyproject.toml  uv.lock  .pre-commit-config.yaml  .secrets.baseline
@@ -108,10 +112,13 @@ rubric -> audit -> freeze -> angle round -> clusters -> ideate (no web) -> resea
 - **Workshop.** Top-value, wildcard and advocate-promoted ideas are
   developed by a different model, which answers every serious critique.
   Fresh critics then judge whether the answers hold.
-- **Finals.** An incomplete round robin in which both presentation orders
-  of every pair go to different judge dispatches.
+- **Finals.** An incomplete round robin. Each pair goes to one judge
+  model, which sees it in both presentation orders in two different
+  dispatches; this is what separates the judges' position bias from their
+  disagreement (the demo's judges preferred the first-listed idea 20 times
+  in 24).
 
-Two knobs: **size** (`quick` / `standard` / `deep`: ~2M / ~8M / ~13M new
+Two knobs: **size** (`quick` / `standard` / `deep`: ~4–6M / ~10–15M / ~16–23M new
 tokens) and **exploration** (`conservative` / `balanced` / `wild`: where
 effort goes, at the same cost). Neither changes how ideas are judged.
 
@@ -142,7 +149,7 @@ Derivations are in [`docs/DESIGN.md` §10](docs/DESIGN.md#10-scoring).
 - **Offline, zero tokens:** `uv run python examples/demo_run.py` replays a
   recorded live run through the real code and checks that the ranking is
   reproduced exactly.
-- **Live, ~0.9M new tokens each:** in Claude Code, say "run the brainswarm
+- **Live, ~1.4M new tokens each:** in Claude Code, say "run the brainswarm
   demo" or `brainswarm init --manifest examples/demos/<name>.yaml`. Three
   concrete briefs with stated constraints:
   - `etf-strategy.yaml`: a rule-based ETF trading strategy (recorded run);
@@ -151,13 +158,13 @@ Derivations are in [`docs/DESIGN.md` §10](docs/DESIGN.md#10-scoring).
   - `home-heating.yaml`: cutting a house's heating energy by 30 % for
     under $3,000.
 
-See [`examples/README.md`](examples/README.md) for the recorded results.
+See [`examples/README.md`](examples/README.md) for the recorded results and the reruns.
 
 ## Development
 
 ```bash
 uv sync
-uv run pytest                        # 63 tests incl. end-to-end runs with fake agents
+uv run pytest                        # 69 tests incl. end-to-end runs with fake agents
 uv run ruff check . && uv run ty check
 uv run pre-commit install            # ruff, ruff-format, secret scanning, ty on commit
 ```
