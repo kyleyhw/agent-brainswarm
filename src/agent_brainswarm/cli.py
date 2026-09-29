@@ -60,7 +60,10 @@ def _print(obj: Any) -> None:
 
 def create_run(brief: str, config_dict: dict[str, Any], parent: Path, project: str) -> Run:
     """Make a run folder with brief, config, and initial status."""
-    run = Run(parent / new_run_id(int(config_dict["seed"])))
+    attempt = 0
+    while (parent / new_run_id(int(config_dict["seed"]), attempt)).exists():
+        attempt += 1
+    run = Run(parent / new_run_id(int(config_dict["seed"]), attempt))
     run.root.mkdir(parents=True, exist_ok=False)
     run.path("brief.md").write_text(brief.strip() + "\n")
     run.write(config_dict, "config.json")

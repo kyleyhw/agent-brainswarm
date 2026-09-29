@@ -3,6 +3,8 @@
 import re
 from pathlib import Path
 
+import pytest
+
 import agent_brainswarm
 from agent_brainswarm import cli
 
@@ -41,3 +43,19 @@ def test_every_dispatched_role_has_a_guarded_agent_definition() -> None:
         assert front["hooks"]["PreToolUse"][0]["hooks"][0]["command"] == "brainswarm guard"
         if role in ("clusterer", "checker", "advocate", "judge", "rubric-auditor", "ideator"):
             assert "Web" not in front["tools"] and "Bash" not in front["tools"]
+
+
+def test_installer_links_skill_and_agents(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("install", REPO / "install.py")
+    assert spec and spec.loader
+    install = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(install)
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path))
+    assert install.main(["--skip-python"]) == 0
+    assert (tmp_path / "skills/brainswarm/SKILL.md").exists()
+    agents = sorted(p.name for p in (tmp_path / "agents").iterdir())
+    assert "brainswarm-judge.md" in agents and len(agents) == 9
+    # Re-running is idempotent.
+    assert all(line.startswith("ok") for line in install.install_skills(force=False))

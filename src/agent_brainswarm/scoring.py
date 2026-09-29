@@ -28,9 +28,9 @@ betas, and stationarity forces sum_i beta_i / tau^2 = 0.
 Uncertainty. With at least MIN_CLUSTERS dispatches, a cluster bootstrap
 resamples whole dispatches (judgments within one subagent context are
 correlated; across contexts they are treated as independent). With fewer,
-the bootstrap has too few distinct resamples to be meaningful, and draws
-come instead from the Laplace approximation N(theta_hat, (-H)^-1) of the
-posterior.
+draws come from the Laplace approximation N(theta_hat, (-H)^-1) of the
+posterior, which the coverage study found reliable where the bootstrap
+under-covered.
 """
 
 from __future__ import annotations
@@ -52,10 +52,12 @@ MAX_ITERATIONS = 200
 # A tier boundary falls where the tier leader beats the next idea in at
 # least 95 % of draws (the conventional 5 % error rate, one-sided).
 SEPARATION = 0.95
-# Below 10 clusters a cluster bootstrap has too few distinct resamples for
-# 95 % percentile intervals (Field & Welsh 2007), so the Laplace
-# approximation is used instead.
-MIN_CLUSTERS = 10
+# The cluster bootstrap is used only with at least 30 clusters. In the
+# coverage study (docs/studies/uncertainty_coverage.py) the dispatch
+# bootstrap with ~20 clusters, the standard finals, covered the true rank
+# only 90 % of the time when judgments within a dispatch were correlated,
+# while the Laplace approximation covered 98-99 % in both scenarios.
+MIN_CLUSTERS = 30
 
 
 @dataclass(frozen=True)
@@ -264,16 +266,23 @@ def score(
     draws: int = 1000,
     top_k: int = 5,
     seed: int = 0,
+    method: Literal["auto", "bootstrap", "laplace"] = "auto",
 ) -> Scores:
-    """Fit, draw uncertainty (bootstrap or Laplace), and summarise per idea."""
+    """Fit, draw uncertainty (bootstrap or Laplace), and summarise per idea.
+
+    ``method="auto"`` bootstraps with at least MIN_CLUSTERS clusters and uses
+    the Laplace approximation otherwise; the explicit values exist for the
+    coverage study.
+    """
     ids = tuple(ids)
     n = len(ids)
     full = fit(ids, pairs, rankings, prior_scale)
     rng = np.random.default_rng(seed)
     clusters = sorted({p.cluster for p in pairs} | {r.cluster for r in rankings})
     unobserved = 0
-    if len(clusters) >= MIN_CLUSTERS:
-        method: Literal["bootstrap", "laplace"] = "bootstrap"
+    use_bootstrap = method == "bootstrap" or (method == "auto" and len(clusters) >= MIN_CLUSTERS)
+    if use_bootstrap and clusters:
+        chosen: Literal["bootstrap", "laplace"] = "bootstrap"
         by_pairs: dict[str, list[PairEvent]] = {c: [] for c in clusters}
         by_ranks: dict[str, list[RankingEvent]] = {c: [] for c in clusters}
         for p in pairs:
@@ -291,7 +300,7 @@ def score(
                 unobserved += 1
             samples[b] = fit(ids, bp, br, prior_scale, start=start).beta
     else:
-        method = "laplace"
+        chosen = "laplace"
         mean = np.append(full.beta, full.gamma)
         samples = rng.multivariate_normal(mean, full.covariance, size=draws)[:, :n]
 
@@ -321,7 +330,7 @@ def score(
     mean_win = mean_win_probability(full.beta)
     return Scores(
         fit=full,
-        method=method,
+        method=chosen,
         draws=draws,
         clusters=len(clusters),
         rank={x: int(point_ranks[i]) for i, x in enumerate(ids)},

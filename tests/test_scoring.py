@@ -126,7 +126,7 @@ def test_laplace_used_below_cluster_threshold() -> None:
 
 def test_bootstrap_used_with_enough_clusters_and_orders_ranks() -> None:
     events = []
-    for c in range(20):
+    for c in range(40):
         events += [
             PairEvent("A", "B", True, f"c{c}"),
             PairEvent("B", "C", True, f"c{c}"),

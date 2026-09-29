@@ -37,6 +37,7 @@ error-on-warning = true   # any diagnostic, warning or error, fails the run
 dev = [
     "choix>=0.4.1",
     "detect-secrets>=1.5.0",
+    "matplotlib>=3.11.2",
     "pre-commit>=4.6.2",
     "pytest>=9.1.1",
     "ruff>=0.16.9",

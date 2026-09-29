@@ -40,9 +40,13 @@ def is_ephemeral() -> bool:
     return os.environ.get("CLAUDE_CODE_REMOTE") == "true"
 
 
-def new_run_id(seed: int) -> str:
-    """Timestamp plus 4 hex digits drawn from the run's seeded generator."""
-    suffix = int(np.random.default_rng(seed).integers(16**4))
+def new_run_id(seed: int, attempt: int = 0) -> str:
+    """Timestamp plus 4 hex digits drawn from the run's seed and an attempt counter.
+
+    Two runs with the same seed started in the same second would collide on
+    attempt 0; callers retry with the next attempt until the folder is free.
+    """
+    suffix = int(np.random.default_rng([seed, attempt]).integers(16**4))
     return time.strftime("%Y%m%d-%H%M%S") + f"-{suffix:04x}"
 
 
