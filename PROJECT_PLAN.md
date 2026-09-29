@@ -42,7 +42,7 @@ This document outlines the planned phases and tasks for developing agent-brainsw
 ## Phase 6: Evaluation
 20. [in-progress] Benchmark: brainswarm versus a single strong agent asked for 20 ideas, on 3–5 briefs, judged by humans or by a measurable outcome ([`docs/BENCHMARK.md`](docs/BENCHMARK.md)).
     - [completed] Protocol, blinded pack builder, ETF baseline and pack
-    - [pending] Human ratings for the ETF pack
+    - [completed] ETF pack rated by six counterbalanced LLM reviewers: no preference between the sides (docs/BENCHMARK.md)
     - [pending] Exoplanet and home-heating briefs (need their brainswarm runs)
 21. [pending] Ablations: no critique, no workshop, no angle round.
 22. [pending] Coverage study for the critique-stage bootstrap (~60 dispatches).
